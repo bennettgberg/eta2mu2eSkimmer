@@ -8,7 +8,7 @@ setnum = 0
 #C to G
 runlet = 'C'
 
-config.General.requestName = 'test20230314_%d%s'%(setnum, runlet)
+config.General.requestName = 'test1_%d%s'%(setnum, runlet)
 config.General.workArea = 'crab_MiniAnalyzer'
 config.General.transferOutputs = True
 config.General.instance = 'prod'
@@ -18,10 +18,10 @@ config.JobType.psetName = 'run_ntuplizer_cfg.py'
 config.JobType.maxMemoryMB = 5000
 ##allow to run for up to 2 full days (maximum allowed, I think)
 #config.JobType.maxJobRuntimeMin = 2880
-config.JobType.maxJobRuntimeMin = 1440
+#config.JobType.maxJobRuntimeMin = 1440
 config.JobType.numCores = 1 
 
-config.Data.inputDataset = '/ParkingDoubleMuonLowMass%d/Run2022%sPromptReco-v1/MINIAOD'%(setnum, runlet)
+config.Data.inputDataset = '/ParkingDoubleMuonLowMass%d/Run2022%s-PromptReco-v1/MINIAOD'%(setnum, runlet)
 #config.Data.inputDataset = '/EphemeralZeroBias0/Run2022C-v1/RAW'
 #config.Data.inputDataset = '/DoubleElectron_Pt-1To300-gun/Run3Summer21DR-FlatPU0to70FEVT_120X_mcRun3_2021_realistic_v6-v2/GEN-SIM-DIGI-RAW'
 #config.Data.inputDataset = '/QCD_Pt-20To30_EMEnriched_TuneCP5_14TeV-pythia8/Run3Summer21DRPremix-120X_mcRun3_2021_realistic_v6-v2/GEN-SIM-DIGI-RAW'

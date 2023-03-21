@@ -69,14 +69,19 @@ const float ele_mass = 0.000511; //GeV
 const float mu_mass = 0.106; //GeV
 const float pi_mass = 0.140; //GeV
 
+//struct for saving the used tracks and muons
+// -- used as return type for computeVertices functions
 struct VertexTracks {
     vector<reco::Track> tracksP;
     vector<reco::Track> tracksN;
-    vector<reco::Track> muonsP;
-    vector<reco::Track> muonsN;
+    vector<pat::Muon> muonsP;
+    vector<pat::Muon> muonsN;
 };
+
+//fix tracks with non-pos-def covariance matrices -- needed to prevent crashing
 reco::Track fix_track(const reco::Track *tk, double delta=1e-8);
 
+//got this code from Sergey Polikarpov
 reco::Track fix_track(const reco::TrackRef& tk)
 {
     reco::Track t = reco::Track(*tk);
@@ -136,24 +141,14 @@ public:
     typedef std::pair<std::string, bool> IdPairb;
 
 private:
-    //structure to hold the muons (p+n) and tracks (p+n) forming a good vertex
-
     bool getCollections(const edm::Event&);
 
-    //virtual void beginJob() override;
-    //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
-    ////void computeVertices(vector<T> &, vector<T> &, std::string type) override;
-    //virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
-    //virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
-    //virtual void endJob() override;
     void beginJob() override;
     void beginRun(edm::Run const&, edm::EventSetup const&) override;
     float calcVertices(vector<reco::TransientTrack>, TransientVertex, std::string);
-    //type T defined as template (so can take either GsfElectronRef or regular TrackRef)
-    //template<typename T>
     VertexTracks computeVertices(vector<reco::Track> &, vector<reco::Track> &, std::string type, edm::ESHandle<TransientTrackBuilder>, KalmanVertexFitter);
     VertexTracks computeVertices(vector<reco::GsfTrackRef> &, vector<reco::GsfTrackRef> &, std::string type, edm::ESHandle<TransientTrackBuilder>, KalmanVertexFitter);
-    VertexTracks computeVertices(vector<reco::Track> &, vector<reco::Track> &, vector<reco::Track> &, vector<reco::Track> &, std::string type, edm::ESHandle<TransientTrackBuilder>, KalmanVertexFitter);
+    VertexTracks computeVertices(vector<reco::Track> &, vector<reco::Track> &, vector<pat::Muon> &, vector<pat::Muon> &, std::string type, edm::ESHandle<TransientTrackBuilder>, KalmanVertexFitter);
     void analyze(const edm::Event&, const edm::EventSetup&) override;
     void endRun(edm::Run const&, edm::EventSetup const&) override;
     void endJob() override;
@@ -242,7 +237,6 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     //desc.add<edm::InputTag>("trigEvent", edm::InputTag("hltTriggerSummaryAOD", "", "HLT"));
     desc.add<edm::InputTag>("pileups", edm::InputTag("slimmedAddPileupInfo"));
     desc.add<edm::InputTag>("genEvt", edm::InputTag("generator"));
-    //desc.add<edm::InputTag>("transient_track_builder", edm::InputTag("TransientTrackBuilder"));
     desc.add<edm::InputTag>("rho", edm::InputTag("fixedGridRhoFastjetAll"));
     desc.add<edm::InputTag>("packed_candidate", edm::InputTag("packedPFCandidates"));
     
@@ -371,6 +365,7 @@ float eta2mu2eAnalyzer::calcVertices(vector<reco::TransientTrack> transient_trac
     float vz = -9999;
     float prob = -1.0;
 
+    //only process valid transient vertices
     if (tv.isValid()) {
         reco::Vertex vertex = reco::Vertex(tv);
         vxy = sqrt(vertex.x()*vertex.x() + vertex.y()*vertex.y());
@@ -387,7 +382,7 @@ float eta2mu2eAnalyzer::calcVertices(vector<reco::TransientTrack> transient_trac
         return prob;
     }
 
-    //only save if prob > .1 ??
+    //only save if prob > .1 
     if ( prob > 0.1 ) {
         nt.recoVtxReducedChi2_[type].push_back(vtx_chi2);
         nt.recoVtxVxy_[type].push_back(vxy);
@@ -399,18 +394,15 @@ float eta2mu2eAnalyzer::calcVertices(vector<reco::TransientTrack> transient_trac
     
 } 
 
-
-//auto computeVertices = [&](vector<reco::TrackRef> coll_1, vector<reco::TrackRef> coll_2, std::string type) {
-//auto computeVertices = [&](vector<reco::GsfTrackRef> coll_1, vector<reco::GsfTrackRef> coll_2, std::string type) {
-// T is a template class that can be either a GsfTrackRef, or a reco::Track, or a reco::TrackRef, etc.
-//        (anything that can go into the TransientTrackBuilder::build() method)
-//template<typename T>
+//compute vertices for two track vectors coll_1 and coll_2, and add them to the ntuple.
+// (overloaded below)
+// Return type: struct VertexTracks (defined above)
 VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf) {
+    //initialize the struct that will be returned
     VertexTracks myVertTracks;
+    //initialize the tracks list in the struct that will be returned.
     myVertTracks.tracksP = {};
     myVertTracks.tracksN = {};
-    myVertTracks.muonsP = {};
-    myVertTracks.muonsN = {};
     for (size_t i = 0; i < coll_1.size(); i++) {
         for (size_t j = 0; j < coll_2.size(); j++) {
             //if ( j > 15 || i > 15 ) continue;
@@ -418,6 +410,7 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
             part_i = coll_1[i];
             part_j = coll_2[j];
 
+            //first build the transient vertex and transient tracks.
             float dr = -9999;
             TransientVertex tv;
 
@@ -426,10 +419,17 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
             transient_tracks.push_back(theB->build(fix_track(&part_j)));
             tv = kvf.vertex(transient_tracks);
             float probVtx = calcVertices(transient_tracks, tv, type);
+            //only fill the ntuple if the (chi2) prob is > .1
+            // the rest of the ntuple info is filled in the calcVertices function (above)
             //if ( probVtx > 0 ) {
             if ( probVtx > 0.1 ) {
                 dr = reco::deltaR(part_i, part_j);
                 nt.recoVtxDr_[type].push_back(dr);
+                //there are positive AND negative tracks
+                // number pushed back is 4 bits for the first track # (in the good list), followed by 4 bits for the 2nd track #
+                //  so max we can handle is 16 good tracks...
+                uint8_t full_val = nt.mmeeTrxP[i] + (nt.mmeeTrxN[j] << 4);
+                nt.recoVtxTracks_[type].push_back(full_val);
                 myVertTracks.tracksP.push_back(part_i);
                 myVertTracks.tracksN.push_back(part_j);
             }
@@ -440,7 +440,9 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
 } // computeVertices
 
 //overloaded function
+// now compute vertex for two sets of GsfElectron vectors coll_1 and coll_2.
 VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRef> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf) {
+    //we're gonna keep all Gsf electrons anyway (there aren't that many of them) so this struct will just be empty.
     VertexTracks myVertTracks;
     myVertTracks.tracksP = {};
     myVertTracks.tracksN = {};
@@ -451,10 +453,8 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::GsfTrackRef> & coll_
             //reco::TrackRef part_i, part_j;
             //reco::GsfTrackRef part_i, part_j;
             reco::GsfTrackRef part_i, part_j;
-            //if (i < coll_1.size())
-                part_i = coll_1[i];
-            //if (j < coll_2.size())
-                part_j = coll_2[j];
+            part_i = coll_1[i];
+            part_j = coll_2[j];
 
             float dr = -9999;
             TransientVertex tv;
@@ -468,6 +468,9 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::GsfTrackRef> & coll_
                 if ( probVtx > 0.1 ) {
                     dr = reco::deltaR(*part_i, *part_j);
                     nt.recoVtxDr_[type].push_back(dr);
+                    //first 4 bits for first electron, last 4 for second electron
+                    uint8_t full_val = nt.gsfElsP[i] + (nt.gsfElsN[j] << 4);
+                    nt.recoVtxEles_[type].push_back(full_val);
                 }
             } 
 
@@ -477,18 +480,23 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::GsfTrackRef> & coll_
 } // computeVertices
 
 //this version for fitting the 2 electron tracks and the 2 muons all together!
-VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2, vector<reco::Track> & coll_3, vector<reco::Track> & coll_4, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf) {
+// this will be the first version called -- will also filter out the muons and tracks not used in any good vertex
+VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2, vector<pat::Muon> & coll_3, vector<pat::Muon> & coll_4, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf) {
     VertexTracks myVertTracks;
     myVertTracks.tracksP = {};
     myVertTracks.tracksN = {};
     myVertTracks.muonsP = {};
     myVertTracks.muonsN = {};
-    //vectors of bools to save what particles have already been added to the collection to return
-    vector<bool> igood {}; for(size_t i = 0; i < coll_1.size(); i++) igood.push_back(false);
-    vector<bool> jgood {}; for(size_t i = 0; i < coll_2.size(); i++) jgood.push_back(false);
-    vector<bool> kgood {}; for(size_t i = 0; i < coll_3.size(); i++) kgood.push_back(false);
-    vector<bool> lgood {}; for(size_t i = 0; i < coll_4.size(); i++) lgood.push_back(false);
-    unsigned int printevery = 100000;
+    //vectors of bools to save the order each particle is added to the vector of good particles
+    // this will be needed to keep track of what particles are in each vertex!
+    vector<int> igood {}; for(size_t i = 0; i < coll_1.size(); i++) igood.push_back(-1);
+    vector<int> jgood {}; for(size_t i = 0; i < coll_2.size(); i++) jgood.push_back(-1);
+    vector<int> kgood {}; for(size_t i = 0; i < coll_3.size(); i++) kgood.push_back(-1);
+    vector<int> lgood {}; for(size_t i = 0; i < coll_4.size(); i++) lgood.push_back(-1);
+    uint8_t nmuons = 0;
+    uint8_t ntracks = 0;
+    //unsigned int printevery = 100000;
+    //first loop over positive tracks
     for (size_t i = 0; i < coll_1.size(); i++) {
         reco::Track part_i;
         part_i = coll_1[i];
@@ -499,6 +507,7 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
         TLorentzVector pi_i;
         pi_i.SetPtEtaPhiM(part_i.pt(),part_i.eta(),part_i.phi(), pi_mass);
         //if ( i > 15 ) break; // ??
+        //then loop over negative tracks
         for (size_t j = 0; j < coll_2.size(); j++) {
             //if ( j > 15 ) break; // ??
             //print a message once in a while to let us know it's still working
@@ -509,25 +518,28 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
             ele_j.SetPtEtaPhiM(part_j.pt(),part_j.eta(),part_j.phi(), ele_mass);
             TLorentzVector pi_j;
             pi_j.SetPtEtaPhiM(part_j.pt(),part_j.eta(),part_j.phi(), pi_mass);
+            //now loop over pos muons
             for(size_t k = 0; k < coll_3.size(); k++) {
                 reco::Track part_k;
-                part_k = coll_3[k];
+                part_k = *(coll_3[k].bestTrack());
+                //this particle is clearly a muon.
                 TLorentzVector mu_k;
                 mu_k.SetPtEtaPhiM(part_k.pt(),part_k.eta(),part_k.phi(), mu_mass);
                 //if (! (part_k.isNonnull()) ) {
                 //    continue;
                 //}
+                //finally loop over neg muons
                 for(size_t l = 0; l < coll_4.size(); l++) {
                     reco::Track part_l;
-                    part_l = coll_4[l];
+                    part_l = *(coll_4[l].bestTrack());
+                    //first make a 4 vector of the 4 particles, see if their invariant mass is in the regime of interest or nah
                     TLorentzVector mu_l;
                     mu_l.SetPtEtaPhiM(part_l.pt(),part_l.eta(),part_l.phi(), mu_mass);
-                    //if (! (part_l.isNonnull()) ) {
-                    //    continue;
-                    //}
 
                     //first compute the pT/M of the 4 particle system to make sure it's consistent with eta/eta' meson
+                    //first 4-vector assumes tracks are electrons
                     TLorentzVector eta_mmee = ele_i + ele_j + mu_k + mu_l; 
+                    //this 4-vector assumes tracks are pions
                     TLorentzVector eta_mmpp = pi_i + pi_j + mu_k + mu_l; 
                     float eta_Mmmee = eta_mmee.M();
                     float eta_Mmmpp = eta_mmpp.M();
@@ -550,7 +562,7 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
                     TransientVertex tv;
                     vector<reco::TransientTrack> transient_tracks{};
 
-                    // build all 4 transient tracks ( 2 el + 2 mu )
+                    // build all 4 transient tracks ( 2 el(or pi) + 2 mu )
                     transient_tracks.push_back(theB->build(fix_track(&part_i)));
                     transient_tracks.push_back(theB->build(fix_track(&part_j)));
                     transient_tracks.push_back(theB->build(fix_track(&part_k)));
@@ -563,31 +575,42 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
                         //dr of the electron pair
                         dr = reco::deltaR(part_i, part_j);
                         nt.recoVtxDr_[type].push_back(dr);
-                        if( passed_mmee ) {
-                            nt.recoVtxPt_["mmee"].push_back(eta_Ptmmee);
-                            nt.recoVtxM_["mmee"].push_back(eta_Mmmee);
-                        }
-                        if( passed_mmpp ) {
-                            nt.recoVtxPt_["mmpp"].push_back(eta_Ptmmpp);
-                            nt.recoVtxM_["mmpp"].push_back(eta_Mmmpp);
-                        }
                         //check if the particle is saved yet or nah before adding it
-                        if( !igood[i] ) {
+                            //make sure you also keep track of what particle numbers are involved with each vertex.
+                        //if the positive track has not already been added to the list of all good tracks, add it.
+                        if( igood[i] < 0 ) {
                             myVertTracks.tracksP.push_back(part_i);
-                            igood[i] = true;
+                            nt.mmeeTrxP.push_back(ntracks);
+                            igood[i] = ntracks++;
                         }
-                        if( !jgood[j] ) {
+                        //do the same for negative tracks, etc.
+                        if( jgood[j] < 0 ) {
                             myVertTracks.tracksN.push_back(part_j);
-                            jgood[j] = true;
+                            nt.mmeeTrxN.push_back(ntracks);
+                            jgood[j] = ntracks++;
                         }
-                        if ( !kgood[k] ) {
-                            myVertTracks.muonsP.push_back(part_k);
-                            kgood[k] = true;
+                        if ( kgood[k] < 0 ) {
+                            myVertTracks.muonsP.push_back(coll_3[k]);
+                            kgood[k] = nmuons++;
                         }
-                        if( !lgood[l] ) {
-                            myVertTracks.muonsN.push_back(part_l);
-                            lgood[l] = true;
+                        if( lgood[l] < 0 ) {
+                            myVertTracks.muonsN.push_back(coll_4[l]);
+                            lgood[l] = nmuons++;
                         } 
+                        //for this vertex, two different pointers to constituent particles
+                        // first for the tracks (electrons or pions), then for muons
+                        //  for each of the two, first 4 bits are for the positive particle, last 4 bits for the neg particle
+                        uint8_t tracks = igood[i] + (jgood[j] << 4); 
+                        uint8_t muons = kgood[k] + (lgood[l] << 4);
+                        //only 4 bits to represent the particle numbers, so can't handle more than 16 particles!!
+                        if ( igood[i] > 15 || jgood[j] > 15 ) {
+                            throw std::runtime_error("Too many good tracks!");
+                        }
+                        if ( kgood[k] > 15 || lgood[l] > 15 ) {
+                            throw std::runtime_error("Too many good muons!");
+                        }
+                        nt.recoVtxTracks_[type].push_back(tracks);
+                        nt.recoVtxMuons_[type].push_back(muons);
                     }
                 } //l loop
             } //k loop
@@ -596,6 +619,7 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
     } // i loop
     return myVertTracks;
 } // computeVertices
+
 void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
     using std::cout, std::vector, std::endl;
@@ -622,17 +646,15 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     nt.pvz_ = pv.z();
 
 //    // Add all electrons to ntuple, regardless of ID
-//    // for now "good" electron means only ID is passed
-//    // i.e. (IDmap % 2 == 1)
-    nt.recoNElectron_ = recoElectronHandle_->size();
+    // don't care about NElectron, only care about NGoodElectron
+    //nt.recoNElectron_ = recoElectronHandle_->size();
     nt.recoNGoodElectron_ = 0;
     //get the tracks from the electron objects
     vector<reco::GsfTrackRef> elTracksP{};    
     vector<reco::GsfTrackRef> elTracksN{};    
 
-    nt.gsfNTrk_ = recoElectronHandle_->size();
-    nt.gsfNGoodTrk_ = 0;
-    //const edm::ValueMap<float> & eIDmap = *recoElectronIDHandle_;
+    //nt.gsfNTrk_ = recoElectronHandle_->size();
+    //nt.gsfNGoodTrk_ = 0;
     for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
         pat::ElectronRef electronRef(recoElectronHandle_, i);
         nt.recoElectronPt_.push_back(electronRef->pt());
@@ -667,13 +689,26 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         // https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideCategoryBasedElectronID
         // Note: an exception is thrown if the specified ID is not available
 
-        // or use cut-based ID instead of mva??: "cutBasedElectronID-Fall17-94X-V2-loose"
-        //nt.recoElectronIDResult_.push_back( electronRef->electronID("cutBasedElectronID-Fall17-94X-V2-loose") );
-        //nt.recoElectronIDResult_.push_back( electronRef->electronID("mvaEleID-Fall17-noIso-V2-wpLoose") );
+        //format of my Electron ID (8 bits):
+        // 0: wp80 ID, 1: wp80 conversion rejection, 2: wp90 ID, 3: wp90 conversion rejection, 4: loose ID, 5: loose conv. rej. (6,7: 0)
+        uint8_t full_id = 0;
+        int idnum = 0;
+        //loop over the 3 different elec IDs (wp80, wp90, loose)
         for(std::string id : nt.electronIDs) {
-            nt.recoElectronIDResult_[id].push_back( electronRef->electronID(id) );
+            uint8_t thisid = electronRef->electronID(id);
+            //std::cout << id << " : " << (int)thisid << "; ";
+            uint8_t add_id = 0;
+            if ( thisid % 2 == 1 ) {
+                add_id += 1;
+            }
+            if ( thisid > 3 ) {
+                add_id += 2;
+            }
+            full_id = full_id + (add_id << (2*idnum));
+            idnum++;
         }
-
+        //std::cout << "full_id : " << (int)full_id << std::endl;
+        nt.recoElectronIDResult_.push_back( full_id );
         reco::GsfTrackRef eltrack = electronRef->gsfTrack();
 
         nt.gsfTrkPt_.push_back(eltrack->pt());
@@ -681,50 +716,65 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         nt.gsfTrkPhi_.push_back(eltrack->phi());
         nt.gsfTrkCharge_.push_back(eltrack->charge());
 
-        nt.gsfNGoodTrk_++;
 
         if ( electronRef->charge() > 0 ) {
             elTracksP.push_back(eltrack);
+            nt.gsfElsP.push_back(nt.recoNGoodElectron_);
         }
         else {
             elTracksN.push_back(eltrack);
+            nt.gsfElsN.push_back(nt.recoNGoodElectron_);
         }
+        nt.recoNGoodElectron_++;
     }
-//
+
     // Also add all photons to ntuple, regardless of ID
     // Photon ID only produces 1 or 0
-    nt.recoNPhoton_ = recoPhotonHandle_->size();
+    //nt.recoNPhoton_ = recoPhotonHandle_->size();
     nt.recoNGoodPhoton_ = 0;
     for (size_t i = 0; i < recoPhotonHandle_->size(); i++) {
         pat::PhotonRef photonRef(recoPhotonHandle_, i);
         nt.recoPhotonPt_.push_back(photonRef->pt());
         nt.recoPhotonEta_.push_back(photonRef->eta());
         nt.recoPhotonPhi_.push_back(photonRef->phi());
+        //for(std::string id : nt.photonIDs) {
+        //    nt.recoPhotonIDResult_[id].push_back( (float) photonRef->photonID(id) );
+        //}
+        nt.recoNGoodPhoton_++;
+        //my photon ID format:
+        // bit 0: wp80
+        // bit 1: wp90
+        uint8_t full_id = 0;
+        int idnum = 0;
         for(std::string id : nt.photonIDs) {
-            nt.recoPhotonIDResult_[id].push_back( (float) photonRef->photonID(id) );
-        }
+            uint8_t thisid = photonRef->photonID(id);
+            //std::cout << id << " : " << (int)thisid << "; ";
+            full_id += (thisid << idnum);
+            idnum++;
+        } 
+        //std::cout << "full_id : " << (int)full_id << std::endl;
+        nt.recoPhotonIDResult_.push_back( full_id );
     }
     
-    //vector of all Muon tracks (Positive and Negative separately)
-    vector<reco::Track> muTracksP {};
-    vector<reco::Track> muTracksN {};
-    // Also add all muons to ntuple, regardless of ID
-    nt.recoNMuon_ = recoMuonHandle_->size();
+    //vector of all Muons (Positive and Negative separately)
+    vector<pat::Muon> muonsP {};
+    vector<pat::Muon> muonsN {};
     nt.recoNGoodMuon_ = 0;
     for (size_t i = 0; i < recoMuonHandle_->size(); i++) {
         pat::MuonRef muonRef(recoMuonHandle_, i);
-        nt.recoMuonPt_.push_back(muonRef->pt());
-        nt.recoMuonEta_.push_back(muonRef->eta());
-        nt.recoMuonPhi_.push_back(muonRef->phi());
-        nt.recoMuonCharge_.push_back(muonRef->charge());
+        //muon info will be added later, once we're sure this is a useful muon
+        //nt.recoMuonPt_.push_back(muonRef->pt());
+        //nt.recoMuonEta_.push_back(muonRef->eta());
+        //nt.recoMuonPhi_.push_back(muonRef->phi());
+        //nt.recoMuonCharge_.push_back(muonRef->charge());
         if ( muonRef->charge() > 0 ) {
-            muTracksP.push_back(* (muonRef->bestTrack()) );
+            muonsP.push_back(* muonRef );
         }
         else {
-            muTracksN.push_back(* (muonRef->bestTrack()) );
+            muonsN.push_back(* muonRef );
         }
-        //nt.recoMuonIDResult_.push_back(phIDmap[photonRef]);
-        nt.recoMuonIDResult_.push_back( (float) (muonRef->muonID("All")) );
+        //nt.recoMuonIDResult_.push_back( (float) (muonRef->muonID("All")) );
+        //nt.recoNGoodMuon_++;
     }
 
     // Pick pair of muons with smallest vertex chi square fit for all collection combos
@@ -733,16 +783,12 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder", theB);
     KalmanVertexFitter kvf(true);
 
-    //all tracks (will be mostly pions methinks)
+    //all tracks (will be mostly pions methinks) -- separated betwixt positive and negative charge
     vector<reco::Track> allTracksP{};    //positive only
     vector<reco::Track> allTracksN{};    //negative only
-    //for(size_t i = 0; i < trkHandle_->size(); i++) {
-    //    reco::PackedCandidateRef packedRef(trkHandle_, i);
-    //    reco::TrackRef trackRef = packedRef->Track();
-    //    allTracks.push_back(trackRef);
-    //}
+
     //now get the PackedCandidate tracks
-    nt.recoNTrk_ = trkHandle_->size();
+    //nt.recoNTrk_ = trkHandle_->size();
     nt.recoNGoodTrk_ = 0;
     for (pat::PackedCandidateCollection::const_iterator iTra1 = trkHandle_->begin(); iTra1 != trkHandle_->end(); iTra1++) {
         //try setting track mass to electron mass to see what happens
@@ -780,13 +826,14 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         else {
             continue;
         }
-        nt.recoNGoodTrk_++;
-        nt.recoTrkPt_.push_back(iTrack1->pt());
-        nt.recoTrkEta_.push_back(iTrack1->eta());
-        nt.recoTrkPhi_.push_back(iTrack1->phi());
-        nt.recoTrkCharge_.push_back(iTrack1->charge());
+        //nt.recoNGoodTrk_++;
+        //nt.recoTrkPt_.push_back(iTrack1->pt());
+        //nt.recoTrkEta_.push_back(iTrack1->eta());
+        //nt.recoTrkPhi_.push_back(iTrack1->phi());
+        //nt.recoTrkCharge_.push_back(iTrack1->charge());
     }
 
+// TODO: implement triggers
 //
 //    // Assign each trigger result to a different bit
 //    nt.fired_ = 0;
@@ -801,15 +848,49 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 //    }
 //    
 
+    //first get the 4-particle vertices, then get rid of all the particles/tracks that aren't involved in those.
     // EL-EL-MU-MU
-    VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muTracksP, muTracksN, "mmee", theB, kvf);
+    //VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muTracksP, muTracksN, "mmee", theB, kvf);
+    VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muonsP, muonsN, "mmee", theB, kvf);
     // if the mmee vertex is no good, then no need to save the event!
     allTracksP = primVertTrx.tracksP;
     allTracksN = primVertTrx.tracksN;
-    nt.recoNGoodTrk_ = allTracksP.size() + allTracksN.size();
+    muonsN = primVertTrx.muonsN;
+    muonsP = primVertTrx.muonsP;
+    for(auto muonRef : muonsP) {
+        nt.recoMuonPt_.push_back(muonRef.pt());
+        nt.recoMuonEta_.push_back(muonRef.eta());
+        nt.recoMuonPhi_.push_back(muonRef.phi());
+        nt.recoMuonCharge_.push_back(muonRef.charge());
+        nt.recoNGoodMuon_++;
+    }
+    for(auto muonRef : muonsN) {
+        nt.recoMuonPt_.push_back(muonRef.pt());
+        nt.recoMuonEta_.push_back(muonRef.eta());
+        nt.recoMuonPhi_.push_back(muonRef.phi());
+        nt.recoMuonCharge_.push_back(muonRef.charge());
+        nt.recoNGoodMuon_++;
+    }
+  
+    for(auto iTrack1 : allTracksP) {
+        nt.recoNGoodTrk_++;
+        nt.recoTrkPt_.push_back(iTrack1.pt());
+        nt.recoTrkEta_.push_back(iTrack1.eta());
+        nt.recoTrkPhi_.push_back(iTrack1.phi());
+        nt.recoTrkCharge_.push_back(iTrack1.charge());
+    }
+    for(auto iTrack1 : allTracksN) {
+        nt.recoNGoodTrk_++;
+        nt.recoTrkPt_.push_back(iTrack1.pt());
+        nt.recoTrkEta_.push_back(iTrack1.eta());
+        nt.recoTrkPhi_.push_back(iTrack1.phi());
+        nt.recoTrkCharge_.push_back(iTrack1.charge());
+    }
 
+    //now get the vertices for just 2 GsfElectrons
     // EL-EL 
     computeVertices(elTracksP, elTracksN, "elel", theB, kvf);
+    //lastly get the vertices for just 2 packed candidate tracks (electrons or pions)
     // PC-PC
     computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf);
 
@@ -819,6 +900,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
         nt.nGen_ = (int)genParticleHandle_->size();
         
+        //TODO: add gen weight info 
         // Gen weight
         //nt.genwgt_ = genEvtInfoHandle_->weight();
 
