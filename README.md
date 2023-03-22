@@ -1,11 +1,13 @@
 Code for skimming MINIAOD files for use in CMS Run3 2022 BParking SM eta meson -> mu mu e e decay search.
 
 Authors: Bennett Greenberg, Andre Frankenthal
+
 Email: bennett.greenberg@cern.ch
 
 # Set up
 
-```cmsrel CMSSW_12_4_12
+```bash
+cmsrel CMSSW_12_4_12
 cd CMSSW_12_4_12/src
 cmsenv
 git cms-init
