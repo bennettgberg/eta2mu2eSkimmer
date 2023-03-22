@@ -6,10 +6,10 @@ data = True #False
 
 #test file name
 #BParking data
-testfname = "file:/eos/uscms/store/user/bgreenbe/MiniTest/Run3_2022_BParking_MINItest.root"
+testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/MiniTest/Run3_2022_BParking_MINItest.root"
 if not data:
     #signal sample
-    testfname = "file:/eos/uscms/store/user/bgreenbe/EtaTo2Mu2E/Run3_MiniAOD/EtaTo2Mu2E_10218787_MINIAOD.root"
+    testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_MiniAOD/EtaTo2Mu2E_10218787_MINIAOD.root"
 
 process = cms.Process("USER")
 
