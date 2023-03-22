@@ -16,9 +16,12 @@ void NtupleContainer::CreateTreeBranches() {
         recoVtxSigmaVxy_[type] = {};
         recoVtxReducedChi2_[type] = {};
         recoVtxDr_[type] = {};
-        recoVtxMuons_[type] = {};
-        recoVtxEles_[type] = {};
-        recoVtxTracks_[type] = {};
+        recoVtxMuonP_[type] = {};
+        recoVtxMuonN_[type] = {};
+        recoVtxEleP_[type] = {};
+        recoVtxEleN_[type] = {};
+        recoVtxTrackP_[type] = {};
+        recoVtxTrackN_[type] = {};
         mmeeTrxP = {};
         mmeeTrxN = {};
         gsfElsP = {};
@@ -51,19 +54,28 @@ void NtupleContainer::CreateTreeBranches() {
         ssdR << "Vertex_" << type << "_dR";
         recoT->Branch(ssdR.str().c_str(), &(recoVtxDr_[type]));
         if( type == "mmee" ) {
-            std::stringstream ssmuons;
-            ssmuons << "Vertex_" << type << "_muons";
-            recoT->Branch(ssmuons.str().c_str(), &recoVtxMuons_[type]);
+            std::stringstream ssmuonP;
+            ssmuonP << "Vertex_" << type << "_muonP";
+            recoT->Branch(ssmuonP.str().c_str(), &recoVtxMuonP_[type]);
+            std::stringstream ssmuonN;
+            ssmuonN << "Vertex_" << type << "_muonN";
+            recoT->Branch(ssmuonN.str().c_str(), &recoVtxMuonN_[type]);
         }
         if ( type == "elel" ) {
-            std::stringstream ssels;
-            ssels << "Vertex_" << type << "_eles";
-            recoT->Branch(ssels.str().c_str(), &recoVtxEles_[type]);
+            std::stringstream sselP;
+            sselP << "Vertex_" << type << "_eleP";
+            recoT->Branch(sselP.str().c_str(), &recoVtxEleP_[type]);
+            std::stringstream sselN;
+            sselN << "Vertex_" << type << "_eleN";
+            recoT->Branch(sselN.str().c_str(), &recoVtxEleN_[type]);
         }
         if ( type == "mmee" || type == "pcpc" ) {
-            std::stringstream sstrx;
-            sstrx << "Vertex_" << type << "_tracks";
-            recoT->Branch(sstrx.str().c_str(), &recoVtxTracks_[type]);
+            std::stringstream sstrkP;
+            sstrkP << "Vertex_" << type << "_trackP";
+            recoT->Branch(sstrkP.str().c_str(), &recoVtxTrackP_[type]);
+            std::stringstream sstrkN;
+            sstrkN << "Vertex_" << type << "_trackN";
+            recoT->Branch(sstrkN.str().c_str(), &recoVtxTrackN_[type]);
         }
     }
 
@@ -136,9 +148,12 @@ void NtupleContainer::ClearTreeBranches() {
         recoVtxSigmaVxy_[type].clear();
         recoVtxReducedChi2_[type].clear();
         recoVtxDr_[type].clear();
-        recoVtxMuons_[type].clear();
-        recoVtxEles_[type].clear();
-        recoVtxTracks_[type].clear();
+        recoVtxMuonP_[type].clear();
+        recoVtxMuonN_[type].clear();
+        recoVtxEleP_[type].clear();
+        recoVtxEleN_[type].clear();
+        recoVtxTrackP_[type].clear();
+        recoVtxTrackN_[type].clear();
     }
 
     recoElectronPt_.clear();

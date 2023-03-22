@@ -112,9 +112,12 @@ public:
     std::map<std::string, vector<float>> recoVtxDr_;
     //std::map<std::string, vector<float>> recoVtxPt_;
     //std::map<std::string, vector<float>> recoVtxM_;
-    std::map<std::string, vector<uint8_t>> recoVtxMuons_;
-    std::map<std::string, vector<uint8_t>> recoVtxEles_;
-    std::map<std::string, vector<uint8_t>> recoVtxTracks_;
+    std::map<std::string, vector<uint8_t>> recoVtxMuonP_;
+    std::map<std::string, vector<uint8_t>> recoVtxMuonN_;
+    std::map<std::string, vector<uint8_t>> recoVtxEleP_;
+    std::map<std::string, vector<uint8_t>> recoVtxEleN_;
+    std::map<std::string, vector<uint8_t>> recoVtxTrackP_;
+    std::map<std::string, vector<uint8_t>> recoVtxTrackN_;
     //which number in the FULL list of tracks (pos AND neg) is this (Pos OR Neg) track?
     vector<uint8_t> mmeeTrxP;
     vector<uint8_t> mmeeTrxN;

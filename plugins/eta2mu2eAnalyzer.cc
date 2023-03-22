@@ -428,8 +428,12 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
                 //there are positive AND negative tracks
                 // number pushed back is 4 bits for the first track # (in the good list), followed by 4 bits for the 2nd track #
                 //  so max we can handle is 16 good tracks...
-                uint8_t full_val = nt.mmeeTrxP[i] + (nt.mmeeTrxN[j] << 4);
-                nt.recoVtxTracks_[type].push_back(full_val);
+                //uint8_t full_val = nt.mmeeTrxP[i] + (nt.mmeeTrxN[j] << 4);
+                uint8_t trackP = nt.mmeeTrxP[i];
+                uint8_t trackN = nt.mmeeTrxN[j];
+                //nt.recoVtxTracks_[type].push_back(full_val);
+                nt.recoVtxTrackP_[type].push_back(trackP);
+                nt.recoVtxTrackN_[type].push_back(trackN);
                 myVertTracks.tracksP.push_back(part_i);
                 myVertTracks.tracksN.push_back(part_j);
             }
@@ -469,8 +473,11 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::GsfTrackRef> & coll_
                     dr = reco::deltaR(*part_i, *part_j);
                     nt.recoVtxDr_[type].push_back(dr);
                     //first 4 bits for first electron, last 4 for second electron
-                    uint8_t full_val = nt.gsfElsP[i] + (nt.gsfElsN[j] << 4);
-                    nt.recoVtxEles_[type].push_back(full_val);
+                    //uint8_t full_val = nt.gsfElsP[i] + (nt.gsfElsN[j] << 4);
+                    uint8_t eleP = nt.gsfElsP[i];
+                    uint8_t eleN = nt.gsfElsN[j];
+                    nt.recoVtxEleP_[type].push_back(eleP);
+                    nt.recoVtxEleN_[type].push_back(eleN);
                 }
             } 
 
@@ -600,17 +607,25 @@ VertexTracks eta2mu2eAnalyzer::computeVertices(vector<reco::Track> & coll_1, vec
                         //for this vertex, two different pointers to constituent particles
                         // first for the tracks (electrons or pions), then for muons
                         //  for each of the two, first 4 bits are for the positive particle, last 4 bits for the neg particle
-                        uint8_t tracks = igood[i] + (jgood[j] << 4); 
-                        uint8_t muons = kgood[k] + (lgood[l] << 4);
+                        //uint8_t tracks = igood[i] + (jgood[j] << 4); 
+                        uint8_t trackP = igood[i]; 
+                        uint8_t trackN = jgood[j]; 
+                        //uint8_t muons = kgood[k] + (lgood[l] << 4);
+                        uint8_t muonP = kgood[k];
+                        uint8_t muonN = lgood[l];
                         //only 4 bits to represent the particle numbers, so can't handle more than 16 particles!!
-                        if ( igood[i] > 15 || jgood[j] > 15 ) {
-                            throw std::runtime_error("Too many good tracks!");
-                        }
-                        if ( kgood[k] > 15 || lgood[l] > 15 ) {
-                            throw std::runtime_error("Too many good muons!");
-                        }
-                        nt.recoVtxTracks_[type].push_back(tracks);
-                        nt.recoVtxMuons_[type].push_back(muons);
+                        //if ( igood[i] > 15 || jgood[j] > 15 ) {
+                        //    throw std::runtime_error("Too many good tracks!");
+                        //}
+                        //if ( kgood[k] > 15 || lgood[l] > 15 ) {
+                        //    throw std::runtime_error("Too many good muons!");
+                        //}
+                        //nt.recoVtxTracks_[type].push_back(tracks);
+                        nt.recoVtxTrackP_[type].push_back(trackP);
+                        nt.recoVtxTrackN_[type].push_back(trackN);
+                        //nt.recoVtxMuons_[type].push_back(muons);
+                        nt.recoVtxMuonP_[type].push_back(muonP);
+                        nt.recoVtxMuonN_[type].push_back(muonN);
                     }
                 } //l loop
             } //k loop
