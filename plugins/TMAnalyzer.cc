@@ -17,6 +17,8 @@
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/Common/interface/ValueMap.h"
+#include "DataFormats/VertexReco/interface/VertexFwd.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/Math/interface/deltaPhi.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
@@ -61,14 +63,11 @@
 #include "NtupleContainer.hh"
 #include "utils.hh"
 
-#include "TVectorD.h"    // for fixing tracks
-#include "TMatrixDSym.h" // for fixing tracks
-
-class eta2mu2eAnalyzer : public edm::one::EDAnalyzer<edm::one::WatchRuns, edm::one::SharedResources> {
+class TMAnalyzer : public edm::one::EDAnalyzer<edm::one::WatchRuns, edm::one::SharedResources> {
 
 public:
-    explicit eta2mu2eAnalyzer(const edm::ParameterSet&);
-    ~eta2mu2eAnalyzer();
+    explicit TMAnalyzer(const edm::ParameterSet&);
+    ~TMAnalyzer();
 
     static void fillDescriptions(edm::ConfigurationDescriptions&);
     
@@ -80,6 +79,7 @@ private:
 
     void beginJob() override;
     void beginRun(edm::Run const&, edm::EventSetup const&) override;
+    float calcVertices(vector<reco::TransientTrack>, TransientVertex, std::string);
     void analyze(const edm::Event&, const edm::EventSetup&) override;
     void endRun(edm::Run const&, edm::EventSetup const&) override;
     void endJob() override;
@@ -128,7 +128,7 @@ private:
 };
 
 
-eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
+TMAnalyzer::TMAnalyzer(const edm::ParameterSet& ps):
     isData(ps.getParameter<bool>("isData")),
     triggerProcessName_(ps.getParameter<std::string>("triggerProcessName")),
     
@@ -149,9 +149,9 @@ eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
     m_random_generator = std::mt19937(37428479);
 }
 
-eta2mu2eAnalyzer::~eta2mu2eAnalyzer() = default;
+TMAnalyzer::~TMAnalyzer() = default;
 
-void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
+void TMAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
 {
     // Only specify tags with reasonable defaults -- check out cfg for others
 
@@ -171,10 +171,10 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     desc.add<edm::InputTag>("rho", edm::InputTag("fixedGridRhoFastjetAll"));
     desc.add<edm::InputTag>("packed_candidate", edm::InputTag("packedPFCandidates"));
     
-    descriptions.add("eta2mu2eAnalyzer", desc);
+    descriptions.add("TMAnalyzer", desc);
 }
 
-void eta2mu2eAnalyzer::beginJob()
+void TMAnalyzer::beginJob()
 {
     recoT = fs->make<TTree>("recoT", "recoT");
     nt.SetRecoTree(recoT);
@@ -186,21 +186,21 @@ void eta2mu2eAnalyzer::beginJob()
 }
 
 
-void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
+void TMAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 {
     using namespace edm;
 
     bool changed = true;
     if (hltConfig_.init(iRun, iSetup, triggerProcessName_, changed)) {
         if (changed) {
-            LogInfo("HLTConfig") << "eta2mu2eAnalyzer::beginRun: " << "hltConfig init for Run" << iRun.run();
+            LogInfo("HLTConfig") << "TMAnalyzer::beginRun: " << "hltConfig init for Run" << iRun.run();
             hltConfig_.dump("ProcessName");
             hltConfig_.dump("GlobalTag");
             hltConfig_.dump("TableName");
         }
     } 
     else {
-        LogError("HLTConfig") << "eta2mu2eAnalyzer::beginRun: config extraction failure with triggerProcessName -> " << triggerProcessName_;
+        LogError("HLTConfig") << "TMAnalyzer::beginRun: config extraction failure with triggerProcessName -> " << triggerProcessName_;
         return;
     }
 
@@ -209,30 +209,7 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
     triggerPathsWithVersionNum_.clear();
     trigExist_.clear();
 
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET120_PFMHT120_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET130_PFMHT130_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET140_PFMHT140_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETNoMu130_PFMHTNoMu130_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETNoMu140_PFMHTNoMu140_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET120_PFMHT120_IDTight_PFHT60"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET200_HBHECleaned"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET200_HBHE_BeamHaloCleaned"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETTypeOne200_HBHE_BeamHaloCleaned"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFHT500_PFMET100_PFMHT100_IDTight"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFHT700_PFMET85_PFMHT85_IDTight"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFHT800_PFMET75_PFMHT75_IDTight"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET170_HBHECleaned"); // 2016
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET300"); // 2016
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_MET200"); // 2016
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFHT300_PFMET110"); // 2016
     triggerPathsWithoutVersionNum_.emplace_back("HLT_IsoMu27"); // For MET trigger eff. studies in data
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_Mu3er1p5_PFJet100er2p5_PFMETNoMu100_PFMHTNoMu100_IDTight"); // Alternative triggers
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_DoubleMu3_DCA_PFMET50_PFMHT60"); // Alternative triggers
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_DoubleMu3_DZ_PFMET50_PFMHT60");  // Alternative triggers
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_DoubleMu3_DZ_PFMET70_PFMHT70");  // Alternative triggers
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_DoubleMu3_DZ_PFMET90_PFMHT90");  // Alternative triggers
     triggerPathsWithoutVersionNum_.emplace_back("HLT_L2Mu10_NoVertex_NoBPTX");    // For dSA eff. studies in data
     triggerPathsWithoutVersionNum_.emplace_back("HLT_L2Mu10_NoVertex_NoBPTX3BX"); // For dSA eff. studies in data
     
@@ -256,10 +233,10 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
 }
 
 
-bool eta2mu2eAnalyzer::getCollections(const edm::Event& iEvent) {
+bool TMAnalyzer::getCollections(const edm::Event& iEvent) {
     using namespace edm;
 
-    char error_msg[] = "eta2mu2eAnalyzer::GetCollections: Error in getting product %s from Event!";
+    char error_msg[] = "TMAnalyzer::GetCollections: Error in getting product %s from Event!";
 
     bool ret = true;
     auto getHandle = [&]<typename T>(const EDGetTokenT<T> &token, Handle<T> &handle, std::string name) {
@@ -287,7 +264,7 @@ bool eta2mu2eAnalyzer::getCollections(const edm::Event& iEvent) {
     return ret;
 }
 
-void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
     using std::cout, std::vector, std::endl;
 
@@ -606,9 +583,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     return;
 }
 
-void eta2mu2eAnalyzer::endRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
+void TMAnalyzer::endRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
 
-void eta2mu2eAnalyzer::endJob() {}
+void TMAnalyzer::endJob() {}
 
 // define this as a plug-in
-DEFINE_FWK_MODULE(eta2mu2eAnalyzer);
+DEFINE_FWK_MODULE(TMAnalyzer);
