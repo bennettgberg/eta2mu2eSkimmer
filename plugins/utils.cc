@@ -38,6 +38,57 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     
 } 
 
+//compute vertices for two muons vectors coll_1 and coll_2, and add them to the ntuple.
+// (overloaded below)
+// Return type: struct VertexTracks (defined above)
+VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+    //initialize the struct that will be returned
+    VertexTracks myVertTracks;
+    //initialize the tracks list in the struct that will be returned.
+    myVertTracks.tracksP = {};
+    myVertTracks.tracksN = {};
+    for (size_t i = 0; i < coll_1.size(); i++) {
+        for (size_t j = 0; j < coll_2.size(); j++) {
+            //if ( j > 15 || i > 15 ) continue;
+            reco::Track part_i, part_j;
+            part_i = *(coll_1[i].bestTrack());
+            part_j = *(coll_2[j].bestTrack());
+
+            //first build the transient vertex and transient tracks.
+            float dr = -9999;
+            TransientVertex tv;
+
+            vector<reco::TransientTrack> transient_tracks{};
+            transient_tracks.push_back(theB->build(fix_track(&part_i)));
+            transient_tracks.push_back(theB->build(fix_track(&part_j)));
+            tv = kvf.vertex(transient_tracks);
+            float probVtx = calcVertices(transient_tracks, tv, type, nt);
+            //only fill the ntuple if the (chi2) prob is > .1
+            // the rest of the ntuple info is filled in the calcVertices function (above)
+            //if ( probVtx > 0 ) {
+            if ( probVtx > 0.1 ) {
+                dr = reco::deltaR(part_i, part_j);
+                nt.recoVtxDr_[type].push_back(dr);
+                //there are positive AND negative tracks
+                // number pushed back is 4 bits for the first track # (in the good list), followed by 4 bits for the 2nd track #
+                //  so max we can handle is 16 good tracks...
+                //uint8_t full_val = nt.mmeeTrxP[i] + (nt.mmeeTrxN[j] << 4);
+                //uint8_t trackP = nt.mmeeTrxP[i];
+                //uint8_t trackN = nt.mmeeTrxN[j];
+                //nt.recoVtxTracks_[type].push_back(full_val);
+                //nt.recoVtxTrackP_[type].push_back(trackP);
+                //nt.recoVtxTrackN_[type].push_back(trackN);
+                //nt.recoVtxMuonP_[type].push_back(muonP);
+                //nt.recoVtxMuonN_[type].push_back(muonN);
+                myVertTracks.muonsP.push_back(coll_1[i]);
+                myVertTracks.muonsN.push_back(coll_2[j]);
+            }
+            
+        } // j loop
+    } // i loop
+    return myVertTracks;
+} // computeVertices
+
 //compute vertices for two track vectors coll_1 and coll_2, and add them to the ntuple.
 // (overloaded below)
 // Return type: struct VertexTracks (defined above)

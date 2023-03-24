@@ -39,6 +39,9 @@ struct VertexTracks {
     vector<pat::Muon> muonsN;
 };
 
+// compute vertices for two muon vectors coll_1 and coll_2, and add them to the ntuple.
+VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt);
+
 // compute vertices for two track vectors coll_1 and coll_2, and add them to the ntuple.
 VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt);
 

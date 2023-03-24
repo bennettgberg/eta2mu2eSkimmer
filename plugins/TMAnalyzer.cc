@@ -179,8 +179,8 @@ void TMAnalyzer::beginJob()
     recoT = fs->make<TTree>("recoT", "recoT");
     nt.SetRecoTree(recoT);
     if (!isData) {
-        genT = fs->make<TTree>("genT", "genT");
-        nt.SetGenTree(genT);
+        //genT = fs->make<TTree>("genT", "genT");
+        nt.SetGenTree(recoT);
     }
     nt.CreateTreeBranches();
 }
@@ -434,48 +434,50 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     //now get the PackedCandidate tracks
     //nt.recoNTrk_ = trkHandle_->size();
     nt.recoNGoodTrk_ = 0;
-    for (pat::PackedCandidateCollection::const_iterator iTra1 = trkHandle_->begin(); iTra1 != trkHandle_->end(); iTra1++) {
-        //try setting track mass to electron mass to see what happens
-        //iTra1->setMass(ele_mass); //doesn't work
-        if (!(iTra1->hasTrackDetails())) continue;
+    // andre: don't need tracks for true muonium
+    //
+    //for (pat::PackedCandidateCollection::const_iterator iTra1 = trkHandle_->begin(); iTra1 != trkHandle_->end(); iTra1++) {
+    //    //try setting track mass to electron mass to see what happens
+    //    //iTra1->setMass(ele_mass); //doesn't work
+    //    if (!(iTra1->hasTrackDetails())) continue;
 
-        //electrons only
-        //float mass = iTra1->mass();
-        //if( fabs(mass - ele_mass) > (ele_mass/10.0) ) continue;
-        if( iTra1->charge() == 0 ) continue;
-        //std::cout << "mass: " << mass << std::endl;
+    //    //electrons only
+    //    //float mass = iTra1->mass();
+    //    //if( fabs(mass - ele_mass) > (ele_mass/10.0) ) continue;
+    //    if( iTra1->charge() == 0 ) continue;
+    //    //std::cout << "mass: " << mass << std::endl;
 
-        auto iTrack1 = iTra1->bestTrack();
-        if (iTrack1 == nullptr) continue;
-        //
-        if (iTrack1->pt()<0.5) continue;
-        //if (iTrack1->charge() < 0.5) continue; // positive
-        if (!(iTrack1->quality(reco::TrackBase::highPurity))) continue;
-        //
-        if( fabs(iTrack1->eta()) > 2.9 ) continue;
-        //
-        //TLorentzVector p4el1;
-        //p4el1.SetPtEtaPhiM(iTrack1->pt(),iTrack1->eta(),iTrack1->phi(), ele_mass);
-        //
-        reco::TransientTrack elec1TT = theB->build( fix_track(iTra1->bestTrack()) );
-        //reco::TransientTrack elec1TT = theB->build( fix_track(iTra1->bestTrack()) );
-        if (!elec1TT.isValid()) continue;
+    //    auto iTrack1 = iTra1->bestTrack();
+    //    if (iTrack1 == nullptr) continue;
+    //    //
+    //    if (iTrack1->pt()<0.5) continue;
+    //    //if (iTrack1->charge() < 0.5) continue; // positive
+    //    if (!(iTrack1->quality(reco::TrackBase::highPurity))) continue;
+    //    //
+    //    if( fabs(iTrack1->eta()) > 2.9 ) continue;
+    //    //
+    //    //TLorentzVector p4el1;
+    //    //p4el1.SetPtEtaPhiM(iTrack1->pt(),iTrack1->eta(),iTrack1->phi(), ele_mass);
+    //    //
+    //    reco::TransientTrack elec1TT = theB->build( fix_track(iTra1->bestTrack()) );
+    //    //reco::TransientTrack elec1TT = theB->build( fix_track(iTra1->bestTrack()) );
+    //    if (!elec1TT.isValid()) continue;
  
-        if ( iTrack1->charge() > 0.5) {
-            allTracksP.push_back(*iTrack1);
-        }
-        else if ( iTrack1->charge() < -0.5 ) {
-            allTracksN.push_back(*iTrack1); 
-        }
-        else {
-            continue;
-        }
-        //nt.recoNGoodTrk_++;
-        //nt.recoTrkPt_.push_back(iTrack1->pt());
-        //nt.recoTrkEta_.push_back(iTrack1->eta());
-        //nt.recoTrkPhi_.push_back(iTrack1->phi());
-        //nt.recoTrkCharge_.push_back(iTrack1->charge());
-    }
+    //    if ( iTrack1->charge() > 0.5) {
+    //        allTracksP.push_back(*iTrack1);
+    //    }
+    //    else if ( iTrack1->charge() < -0.5 ) {
+    //        allTracksN.push_back(*iTrack1); 
+    //    }
+    //    else {
+    //        continue;
+    //    }
+    //    //nt.recoNGoodTrk_++;
+    //    //nt.recoTrkPt_.push_back(iTrack1->pt());
+    //    //nt.recoTrkEta_.push_back(iTrack1->eta());
+    //    //nt.recoTrkPhi_.push_back(iTrack1->phi());
+    //    //nt.recoTrkCharge_.push_back(iTrack1->charge());
+    //}
 
 // TODO: implement triggers
 //
@@ -495,12 +497,12 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     //first get the 4-particle vertices, then get rid of all the particles/tracks that aren't involved in those.
     // EL-EL-MU-MU
     //VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muTracksP, muTracksN, "mmee", theB, kvf);
-    VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muonsP, muonsN, "mmee", theB, kvf, nt);
+    //VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muonsP, muonsN, "mmee", theB, kvf, nt);
     // if the mmee vertex is no good, then no need to save the event!
-    allTracksP = primVertTrx.tracksP;
-    allTracksN = primVertTrx.tracksN;
-    muonsN = primVertTrx.muonsN;
-    muonsP = primVertTrx.muonsP;
+    //allTracksP = primVertTrx.tracksP;
+    //allTracksN = primVertTrx.tracksN;
+    //muonsN = primVertTrx.muonsN;
+    //muonsP = primVertTrx.muonsP;
     for(auto muonRef : muonsP) {
         nt.recoMuonPt_.push_back(muonRef.pt());
         nt.recoMuonEta_.push_back(muonRef.eta());
@@ -516,27 +518,27 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         nt.recoNGoodMuon_++;
     }
   
-    for(auto iTrack1 : allTracksP) {
-        nt.recoNGoodTrk_++;
-        nt.recoTrkPt_.push_back(iTrack1.pt());
-        nt.recoTrkEta_.push_back(iTrack1.eta());
-        nt.recoTrkPhi_.push_back(iTrack1.phi());
-        nt.recoTrkCharge_.push_back(iTrack1.charge());
-    }
-    for(auto iTrack1 : allTracksN) {
-        nt.recoNGoodTrk_++;
-        nt.recoTrkPt_.push_back(iTrack1.pt());
-        nt.recoTrkEta_.push_back(iTrack1.eta());
-        nt.recoTrkPhi_.push_back(iTrack1.phi());
-        nt.recoTrkCharge_.push_back(iTrack1.charge());
-    }
+    //for(auto iTrack1 : allTracksP) {
+    //    nt.recoNGoodTrk_++;
+    //    nt.recoTrkPt_.push_back(iTrack1.pt());
+    //    nt.recoTrkEta_.push_back(iTrack1.eta());
+    //    nt.recoTrkPhi_.push_back(iTrack1.phi());
+    //    nt.recoTrkCharge_.push_back(iTrack1.charge());
+    //}
+    //for(auto iTrack1 : allTracksN) {
+    //    nt.recoNGoodTrk_++;
+    //    nt.recoTrkPt_.push_back(iTrack1.pt());
+    //    nt.recoTrkEta_.push_back(iTrack1.eta());
+    //    nt.recoTrkPhi_.push_back(iTrack1.phi());
+    //    nt.recoTrkCharge_.push_back(iTrack1.charge());
+    //}
 
-    //now get the vertices for just 2 GsfElectrons
-    // EL-EL 
-    computeVertices(elTracksP, elTracksN, "elel", theB, kvf, nt);
+    //now get the vertices for just 2 muons
+    // MU-MU 
+    computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt);
     //lastly get the vertices for just 2 packed candidate tracks (electrons or pions)
     // PC-PC
-    computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
+    //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
     /****** GEN INFO *******/
 
@@ -575,7 +577,7 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
             nt.genMass_.push_back(genParticle->mass());
         }
 
-        genT->Fill();
+        //genT->Fill();
     }
 
     recoT->Fill();

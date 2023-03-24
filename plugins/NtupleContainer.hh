@@ -15,7 +15,7 @@ public:
     NtupleContainer();
     //types of vertices
     // elec-elec, packedCand-packedCand, mu-mu-e-e (where e's are packedCandidates)
-    vector<std::string> vtxTypes = { "elel", "pcpc", "mmee" };
+    vector<std::string> vtxTypes = { "elel", "pcpc", "mmee", "mumu"};
     //list of photonID names to save
     vector<std::string> photonIDs = {"mvaPhoID-RunIIFall17-v2-wp80", "mvaPhoID-RunIIFall17-v2-wp90" };
     //list of electron ID names to save

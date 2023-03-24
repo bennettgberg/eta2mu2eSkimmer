@@ -69,6 +69,14 @@ void NtupleContainer::CreateTreeBranches() {
             sselN << "Vertex_" << type << "_eleN";
             recoT->Branch(sselN.str().c_str(), &recoVtxEleN_[type]);
         }
+        if ( type == "mumu" ) {
+            std::stringstream ssmuP;
+            ssmuP << "Vertex_" << type << "_muP";
+            recoT->Branch(ssmuP.str().c_str(), &recoVtxMuonP_[type]);
+            std::stringstream ssmuN;
+            ssmuN << "Vertex_" << type << "_muN";
+            recoT->Branch(ssmuN.str().c_str(), &recoVtxMuonN_[type]);
+        }
         if ( type == "mmee" || type == "pcpc" ) {
             std::stringstream sstrkP;
             sstrkP << "Vertex_" << type << "_trackP";
