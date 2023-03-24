@@ -1,6 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
 
+# setup 'analysis' options
+options = VarParsing.VarParsing('analysis')
+
+options.parseArguments()
+
 year = 2022
 data = True #False
 
@@ -58,7 +63,8 @@ process.options = cms.untracked.PSet(
 process.maxEvents = cms.untracked.PSet(
     #input = cms.untracked.int32(1000)
     #input = cms.untracked.int32(100)
-    input = cms.untracked.int32(-1)
+    #input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(options.maxEvents)
     )
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(testfname),
