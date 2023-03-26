@@ -580,7 +580,28 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         //genT->Fill();
     }
 
-    recoT->Fill();
+    // only add event if at least one combination of mumugamma has a mass close to the eta
+    bool saveEvent = false;
+    for (auto muonRefP : muonsP) {
+      if (saveEvent) break;
+      for (auto muonRefN : muonsN) {
+        if (saveEvent) break;
+        for (size_t i = 0; i < recoPhotonHandle_->size(); i++) {
+          pat::PhotonRef photonRef(recoPhotonHandle_, i);
+          TLorentzVector p_mu_plus(muonRefP.pt(), muonRefP.eta(), muonRefP.phi(), mu_mass);
+          TLorentzVector p_mu_minus(muonRefN.pt(), muonRefN.eta(), muonRefN.phi(), mu_mass);
+          TLorentzVector p_photon(photonRef->pt(), photonRef->eta(), photonRef->phi(), 0.);
+          TLorentzVector sum = p_mu_plus + p_mu_minus + p_photon;
+          if (sum.M() > 0.3 && sum.M() < 0.7) {
+            saveEvent = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (saveEvent)
+      recoT->Fill();
 
     return;
 }
