@@ -171,6 +171,14 @@ VertexTracks computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::Gs
                     //uint8_t full_val = nt.gsfElsP[i] + (nt.gsfElsN[j] << 4);
                     uint8_t eleP = nt.gsfElsP[i];
                     uint8_t eleN = nt.gsfElsN[j];
+                    //std::cout << "eleP: " << (int)eleP << "; eleN: " << (int)eleN << std::endl;
+                    //std::cout << "full vector gsfElsP: ";
+                    //for(uint8_t elp : nt.gsfElsP) std::cout << (int)elp << ", ";
+                    //std::cout << std::endl;
+                    //std::cout << "full vector gsfElsN: ";
+                    //for(uint8_t eln : nt.gsfElsN) std::cout << (int)eln << ", ";
+                    //std::cout << std::endl;
+                    //std::cout << "nGoodElectron: " << (int)nt.recoNGoodElectron_ << std::endl;
                     nt.recoVtxEleP_[type].push_back(eleP);
                     nt.recoVtxEleN_[type].push_back(eleN);
                 }
@@ -283,21 +291,25 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                         if( igood[i] < 0 ) {
                             myVertTracks.tracksP.push_back(part_i);
                             nt.mmeeTrxP.push_back(ntracks);
-                            igood[i] = ntracks++;
+                            igood[i] = (int)ntracks;
+                            ntracks++;
                         }
                         //do the same for negative tracks, etc.
                         if( jgood[j] < 0 ) {
                             myVertTracks.tracksN.push_back(part_j);
                             nt.mmeeTrxN.push_back(ntracks);
-                            jgood[j] = ntracks++;
+                            jgood[j] = (int)ntracks;
+                            ntracks++;
                         }
                         if ( kgood[k] < 0 ) {
                             myVertTracks.muonsP.push_back(coll_3[k]);
-                            kgood[k] = nmuons++;
+                            kgood[k] = (int)nmuons;
+                            nmuons++;
                         }
                         if( lgood[l] < 0 ) {
                             myVertTracks.muonsN.push_back(coll_4[l]);
-                            lgood[l] = nmuons++;
+                            lgood[l] = (int)nmuons;
+                            nmuons++;
                         } 
                         //for this vertex, two different pointers to constituent particles
                         // first for the tracks (electrons or pions), then for muons

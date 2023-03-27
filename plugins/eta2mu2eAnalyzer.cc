@@ -392,7 +392,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             elTracksN.push_back(eltrack);
             nt.gsfElsN.push_back(nt.recoNGoodElectron_);
         }
+        //cout << "about to increment; just pushed back: " << (int)nt.recoNGoodElectron_ << "/" << (int)(recoElectronHandle_->size()) << " good electrons." << endl;
         nt.recoNGoodElectron_++;
+        //cout<<"just incremented NGoodElectron: " << (int)nt.recoNGoodElectron_ << "; i: " << (int)i << "; handle size: " << (int)(recoElectronHandle_->size()) << endl;
     }
 
     // Also add all photons to ntuple, regardless of ID

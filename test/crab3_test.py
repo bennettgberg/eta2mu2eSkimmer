@@ -8,7 +8,7 @@ setnum = 0
 #C to G
 runlet = 'C'
 
-config.General.requestName = 'test2_%d%s'%(setnum, runlet)
+config.General.requestName = 'test3_%d%s'%(setnum, runlet)
 config.General.workArea = 'crab_MiniAnalyzer'
 config.General.transferOutputs = True
 config.General.instance = 'prod'

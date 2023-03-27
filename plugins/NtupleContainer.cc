@@ -22,11 +22,11 @@ void NtupleContainer::CreateTreeBranches() {
         recoVtxEleN_[type] = {};
         recoVtxTrackP_[type] = {};
         recoVtxTrackN_[type] = {};
-        mmeeTrxP = {};
-        mmeeTrxN = {};
-        gsfElsP = {};
-        gsfElsN = {};
     }
+    mmeeTrxP = {};
+    mmeeTrxN = {};
+    gsfElsP = {};
+    gsfElsN = {};
 
     recoT->Branch("evt", &eventNum_);
     recoT->Branch("lumi_sec", &lumiSec_);
@@ -163,6 +163,10 @@ void NtupleContainer::ClearTreeBranches() {
         recoVtxTrackP_[type].clear();
         recoVtxTrackN_[type].clear();
     }
+    mmeeTrxP.clear();
+    mmeeTrxN.clear();
+    gsfElsP .clear();
+    gsfElsN .clear();
 
     recoElectronPt_.clear();
     recoElectronEta_.clear();
