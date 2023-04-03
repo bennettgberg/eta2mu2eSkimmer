@@ -17,6 +17,7 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'run_TM_ntuplizer_cfg.py'
 config.JobType.maxMemoryMB = 5000
 ##allow to run for up to 2 full days (maximum allowed, I think)
+#
 #config.JobType.maxJobRuntimeMin = 2880
 config.JobType.numCores = 1 
 
