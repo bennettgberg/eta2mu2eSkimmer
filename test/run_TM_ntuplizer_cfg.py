@@ -16,6 +16,10 @@ if not data:
     #signal sample
     testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_MiniAOD/EtaTo2Mu2E_10218787_MINIAOD.root"
 
+print("options.inputFiles=" + str(options.inputFiles)) 
+if options.inputFiles == [] : 
+    options.inputFiles = [testfname]  
+
 process = cms.Process("USER")
 
 outputFile = 'test_TM.root'
@@ -64,6 +68,7 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(options.maxEvents)
 )
 process.source = cms.Source("PoolSource",
+    #fileNames = cms.untracked.vstring(options.inputFiles),
     fileNames = cms.untracked.vstring(testfname),
     skipBadFiles = cms.untracked.bool(True)
     )
