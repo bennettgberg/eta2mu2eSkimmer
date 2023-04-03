@@ -2,7 +2,6 @@
 #define NTUPLECONTAINER_HH
 
 #include <vector>
-#include <map>
 #include <string>
 #include <sstream>
 using std::vector;
@@ -13,9 +12,6 @@ class NtupleContainer {
 
 public:
     NtupleContainer();
-    //types of vertices
-    // elec-elec, packedCand-packedCand, mu-mu-e-e (where e's are packedCandidates)
-    vector<std::string> vtxTypes = { "elel", "pcpc", "mmee", "mumu"};
     //list of photonID names to save
     vector<std::string> photonIDs = {"mvaPhoID-RunIIFall17-v2-wp80", "mvaPhoID-RunIIFall17-v2-wp90" };
     //list of electron ID names to save
@@ -101,28 +97,70 @@ public:
     vector<float> gsfTrkPhi_;
     vector<int8_t> gsfTrkCharge_;
 
-    // Vertex branches
-    float pvx_;
-    float pvy_;
-    float pvz_;
-    std::map<std::string, vector<float>> recoVtxVxy_;
-    std::map<std::string, vector<float>> recoVtxVz_;
-    std::map<std::string, vector<float>> recoVtxSigmaVxy_;
-    std::map<std::string, vector<float>> recoVtxReducedChi2_;
-    std::map<std::string, vector<float>> recoVtxDr_;
-    //std::map<std::string, vector<float>> recoVtxPt_;
-    //std::map<std::string, vector<float>> recoVtxM_;
-    std::map<std::string, vector<uint8_t>> recoVtxMuonP_;
-    std::map<std::string, vector<uint8_t>> recoVtxMuonN_;
-    std::map<std::string, vector<uint8_t>> recoVtxEleP_;
-    std::map<std::string, vector<uint8_t>> recoVtxEleN_;
-    std::map<std::string, vector<uint8_t>> recoVtxTrackP_;
-    std::map<std::string, vector<uint8_t>> recoVtxTrackN_;
-    //which number in the FULL list of tracks (pos AND neg) is this (Pos OR Neg) track?
+    //mapping from the pos-only and neg-only list to the full list
     vector<uint8_t> mmeeTrxP;
     vector<uint8_t> mmeeTrxN;
     vector<uint8_t> gsfElsP;
     vector<uint8_t> gsfElsN;
+
+    // Vertex branches
+    float pvx_;
+    float pvy_;
+    float pvz_;
+
+    vector<float> mmeeVtxVxy_;
+    vector<float> mmeeVtxVz_;
+    vector<float> mmeeVtxSigmaVxy_;
+    vector<float> mmeeVtxReducedChi2_;
+    vector<float> mmeeVtxDr_;
+    vector<float> mmeeVtxPt_;
+    vector<float> mmeeVtxM_;
+    vector<float> mmeeVtxM2_;
+    vector<float> mmeeVtxPt2_;
+    vector<uint8_t> mmeeVtxMuonP_;
+    vector<uint8_t> mmeeVtxMuonN_;
+    vector<uint8_t> mmeeVtxEleP_;
+    vector<uint8_t> mmeeVtxEleN_;
+    vector<uint8_t> mmeeVtxTrackP_;
+    vector<uint8_t> mmeeVtxTrackN_;
+
+    vector<float> elelVtxVxy_;
+    vector<float> elelVtxVz_;
+    vector<float> elelVtxSigmaVxy_;
+    vector<float> elelVtxReducedChi2_;
+    vector<float> elelVtxDr_;
+    vector<float> elelVtxPt_;
+    vector<float> elelVtxM_;
+    vector<float> elelVtxM2_;
+    vector<float> elelVtxPt2_;
+    vector<uint8_t> elelVtxEleP_;
+    vector<uint8_t> elelVtxEleN_;
+    vector<uint8_t> elelVtxTrackP_;
+    vector<uint8_t> elelVtxTrackN_;
+
+    vector<float> pcpcVtxVxy_;
+    vector<float> pcpcVtxVz_;
+    vector<float> pcpcVtxSigmaVxy_;
+    vector<float> pcpcVtxReducedChi2_;
+    vector<float> pcpcVtxDr_;
+    vector<float> pcpcVtxPt_;
+    vector<float> pcpcVtxM_;
+    vector<float> pcpcVtxM2_;
+    vector<float> pcpcVtxPt2_;
+    vector<uint8_t> pcpcVtxTrackP_;
+    vector<uint8_t> pcpcVtxTrackN_;
+
+    vector<float> mumuVtxVxy_;
+    vector<float> mumuVtxVz_;
+    vector<float> mumuVtxSigmaVxy_;
+    vector<float> mumuVtxReducedChi2_;
+    vector<float> mumuVtxDr_;
+    vector<float> mumuVtxPt_;
+    vector<float> mumuVtxM_;
+    vector<float> mumuVtxM2_;
+    vector<float> mumuVtxPt2_;
+    vector<uint8_t> mumuVtxMuonP_;
+    vector<uint8_t> mumuVtxMuonN_;
 
 private:
     // Reco and gen TTrees

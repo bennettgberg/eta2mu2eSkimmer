@@ -1,9 +1,9 @@
 <library name="eta2mu2eAnalyzer" file="*.cc">
-    <flags EDM_PLUGIN="1"/>
+    <flags EDM_PLUGIN="1" CXXFLAGS="-g"/>
 </library>
 
 <!--<use name="iDMAnalysis/skimmer"/>-->
-<use name="eta2mu2e/eta2mu2eSkimmer"/>
+<!--<use name="eta2mu2e/eta2mu2eSkimmer"/>-->
 
 <use name="boost"/>
 

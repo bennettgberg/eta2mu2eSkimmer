@@ -517,54 +517,45 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 //    }
 //    
 
+    //std::cout << "computing vertices 0" << std::endl;
     //first get the 4-particle vertices, then get rid of all the particles/tracks that aren't involved in those.
     // EL-EL-MU-MU
     //VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muTracksP, muTracksN, "mmee", theB, kvf);
     VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muonsP, muonsN, "mmee", theB, kvf, nt);
-    // if the mmee vertex is no good, then no need to save the event!
+    //debugging
+    ////std::cout << "AFTER computeVertices recoVtxTrackP_: ";
+    ////for(uint8_t rvtp : nt.recoVtxTrackP_) cout << (int)rvtp << ", " ;
+    ////std::cout << "AFTER computeVertices recoVtxTrackN_: ";
+    ////for(uint8_t rvtn : nt.recoVtxTrackN_) cout << (int)rvtn << ", " ;
+    ////std::cout << std::endl;
+    ////std::cout << std::endl << "AFTER computeVertices recoVtxDr_: ";
+    ////for(float rvdr : nt.recoVtxDr_) cout << rvdr << ", ";
+    ////std::cout << std::endl;
+    ////std::cout << "AFTER computeVertices recoVtxMuonP_: ";
+    ////for(uint8_t rvtn : nt.recoVtxMuonP_) cout << (int)rvtn << ", " ;
+    ////std::cout << std::endl;
+    ////std::cout << "AFTER computeVertices recoVtxMuonN_: ";
+    ////for(uint8_t rvtn : nt.recoVtxMuonN_) cout << (int)rvtn << ", " ;
+    ////std::cout << std::endl;
+    //// if the mmee vertex is no good, then no need to save the event!
+    ////std::cout << "reassigning allTracksP and N" << std::endl;
     allTracksP = primVertTrx.tracksP;
     allTracksN = primVertTrx.tracksN;
     muonsN = primVertTrx.muonsN;
     muonsP = primVertTrx.muonsP;
-    for(auto muonRef : muonsP) {
-        nt.recoMuonPt_.push_back(muonRef.pt());
-        nt.recoMuonEta_.push_back(muonRef.eta());
-        nt.recoMuonPhi_.push_back(muonRef.phi());
-        nt.recoMuonCharge_.push_back(muonRef.charge());
-        nt.recoNGoodMuon_++;
-    }
-    for(auto muonRef : muonsN) {
-        nt.recoMuonPt_.push_back(muonRef.pt());
-        nt.recoMuonEta_.push_back(muonRef.eta());
-        nt.recoMuonPhi_.push_back(muonRef.phi());
-        nt.recoMuonCharge_.push_back(muonRef.charge());
-        nt.recoNGoodMuon_++;
-    }
-  
-    for(auto iTrack1 : allTracksP) {
-        nt.recoNGoodTrk_++;
-        nt.recoTrkPt_.push_back(iTrack1.pt());
-        nt.recoTrkEta_.push_back(iTrack1.eta());
-        nt.recoTrkPhi_.push_back(iTrack1.phi());
-        nt.recoTrkCharge_.push_back(iTrack1.charge());
-    }
-    for(auto iTrack1 : allTracksN) {
-        nt.recoNGoodTrk_++;
-        nt.recoTrkPt_.push_back(iTrack1.pt());
-        nt.recoTrkEta_.push_back(iTrack1.eta());
-        nt.recoTrkPhi_.push_back(iTrack1.phi());
-        nt.recoTrkCharge_.push_back(iTrack1.charge());
-    }
 
+    //std::cout << "computing vertices 1" << std::endl;
     //now get the vertices for just 2 GsfElectrons
     // EL-EL 
     computeVertices(elTracksP, elTracksN, "elel", theB, kvf, nt);
+    //std::cout << "computing vertices 2" << std::endl;
     //lastly get the vertices for just 2 packed candidate tracks (electrons or pions)
     // PC-PC
     computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
     /****** GEN INFO *******/
 
+    //std::cout << "done computing vertices." << std::endl;
     if (!isData) {
 
         nt.nGen_ = (int)genParticleHandle_->size();

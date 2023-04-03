@@ -1,4 +1,5 @@
 #include "NtupleContainer.hh"
+#include <iostream>
 
 NtupleContainer::NtupleContainer() : isData_(true) {}
 
@@ -9,20 +10,6 @@ void NtupleContainer::SetGenTree(TTree *tree) { genT = tree; isData_ = false; }
 
 void NtupleContainer::CreateTreeBranches() {
 
-    //initialize vertex maps
-    for ( std::string type : vtxTypes ) {
-        recoVtxVxy_[type] = {};
-        recoVtxVz_[type] = {};
-        recoVtxSigmaVxy_[type] = {};
-        recoVtxReducedChi2_[type] = {};
-        recoVtxDr_[type] = {};
-        recoVtxMuonP_[type] = {};
-        recoVtxMuonN_[type] = {};
-        recoVtxEleP_[type] = {};
-        recoVtxEleN_[type] = {};
-        recoVtxTrackP_[type] = {};
-        recoVtxTrackN_[type] = {};
-    }
     mmeeTrxP = {};
     mmeeTrxN = {};
     gsfElsP = {};
@@ -37,56 +24,53 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("PV_vz", &pvz_);
 
     //vertices
-    for( std::string type : vtxTypes ) {
-        std::stringstream ssvxy;
-        ssvxy << "Vertex_" << type << "_vxy";
-        recoT->Branch(ssvxy.str().c_str(), &(recoVtxVxy_[type]));
-        std::stringstream ssvz;
-        ssvz << "Vertex_" << type << "_vz";
-        recoT->Branch(ssvz.str().c_str(), &(recoVtxVz_[type]));
-        std::stringstream sssigmavxy;
-        sssigmavxy << "Vertex_" << type << "_sigmavxy";
-        recoT->Branch(sssigmavxy.str().c_str(), &(recoVtxSigmaVxy_[type]));
-        std::stringstream ssrchi2;
-        ssrchi2 << "Vertex_" << type << "_reduced_chi2";
-        recoT->Branch(ssrchi2.str().c_str(), &(recoVtxReducedChi2_[type]));
-        std::stringstream ssdR;
-        ssdR << "Vertex_" << type << "_dR";
-        recoT->Branch(ssdR.str().c_str(), &(recoVtxDr_[type]));
-        if( type == "mmee" ) {
-            std::stringstream ssmuonP;
-            ssmuonP << "Vertex_" << type << "_muonP";
-            recoT->Branch(ssmuonP.str().c_str(), &recoVtxMuonP_[type]);
-            std::stringstream ssmuonN;
-            ssmuonN << "Vertex_" << type << "_muonN";
-            recoT->Branch(ssmuonN.str().c_str(), &recoVtxMuonN_[type]);
-        }
-        if ( type == "elel" ) {
-            std::stringstream sselP;
-            sselP << "Vertex_" << type << "_eleP";
-            recoT->Branch(sselP.str().c_str(), &recoVtxEleP_[type]);
-            std::stringstream sselN;
-            sselN << "Vertex_" << type << "_eleN";
-            recoT->Branch(sselN.str().c_str(), &recoVtxEleN_[type]);
-        }
-        if ( type == "mumu" ) {
-            std::stringstream ssmuP;
-            ssmuP << "Vertex_" << type << "_muP";
-            recoT->Branch(ssmuP.str().c_str(), &recoVtxMuonP_[type]);
-            std::stringstream ssmuN;
-            ssmuN << "Vertex_" << type << "_muN";
-            recoT->Branch(ssmuN.str().c_str(), &recoVtxMuonN_[type]);
-        }
-        if ( type == "mmee" || type == "pcpc" ) {
-            std::stringstream sstrkP;
-            sstrkP << "Vertex_" << type << "_trackP";
-            recoT->Branch(sstrkP.str().c_str(), &recoVtxTrackP_[type]);
-            std::stringstream sstrkN;
-            sstrkN << "Vertex_" << type << "_trackN";
-            recoT->Branch(sstrkN.str().c_str(), &recoVtxTrackN_[type]);
-        }
-    }
+    recoT->Branch("Vertex_mmee_vxy", &mmeeVtxVxy_);
+    recoT->Branch("Vertex_mmee_vz", &mmeeVtxVz_);
+    recoT->Branch("Vertex_mmee_sigmaVxy", &mmeeVtxSigmaVxy_);
+    recoT->Branch("Vertex_mmee_reduced_chi2", &mmeeVtxReducedChi2_);
+    recoT->Branch("Vertex_mmee_dR", &mmeeVtxDr_);
+    recoT->Branch("Vertex_mmee_muP", &mmeeVtxMuonP_);
+    recoT->Branch("Vertex_mmee_muN", &mmeeVtxMuonN_);
+    recoT->Branch("Vertex_mmee_trackP", &mmeeVtxTrackP_);
+    recoT->Branch("Vertex_mmee_trackN", &mmeeVtxTrackN_);
+    //for debugging only, do NOT include in final ntuple (waste of space)
+    recoT->Branch("Vertex_mmee_M", &mmeeVtxM_);
+    recoT->Branch("Vertex_mmee_Pt", &mmeeVtxPt_);
+    
+    recoT->Branch("Vertex_elel_vxy", &elelVtxVxy_);
+    recoT->Branch("Vertex_elel_vz", &elelVtxVz_);
+    recoT->Branch("Vertex_elel_sigmaVxy", &elelVtxSigmaVxy_);
+    recoT->Branch("Vertex_elel_reduced_chi2", &elelVtxReducedChi2_);
+    recoT->Branch("Vertex_elel_dR", &elelVtxDr_);
+    recoT->Branch("Vertex_elel_eleP", &elelVtxEleP_);
+    recoT->Branch("Vertex_elel_eleN", &elelVtxEleN_);
+    //for debugging only, do NOT include in final ntuple (waste of space)
+    recoT->Branch("Vertex_elel_M", &elelVtxM_);
+    recoT->Branch("Vertex_elel_Pt", &elelVtxPt_);
 
+    recoT->Branch("Vertex_pcpc_vxy", &pcpcVtxVxy_);
+    recoT->Branch("Vertex_pcpc_vz", &pcpcVtxVz_);
+    recoT->Branch("Vertex_pcpc_sigmaVxy", &pcpcVtxSigmaVxy_);
+    recoT->Branch("Vertex_pcpc_reduced_chi2", &pcpcVtxReducedChi2_);
+    recoT->Branch("Vertex_pcpc_dR", &pcpcVtxDr_);
+    recoT->Branch("Vertex_pcpc_trackP", &pcpcVtxTrackP_);
+    recoT->Branch("Vertex_pcpc_trackN", &pcpcVtxTrackN_);
+    //for debugging only, do NOT include in final ntuple (waste of space)
+    recoT->Branch("Vertex_pcpc_M", &pcpcVtxM_);
+    recoT->Branch("Vertex_pcpc_Pt", &pcpcVtxPt_);
+
+    recoT->Branch("Vertex_mumu_vxy", &mumuVtxVxy_);
+    recoT->Branch("Vertex_mumu_vz", &mumuVtxVz_);
+    recoT->Branch("Vertex_mumu_sigmaVxy", &mumuVtxSigmaVxy_);
+    recoT->Branch("Vertex_mumu_reduced_chi2", &mumuVtxReducedChi2_);
+    recoT->Branch("Vertex_mumu_dR", &mumuVtxDr_);
+    recoT->Branch("Vertex_mumu_muP", &mumuVtxMuonP_);
+    recoT->Branch("Vertex_mumu_muN", &mumuVtxMuonN_);
+    //for debugging only, do NOT include in final ntuple (waste of space)
+    recoT->Branch("Vertex_mumu_M", &mumuVtxM_);
+    recoT->Branch("Vertex_mumu_Pt", &mumuVtxPt_);
+
+    //good particles
     recoT->Branch("nGoodElectron", &recoNGoodElectron_);
     recoT->Branch("Electron_pt",  &recoElectronPt_);
     recoT->Branch("Electron_eta", &recoElectronEta_);
@@ -150,23 +134,60 @@ void NtupleContainer::CreateTreeBranches() {
 
 void NtupleContainer::ClearTreeBranches() {
 
-    for(std::string type : vtxTypes) {
-        recoVtxVxy_[type].clear();
-        recoVtxVz_[type].clear();
-        recoVtxSigmaVxy_[type].clear();
-        recoVtxReducedChi2_[type].clear();
-        recoVtxDr_[type].clear();
-        recoVtxMuonP_[type].clear();
-        recoVtxMuonN_[type].clear();
-        recoVtxEleP_[type].clear();
-        recoVtxEleN_[type].clear();
-        recoVtxTrackP_[type].clear();
-        recoVtxTrackN_[type].clear();
-    }
+    mmeeVtxVxy_.clear();
+    mmeeVtxVz_.clear();
+    mmeeVtxSigmaVxy_.clear();
+    mmeeVtxReducedChi2_.clear();
+    mmeeVtxDr_.clear();
+    mmeeVtxM_.clear();
+    mmeeVtxPt_.clear();
+    mmeeVtxM2_.clear();
+    mmeeVtxPt2_.clear();
+    mmeeVtxMuonP_.clear();
+    mmeeVtxMuonN_.clear();
+    mmeeVtxTrackP_.clear();
+    mmeeVtxTrackN_.clear();
+
+    elelVtxVxy_.clear();
+    elelVtxVz_.clear();
+    elelVtxSigmaVxy_.clear();
+    elelVtxReducedChi2_.clear();
+    elelVtxDr_.clear();
+    elelVtxM_.clear();
+    elelVtxPt_.clear();
+    elelVtxM2_.clear();
+    elelVtxPt2_.clear();
+    elelVtxEleP_.clear();
+    elelVtxEleN_.clear();
+
+    pcpcVtxVxy_.clear();
+    pcpcVtxVz_.clear();
+    pcpcVtxSigmaVxy_.clear();
+    pcpcVtxReducedChi2_.clear();
+    pcpcVtxDr_.clear();
+    pcpcVtxM_.clear();
+    pcpcVtxPt_.clear();
+    pcpcVtxM2_.clear();
+    pcpcVtxPt2_.clear();
+    pcpcVtxTrackP_.clear();
+    pcpcVtxTrackN_.clear();
+
+    mumuVtxVxy_.clear();
+    mumuVtxVz_.clear();
+    mumuVtxSigmaVxy_.clear();
+    mumuVtxReducedChi2_.clear();
+    mumuVtxDr_.clear();
+    mumuVtxM_.clear();
+    mumuVtxPt_.clear();
+    mumuVtxM2_.clear();
+    mumuVtxPt2_.clear();
+    mumuVtxMuonP_.clear();
+    mumuVtxMuonN_.clear();
+
+    gsfElsP.clear();
+    gsfElsN.clear();
     mmeeTrxP.clear();
     mmeeTrxN.clear();
-    gsfElsP .clear();
-    gsfElsN .clear();
 
     recoElectronPt_.clear();
     recoElectronEta_.clear();
