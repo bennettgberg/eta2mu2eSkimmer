@@ -4,10 +4,17 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 # setup 'analysis' options
 options = VarParsing.VarParsing('analysis')
 
+options.register('data',
+        False,
+        VarParsing.VarParsing.multiplicity.singleton,
+        VarParsing.VarParsing.varType.bool,
+        "Run on data (1) or MC (0)"
+        )
 options.parseArguments()
 
 year = 2022
-data = False
+#data = False
+data = options.data
 
 #test file name
 #BParking data

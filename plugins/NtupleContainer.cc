@@ -34,8 +34,8 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Vertex_mmee_trackP", &mmeeVtxTrackP_);
     recoT->Branch("Vertex_mmee_trackN", &mmeeVtxTrackN_);
     //for debugging only, do NOT include in final ntuple (waste of space)
-    recoT->Branch("Vertex_mmee_M", &mmeeVtxM_);
-    recoT->Branch("Vertex_mmee_Pt", &mmeeVtxPt_);
+    //recoT->Branch("Vertex_mmee_M", &mmeeVtxM_);
+    //recoT->Branch("Vertex_mmee_Pt", &mmeeVtxPt_);
     
     recoT->Branch("Vertex_elel_vxy", &elelVtxVxy_);
     recoT->Branch("Vertex_elel_vz", &elelVtxVz_);
@@ -45,8 +45,8 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Vertex_elel_eleP", &elelVtxEleP_);
     recoT->Branch("Vertex_elel_eleN", &elelVtxEleN_);
     //for debugging only, do NOT include in final ntuple (waste of space)
-    recoT->Branch("Vertex_elel_M", &elelVtxM_);
-    recoT->Branch("Vertex_elel_Pt", &elelVtxPt_);
+    //recoT->Branch("Vertex_elel_M", &elelVtxM_);
+    //recoT->Branch("Vertex_elel_Pt", &elelVtxPt_);
 
     recoT->Branch("Vertex_pcpc_vxy", &pcpcVtxVxy_);
     recoT->Branch("Vertex_pcpc_vz", &pcpcVtxVz_);
@@ -56,8 +56,8 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Vertex_pcpc_trackP", &pcpcVtxTrackP_);
     recoT->Branch("Vertex_pcpc_trackN", &pcpcVtxTrackN_);
     //for debugging only, do NOT include in final ntuple (waste of space)
-    recoT->Branch("Vertex_pcpc_M", &pcpcVtxM_);
-    recoT->Branch("Vertex_pcpc_Pt", &pcpcVtxPt_);
+    //recoT->Branch("Vertex_pcpc_M", &pcpcVtxM_);
+    //recoT->Branch("Vertex_pcpc_Pt", &pcpcVtxPt_);
 
     recoT->Branch("Vertex_mumu_vxy", &mumuVtxVxy_);
     recoT->Branch("Vertex_mumu_vz", &mumuVtxVz_);
@@ -67,8 +67,8 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Vertex_mumu_muP", &mumuVtxMuonP_);
     recoT->Branch("Vertex_mumu_muN", &mumuVtxMuonN_);
     //for debugging only, do NOT include in final ntuple (waste of space)
-    recoT->Branch("Vertex_mumu_M", &mumuVtxM_);
-    recoT->Branch("Vertex_mumu_Pt", &mumuVtxPt_);
+    //recoT->Branch("Vertex_mumu_M", &mumuVtxM_);
+    //recoT->Branch("Vertex_mumu_Pt", &mumuVtxPt_);
 
     //good particles
     recoT->Branch("nGoodElectron", &recoNGoodElectron_);
@@ -110,6 +110,9 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("GsfTrack_eta", &gsfTrkEta_);
     recoT->Branch("GsfTrack_phi", &gsfTrkPhi_);
     recoT->Branch("GsfTrack_charge", &gsfTrkCharge_);
+    //which triggers fired?
+    recoT->Branch("Triggers_fired0", &fired0_);
+    recoT->Branch("Triggers_fired1", &fired1_);
 
     if (!isData_) {
         genT->Branch("evt", &eventNum_);
@@ -213,7 +216,8 @@ void NtupleContainer::ClearTreeBranches() {
     //recoNPhoton_ = 0;
     recoNGoodPhoton_ = 0;
 
-    //fired_ = 0;
+    fired0_ = 0;
+    fired1_ = 0;
 
     genID_.clear();
     genHardProcess_.clear();

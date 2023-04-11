@@ -209,32 +209,76 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
     triggerPathsWithVersionNum_.clear();
     trigExist_.clear();
 
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET120_PFMHT120_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET130_PFMHT130_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET140_PFMHT140_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETNoMu130_PFMHTNoMu130_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETNoMu140_PFMHTNoMu140_IDTight");
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET120_PFMHT120_IDTight_PFHT60"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETNoMu120_PFMHTNoMu120_IDTight_PFHT60"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET200_HBHECleaned"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET200_HBHE_BeamHaloCleaned"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMETTypeOne200_HBHE_BeamHaloCleaned"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFHT500_PFMET100_PFMHT100_IDTight"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFHT700_PFMET85_PFMHT85_IDTight"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFHT800_PFMET75_PFMHT75_IDTight"); // 2017+2018
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET170_HBHECleaned"); // 2016
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFMET300"); // 2016
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_MET200"); // 2016
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_PFHT300_PFMET110"); // 2016
-    triggerPathsWithoutVersionNum_.emplace_back("HLT_IsoMu27"); // For MET trigger eff. studies in data
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_Mu3er1p5_PFJet100er2p5_PFMETNoMu100_PFMHTNoMu100_IDTight"); // Alternative triggers
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_DoubleMu3_DCA_PFMET50_PFMHT60"); // Alternative triggers
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_DoubleMu3_DZ_PFMET50_PFMHT60");  // Alternative triggers
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_DoubleMu3_DZ_PFMET70_PFMHT70");  // Alternative triggers
-    //triggerPathsWithoutVersionNum_.emplace_back("HLT_DoubleMu3_DZ_PFMET90_PFMHT90");  // Alternative triggers
-    triggerPathsWithoutVersionNum_.emplace_back("HLT_L2Mu10_NoVertex_NoBPTX");    // For dSA eff. studies in data
-    triggerPathsWithoutVersionNum_.emplace_back("HLT_L2Mu10_NoVertex_NoBPTX3BX"); // For dSA eff. studies in data
+    vector<std::string> triggerNames { "HLT_Dimuon0_Jpsi3p5_Muon2",
+        "HLT_Dimuon0_Jpsi_L1_4R_0er1p5R",
+        "HLT_Dimuon0_Jpsi_L1_NoOS",
+        "HLT_Dimuon0_Jpsi_NoVertexing_L1_4R_0er1p5R",
+        "HLT_Dimuon0_Jpsi_NoVertexing_NoOS",
+        "HLT_Dimuon0_Jpsi_NoVertexing",
+        "HLT_Dimuon0_Jpsi",
+        "HLT_Dimuon0_LowMass_L1_0er1p5R",
+        "HLT_Dimuon0_LowMass_L1_0er1p5",
+        "HLT_Dimuon0_LowMass_L1_4R",
+        "HLT_Dimuon0_LowMass_L1_4",
+        "HLT_Dimuon0_LowMass_L1_TM530",
+        "HLT_Dimuon0_LowMass",
+        "HLT_Dimuon0_Upsilon_L1_4p5NoOS",
+        "HLT_Dimuon0_Upsilon_L1_4p5",
+        "HLT_Dimuon0_Upsilon_L1_4p5er2p0M",
+        "HLT_Dimuon0_Upsilon_L1_4p5er2p0",
+        "HLT_Dimuon0_Upsilon_L1_5M",
+        "HLT_Dimuon0_Upsilon_L1_5",
+        "HLT_Dimuon0_Upsilon_Muon_L1_TM0",
+        "HLT_Dimuon0_Upsilon_Muon_NoL1Mass",
+        "HLT_Dimuon0_Upsilon_NoVertexing",
+        "HLT_Dimuon10_PsiPrime_Barrel_Seagulls",
+        "HLT_Dimuon10_Upsilon_y1p4",
+        "HLT_Dimuon12_Upsilon_y1p4",
+        "HLT_Dimuon14_Phi_Barrel_Seagulls",
+        "HLT_Dimuon14_PsiPrime_noCorrL1",
+        "HLT_Dimuon14_PsiPrime",
+        "HLT_Dimuon18_PsiPrime_noCorrL1",
+        "HLT_Dimuon18_PsiPrime",
+        "HLT_Dimuon20_Jpsi_Barrel_Seagulls",
+        "HLT_Dimuon24_Phi_noCorrL1",
+        "HLT_Dimuon24_Upsilon_noCorrL1",
+        "HLT_Dimuon25_Jpsi_noCorrL1",
+        "HLT_Dimuon25_Jpsi",
+        "HLT_DoubleMu2_Jpsi_DoubleTrk1_Phi1p05",
+        "HLT_DoubleMu3_DoubleEle7p5_CaloIdL_TrackIdL_Upsilon",
+        "HLT_DoubleMu3_TkMu_DsTau3Mu",
+        "HLT_DoubleMu3_Trk_Tau3mu_NoL1Mass",
+        "HLT_DoubleMu3_Trk_Tau3mu",
+        "HLT_DoubleMu4_3_Bs",
+        "HLT_DoubleMu4_3_Displaced_Photon4_BsToMMG",
+        "HLT_DoubleMu4_3_Jpsi",
+        "HLT_DoubleMu4_3_LowMass",
+        "HLT_DoubleMu4_3_Photon4_BsToMMG",
+        "HLT_DoubleMu4_JpsiTrkTrk_Displaced",
+        "HLT_DoubleMu4_JpsiTrk_Bc",
+        "HLT_DoubleMu4_Jpsi_Displaced",
+        "HLT_DoubleMu4_Jpsi_NoVertexing",
+        "HLT_DoubleMu4_LowMass_Displaced",
+        "HLT_DoubleMu4_MuMuTrk_Displaced",
+        "HLT_DoubleMu5_Upsilon_DoubleEle3_CaloIdL_TrackIdL",
+        "HLT_Mu20_TkMu0_Phi",
+        "HLT_Mu25_TkMu0_Onia",
+        "HLT_Mu25_TkMu0_Phi",
+        "HLT_Mu30_TkMu0_Psi",
+        "HLT_Mu30_TkMu0_Upsilon",
+        "HLT_Mu4_L1DoubleMu",
+        "HLT_Mu7p5_L2Mu2_Jpsi",
+        "HLT_Mu7p5_L2Mu2_Upsilon",
+        "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15_Charge1",
+        "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15",
+        "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15_Charge1",
+        "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15",
+        "HLT_Trimuon5_3p5_2_Upsilon_Muon",
+        "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon" };
+
+    for(std::string tName : triggerNames) {
+        triggerPathsWithoutVersionNum_.emplace_back(tName);
+    }
     
     const std::vector<std::string>& pathNames = hltConfig_.triggerNames();
     for (auto trigPathNoVersion : triggerPathsWithoutVersionNum_) {
@@ -251,6 +295,9 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
                 LogError("TriggerError") << "Cannot find trigger path --> " << matchedPaths[0];
                 return;
             }
+            //else {
+            //    std::cout << "Seems to be no problem with trigger path " << trigPathNoVersion << " : " << matchedPaths[0] << std::endl;
+            //}
         }
     }
 }
@@ -502,20 +549,31 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         //nt.recoTrkCharge_.push_back(iTrack1->charge());
     }
 
-// TODO: implement triggers
-//
-//    // Assign each trigger result to a different bit
-//    nt.fired_ = 0;
-//    for (size_t i = 0; i < triggerPathsWithVersionNum_.size(); i++) {
-//        if (trigExist_.at(i)) {
-//            std::string trigPath = triggerPathsWithVersionNum_[i];
-//            nt.fired_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << i);
-//        }
-//        else {
-//            nt.fired_ |= (0 <<i);
-//        }
-//    }
-//    
+
+    // Assign each trigger result to a different bit
+    nt.fired0_ = 0;
+    nt.fired1_ = 0;
+    for (size_t i = 0; i < triggerPathsWithVersionNum_.size(); i++) {
+        if (trigExist_.at(i)) {
+            std::string trigPath = triggerPathsWithVersionNum_[i];
+            //first 64 triggers belong to the first trigger word, next few to the second one.
+            if(i < 64) {
+                nt.fired0_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << i);
+            }
+            else {
+                nt.fired1_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << (i-64));
+            }
+        }
+        else {
+            if(i < 64) {
+                nt.fired0_ |= (0 <<i);
+            }
+            else {
+                nt.fired1_ |= (0 <<(i-64));
+            }
+        }
+    }
+    
 
     //std::cout << "computing vertices 0" << std::endl;
     //first get the 4-particle vertices, then get rid of all the particles/tracks that aren't involved in those.
