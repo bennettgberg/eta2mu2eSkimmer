@@ -580,7 +580,7 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         //genT->Fill();
     }
 
-    // only add event if at least one combination of mumugamma has a mass close to the eta
+    // only add event if at least one combination of mumugamma or eegamma has a mass close to the eta
     bool saveEvent = false;
     for (auto muonRefP : muonsP) {
       if (saveEvent) break;
@@ -588,10 +588,12 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         if (saveEvent) break;
         for (size_t i = 0; i < recoPhotonHandle_->size(); i++) {
           pat::PhotonRef photonRef(recoPhotonHandle_, i);
-          TLorentzVector p_mu_plus(muonRefP.pt(), muonRefP.eta(), muonRefP.phi(), mu_mass);
-          TLorentzVector p_mu_minus(muonRefN.pt(), muonRefN.eta(), muonRefN.phi(), mu_mass);
-          TLorentzVector p_photon(photonRef->pt(), photonRef->eta(), photonRef->phi(), 0.);
+          TLorentzVector p_mu_plus, p_mu_minus, p_photon;
+          p_mu_plus.SetPtEtaPhiM(muonRefP.pt(), muonRefP.eta(), muonRefP.phi(), mu_mass);
+          p_mu_minus.SetPtEtaPhiM(muonRefN.pt(), muonRefN.eta(), muonRefN.phi(), mu_mass);
+          p_photon.SetPtEtaPhiM(photonRef->pt(), photonRef->eta(), photonRef->phi(), 0.);
           TLorentzVector sum = p_mu_plus + p_mu_minus + p_photon;
+          std::cout << "mumugamma Invariant mass: " << sum.M() << std::endl;
           if (sum.M() > 0.3 && sum.M() < 0.7) {
             saveEvent = true;
             break;
@@ -599,6 +601,28 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
         }
       }
     }
+    // only add event if at least one combination of mumugamma or eegamma has a mass close to the eta
+    //if (!saveEvent) {
+    //  for (auto elRefP : elTracksP) {
+    //    if (saveEvent) break;
+    //    for (auto elRefN : elTracksN) {
+    //      if (saveEvent) break;
+    //      for (size_t i = 0; i < recoPhotonHandle_->size(); i++) {
+    //        pat::PhotonRef photonRef(recoPhotonHandle_, i);
+    //        TLorentzVector p_ele_plus, p_ele_minus, p_photon;
+    //        p_ele_plus.SetPtEtaPhiM(elRefP.pt(), elRefP.eta(), elRefP.phi(), ele_mass);
+    //        p_ele_minus.SetPtEtaPhiM(elRefN.pt(), elRefN.eta(), elRefN.phi(), ele_mass);
+    //        p_photon.SetPtEtaPhiM(photonRef->pt(), photonRef->eta(), photonRef->phi(), 0.);
+    //        TLorentzVector sum = p_ele_plus + p_ele_minus + p_photon;
+    //        std::cout << "eegamma Invariant mass: " << sum.M() << std::endl;
+    //        if (sum.M() > 0.3 && sum.M() < 0.7) {
+    //          saveEvent = true;
+    //          break;
+    //        }
+    //      }
+    //    }
+    //  }
+    //}
 
     if (saveEvent)
       recoT->Fill();
