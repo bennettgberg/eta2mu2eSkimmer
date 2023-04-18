@@ -65,6 +65,26 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     
 } 
 
+void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+  reco::Track part_1, part_2;
+  part_1 = *(coll_1.bestTrack());
+  part_2 = *(coll_2.bestTrack());
+  //first build the transient vertex and transient tracks.
+  float dr = -9999;
+  TransientVertex tv;
+
+  vector<reco::TransientTrack> transient_tracks{};
+  transient_tracks.push_back(theB->build(fix_track(&part_1)));
+  transient_tracks.push_back(theB->build(fix_track(&part_2)));
+  tv = kvf.vertex(transient_tracks);
+  float probVtx = calcVertices(transient_tracks, tv, type, nt);
+  if ( probVtx > 0.1 ) {
+    dr = reco::deltaR(part_1, part_2);
+    nt.mumuVtxDr_.push_back(dr);
+  }
+}
+
+
 //compute vertices for two muons vectors coll_1 and coll_2, and add them to the ntuple.
 // (overloaded below)
 // Return type: struct VertexTracks (defined above)
