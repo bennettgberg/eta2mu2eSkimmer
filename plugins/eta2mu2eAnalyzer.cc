@@ -85,6 +85,14 @@ private:
     void endJob() override;
 
     TTree *recoT, *genT;
+    //for MC only
+    TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE;
+    //max dR between gen and reco particles for a successful gen-match to be declared
+    const float drCut = 0.01;
+    //min, max invariant mass values for reco'd eta meson for a successful reco to be declared
+    const float etaMassMin = 0.0;
+    const float etaMassMax = 9999.0;
+
     NtupleContainer nt;
     edm::Service<TFileService> fs;
 
@@ -181,6 +189,17 @@ void eta2mu2eAnalyzer::beginJob()
     if (!isData) {
         genT = fs->make<TTree>("genT", "genT");
         nt.SetGenTree(genT);
+        allGenPt = new TH1F("allGenPt", "allGenPt", 10000, 0., 100.);
+        matchedGenPt = new TH1F("matchedGenPt", "matchedGenPt", 10000, 0., 100.);
+        matchedGenPtE = new TH1F("matchedGenPtE", "matchedGenPtE", 10000, 0., 100.);
+        alldR = new TH1F("alldR", "alldR", 10000, 0., 1.);
+        alldRE = new TH1F("alldRE", "alldRE", 10000, 0., 1.);
+        alldRMu = new TH1F("alldRMu", "alldRMu", 10000, 0., 1.);
+        allGenPtMu = new TH1F("allGenPtMu", "allGenPtMu", 10000, 0., 100.);
+        matchedGenPtMu = new TH1F("matchedGenPtMu", "matchedGenPtMu", 10000, 0., 100.);
+        allGenPtEta = new TH1F("allGenPtEta", "allGenPtEta", 10000, 0., 100.);
+        matchedGenPtEta = new TH1F("matchedGenPtEta", "matchedGenPtEta", 10000, 0., 100.);
+        matchedGenPtEtaE = new TH1F("matchedGenPtEtaE", "matchedGenPtEtaE", 10000, 0., 100.);
     }
     nt.CreateTreeBranches();
 }
@@ -575,6 +594,150 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     }
     
 
+    /****** GEN INFO *******/
+
+    //std::cout << "done computing vertices." << std::endl;
+    if (!isData) {
+
+        nt.nGen_ = (int)genParticleHandle_->size();
+        
+        //TODO: add gen weight info 
+        // Gen weight
+        //nt.genwgt_ = genEvtInfoHandle_->weight();
+
+        // Pile-up
+        for (const auto & pileupInfo : *pileupInfosHandle_) {
+            if (pileupInfo.getBunchCrossing() == 0) {
+                nt.genpuobs_ = pileupInfo.getPU_NumInteractions();
+                nt.genputrue_ = pileupInfo.getTrueNumInteractions();
+                break;
+            }
+        }
+
+        //gen level eta meson
+        TLorentzVector genEtaVec;
+        //reco'd eta meson using PC tracks
+        TLorentzVector recoEtaVec;
+        //reco'd eta meson using GsfElectrons
+        TLorentzVector recoEtaVecE;
+        //start out true, but if any leptons fail to be genmatched then it becomes false
+        bool genmatched = true;
+        //same but for GsfElectrons instead of PC tracks
+        bool genmatchedE = true;
+        for (size_t i = 0; i < genParticleHandle_->size(); i++) {
+            reco::GenParticleRef genParticle(genParticleHandle_, i);
+            // ?? what is this for??
+            //if (!genParticle->isHardProcess()) continue;
+            nt.genID_.push_back(genParticle->pdgId());
+            nt.genHardProcess_.push_back(genParticle->isHardProcess());
+            nt.genCharge_.push_back(genParticle->charge());
+            nt.genPt_.push_back(genParticle->pt());
+            nt.genEta_.push_back(genParticle->eta());
+            nt.genPhi_.push_back(genParticle->phi());
+            nt.genPz_.push_back(genParticle->pz());
+            nt.genEn_.push_back(genParticle->energy());
+            nt.genVxy_.push_back(genParticle->vertex().rho());
+            //nt.genVxy_.push_back(genParticle->vxy()); //?????
+            nt.genVz_.push_back(genParticle->vz());
+            nt.genMass_.push_back(genParticle->mass());
+
+            TLorentzVector genLepVec;
+            genLepVec.SetPtEtaPhiM(genParticle->pt(), genParticle->eta(), genParticle->phi(), genParticle->mass());
+            if(i == 0) genEtaVec = genLepVec;
+            else genEtaVec = genEtaVec + genLepVec;
+            //4vector for the reco'd particle
+            TLorentzVector recoLepVec;
+            if(fabs(genParticle->pdgId()) == 11) {
+                //for MC for electrons, do genmatching for allTracksP to find the best track corr. to the gen particle; fill the histogram
+                    // so that later can calculate reco efficiency
+                //TLorentzVector genpart;
+                //genpart.SetPtEtaPhiM( genParticle->pt(), genParticle->eta(), genParticle->phi(), genParticle->mass() );
+                //loop thru each track and find the closest dR match
+                vector<reco::Track> alltracks = (genParticle->charge() > 0 ? allTracksP : allTracksN);
+                float mindR = 9999.0;
+                for(unsigned int k = 0; k < alltracks.size(); k++) {
+                    reco::Track trk = alltracks[k];
+                    float gendR = reco::deltaR(trk, *genParticle);
+                    if( gendR < mindR ) {
+                        mindR = gendR;
+                        recoLepVec.SetPtEtaPhiM(trk.pt(), trk.eta(), trk.phi(), ele_mass);
+                    }
+                } //end loop over alltracks
+                //now fill the histograms
+                allGenPt->Fill(genParticle->pt());
+                if(i == 0) recoEtaVec = recoLepVec; else recoEtaVec += recoLepVec;
+                if(mindR < drCut) {
+                    matchedGenPt->Fill(genParticle->pt());
+                }
+                else {
+                    genmatched = false;
+                }
+                alldR->Fill(mindR);
+
+                //now do the same for GsfElectrons instead of PC tracks.
+                TLorentzVector recoLepVecE;
+                mindR = 9999.0;
+                for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
+                    pat::ElectronRef ele(recoElectronHandle_, i);
+                    float gendR = reco::deltaR(*ele, *genParticle);
+                    if( gendR < mindR ) {
+                        mindR = gendR;
+                        recoLepVecE.SetPtEtaPhiM(ele->pt(), ele->eta(), ele->phi(), ele->mass());
+                    }
+                } //end loop over alltracks
+                if(i == 0) recoEtaVecE = recoLepVecE; else recoEtaVecE += recoLepVecE;
+                //now fill the histograms
+                if(mindR < drCut) {
+                    matchedGenPtE->Fill(genParticle->pt());
+                }
+                else {
+                    genmatchedE = false;
+                }
+                alldRE->Fill(mindR);
+
+            } //end is gen electron/positron
+            //otherwise could be a muon
+            else if(fabs(genParticle->pdgId()) == 13) {
+                //for MC for electrons, do genmatching for allTracksP to find the best track corr. to the gen particle; fill the histogram
+                    // so that later can calculate reco efficiency
+                //loop thru each track and find the closest dR match
+                float mindR = 9999.0;
+                allGenPtMu->Fill(genParticle->pt());
+                for (size_t i = 0; i < recoMuonHandle_->size(); i++) {
+                    pat::MuonRef muo(recoMuonHandle_, i);
+                    float gendR = reco::deltaR(*muo, *genParticle);
+                    if( gendR < mindR ) {
+                        mindR = gendR;
+                        recoLepVec.SetPtEtaPhiM(muo->pt(), muo->eta(), muo->phi(), muo->mass());
+                    }
+                } //end loop over all muons
+                if(i==0) recoEtaVec = recoLepVec; else recoEtaVec += recoLepVec;
+                if(i==0) recoEtaVecE = recoLepVec; else recoEtaVecE += recoLepVec;
+                //now fill the histograms
+                if(mindR < drCut) {
+                    matchedGenPtMu->Fill(genParticle->pt());
+                }
+                else {
+                    genmatched = false;
+                    genmatchedE = false;
+                }
+                alldRMu->Fill(mindR);
+
+            } //end is gen muon
+            
+        }
+        //now get the pt of the full eta meson; see if all 4 particles genmatched successfully AND reco invar mass in good range!
+        allGenPtEta->Fill(genEtaVec.Pt());
+        if(genmatched && recoEtaVec.M() > etaMassMin && recoEtaVec.M() < etaMassMax) {
+            matchedGenPtEta->Fill(genEtaVec.Pt());
+        }
+        if(genmatchedE && recoEtaVecE.M() > etaMassMin && recoEtaVecE.M() < etaMassMax) {
+            matchedGenPtEtaE->Fill(genEtaVec.Pt());
+        }
+
+        genT->Fill();
+    }
+
     //std::cout << "computing vertices 0" << std::endl;
     //first get the 4-particle vertices, then get rid of all the particles/tracks that aren't involved in those.
     // EL-EL-MU-MU
@@ -611,46 +774,6 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     // PC-PC
     computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
-    /****** GEN INFO *******/
-
-    //std::cout << "done computing vertices." << std::endl;
-    if (!isData) {
-
-        nt.nGen_ = (int)genParticleHandle_->size();
-        
-        //TODO: add gen weight info 
-        // Gen weight
-        //nt.genwgt_ = genEvtInfoHandle_->weight();
-
-        // Pile-up
-        for (const auto & pileupInfo : *pileupInfosHandle_) {
-            if (pileupInfo.getBunchCrossing() == 0) {
-                nt.genpuobs_ = pileupInfo.getPU_NumInteractions();
-                nt.genputrue_ = pileupInfo.getTrueNumInteractions();
-                break;
-            }
-        }
-
-        for (size_t i = 0; i < genParticleHandle_->size(); i++) {
-            reco::GenParticleRef genParticle(genParticleHandle_, i);
-            // ?? what is this for??
-            //if (!genParticle->isHardProcess()) continue;
-            nt.genID_.push_back(genParticle->pdgId());
-            nt.genHardProcess_.push_back(genParticle->isHardProcess());
-            nt.genCharge_.push_back(genParticle->charge());
-            nt.genPt_.push_back(genParticle->pt());
-            nt.genEta_.push_back(genParticle->eta());
-            nt.genPhi_.push_back(genParticle->phi());
-            nt.genPz_.push_back(genParticle->pz());
-            nt.genEn_.push_back(genParticle->energy());
-            nt.genVxy_.push_back(genParticle->vertex().rho());
-            //nt.genVxy_.push_back(genParticle->vxy()); //?????
-            nt.genVz_.push_back(genParticle->vz());
-            nt.genMass_.push_back(genParticle->mass());
-        }
-
-        genT->Fill();
-    }
 
     recoT->Fill();
 
@@ -659,7 +782,22 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
 void eta2mu2eAnalyzer::endRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
 
-void eta2mu2eAnalyzer::endJob() {}
+void eta2mu2eAnalyzer::endJob() {
+    if(!isData) {
+        fs->cd();
+        allGenPt->Write();
+        matchedGenPt->Write();
+        alldR->Write();
+        matchedGenPtE->Write();
+        alldRE->Write();
+        allGenPtMu->Write();
+        matchedGenPtMu->Write();
+        alldRMu->Write();
+        allGenPtEta->Write();
+        matchedGenPtEta->Write();
+        matchedGenPtEtaE->Write();
+    }
+}
 
 // define this as a plug-in
 DEFINE_FWK_MODULE(eta2mu2eAnalyzer);

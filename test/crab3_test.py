@@ -1,16 +1,16 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-isMC = False
+isMC = True
 #signal or MC background?
-isSig = False
+isSig = True
 
 #BParking set number, and Run letter of 2022 for the inputDataset
 # 40 different datasets total
 #0 to 7
-setnum = 3
+setnum = 0
 #C to G
-runlet = 'E'
+runlet = 'G'
 
 #v1 or v2?
 version = 1
@@ -22,7 +22,7 @@ if not isMC:
 else:
     if isSig:
         #config.General.requestName = 'test0MC_EtaTo2Mu2E'
-        config.General.requestName = 'test8MC_EtaTo2Mu2E'
+        config.General.requestName = 'test11MC_EtaTo2Mu2E'
     else:
         config.General.requestName = 'test0MC_EtaToMuMuGamma'
 config.General.workArea = 'crab_MiniAnalyzer'
@@ -35,6 +35,7 @@ config.JobType.psetName = 'run_ntuplizer_cfg.py'
 config.JobType.pyCfgParams=["data=%d"%(0 if isMC else 1)]
 config.JobType.maxMemoryMB = 5000
 ##allow to run for up to 2 full days (maximum allowed, I think)
+# Not allowed with automatic splitting.
 #config.JobType.maxJobRuntimeMin = 2880
 #config.JobType.maxJobRuntimeMin = 1440
 config.JobType.numCores = 1 
