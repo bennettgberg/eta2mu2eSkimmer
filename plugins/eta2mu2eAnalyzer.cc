@@ -463,6 +463,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         //cout<<"just incremented NGoodElectron: " << (int)nt.recoNGoodElectron_ << "; i: " << (int)i << "; handle size: " << (int)(recoElectronHandle_->size()) << endl;
     }
 
+    cout << "Event " << (int)nt.eventNum_ << ": " << (int)nt.recoNGoodElectron_ << " good electrons total. " << (int)elTracksP.size() << " positive and " << (int)elTracksN.size() << " negative." << std::endl;
     // Also add all photons to ntuple, regardless of ID
     // Photon ID only produces 1 or 0
     //nt.recoNPhoton_ = recoPhotonHandle_->size();
@@ -679,6 +680,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 mindR = 9999.0;
                 for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
                     pat::ElectronRef ele(recoElectronHandle_, i);
+                    //make sure the GsfElectron has the right charge!!
+                    if(ele->charge() * (genParticle->charge()) < 0) continue;
                     float gendR = reco::deltaR(*ele, *genParticle);
                     if( gendR < mindR ) {
                         mindR = gendR;
@@ -689,9 +692,11 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 //now fill the histograms
                 if(mindR < drCut) {
                     matchedGenPtE->Fill(genParticle->pt());
+                    //std::cout << "Event " << (int)nt.eventNum_ << " : gen electron " << (int)i << " genmatched to gsfel (pdgId " << (int)genParticle->pdgId() << ")." << endl;
                 }
                 else {
                     genmatchedE = false;
+                    //std::cout << "Event " << (int)nt.eventNum_ << " : gen electron " << (int)i << " NOT genmatched (pdgId " << (int)genParticle->pdgId() << ")." << endl;
                 }
                 alldRE->Fill(mindR);
 
@@ -733,6 +738,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         }
         if(genmatchedE && recoEtaVecE.M() > etaMassMin && recoEtaVecE.M() < etaMassMax) {
             matchedGenPtEtaE->Fill(genEtaVec.Pt());
+            std::cout << "Event " << (int)nt.eventNum_ << " : eta meson fully genmatched!" << endl;
         }
 
         genT->Fill();
@@ -765,6 +771,14 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     muonsN = primVertTrx.muonsN;
     muonsP = primVertTrx.muonsP;
 
+    //maybe implement this later? but not needed for now.
+    ////if there's a max number of vertices to save, delet the rest of them!
+    //if(nt.maxNmmee > 0) {
+    //    //new vectors for mmee vertex
+    //    for(int nv=0; nv < nt.maxNmmee; nv++) {
+    //        //find the vertex with the highest prob, add it to the new list
+    //    }
+    //}
     //std::cout << "computing vertices 1" << std::endl;
     //now get the vertices for just 2 GsfElectrons
     // EL-EL 

@@ -111,6 +111,9 @@ public:
     float pvy_;
     float pvz_;
 
+    //the maximum number of mmee vertices to save (if -1 no maximum)
+    //int maxNmmee = -1;
+
     vector<float> mmeeVtxVxy_;
     vector<float> mmeeVtxVz_;
     vector<float> mmeeVtxSigmaVxy_;

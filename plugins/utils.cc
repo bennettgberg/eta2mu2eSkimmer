@@ -34,7 +34,8 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     //    nt.recoVtxSigmaVxy_[type].push_back(sigma_vxy);
     //    //std::cout << "probability: " << prob << std::endl;
     //}
-    if ( prob > 0.1 ) {
+    //TODO: keep in this || elel?? decide.
+    if ( prob > 0.1 || (prob > 0 && (type == "elel" || type == "mmee" || type == "pcpc"))) {
         if(type == "mmee") {
             nt.mmeeVtxReducedChi2_.push_back(vtx_chi2);
             nt.mmeeVtxVxy_.push_back(vxy);
@@ -143,8 +144,9 @@ void computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2,
             float probVtx = calcVertices(transient_tracks, tv, type, nt);
             //only fill the ntuple if the (chi2) prob is > .1
             // the rest of the ntuple info is filled in the calcVertices function (above)
-            //if ( probVtx > 0 ) {
-            if ( probVtx > 0.1 ) {
+            if ( probVtx > 0 ) {
+            //if ( probVtx > 0.1 ) {
+            //if ( 0.2 > 0.1 ) {
                 dr = reco::deltaR(part_i, part_j);
                 //nt.recoVtxDr_[type].push_back(dr);
                 nt.pcpcVtxDr_.push_back(dr);
@@ -170,6 +172,7 @@ void computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2,
 void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRef> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
     for (size_t i = 0; i < coll_1.size(); i++) {
         for (size_t j = 0; j < coll_2.size(); j++) {
+            std::cout << "Vertex cand " << (int)i << " " << (int)j << std::endl;
             //reco::TrackRef part_i, part_j;
             //reco::GsfTrackRef part_i, part_j;
             reco::GsfTrackRef part_i, part_j;
@@ -184,8 +187,9 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                 transient_tracks.push_back(theB->build(part_j));
                 tv = kvf.vertex(transient_tracks);
                 float probVtx = calcVertices(transient_tracks, tv, type, nt);
-                //if ( probVtx > 0 ) {
-                if ( probVtx > 0.1 ) {
+                if ( probVtx > 0 ) {
+                //if ( probVtx > 0.1 ) {
+                //if ( 0.2 > 0.1 ) {
                     dr = reco::deltaR(*part_i, *part_j);
                     //nt.recoVtxDr_[type].push_back(dr);
                     nt.elelVtxDr_.push_back(dr);
@@ -205,9 +209,24 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                     //nt.recoVtxEleN_[type].push_back(eleN);
                     nt.elelVtxEleP_.push_back(eleP);
                     nt.elelVtxEleN_.push_back(eleN);
+                    //std::cout << "eleP: " << (int)eleP << "; eleN: " << (int)eleN;
                 }
-            } 
-
+            } //end is Nonnull 
+            else { //is null ....
+                std::cout << "Null GsfTrack! Event" << (int)nt.eventNum_ << " ";
+                if(!part_i.isNonnull()) std::cout << "part i: " << (int)i << " "; 
+                if(!part_j.isNonnull()) std::cout << "part j: " << (int)j << " "; 
+                std::cout << std::endl;
+                nt.elelVtxDr_.push_back(9999);
+                uint8_t eleP = nt.gsfElsP[i];
+                uint8_t eleN = nt.gsfElsN[j];
+                nt.elelVtxEleP_.push_back(eleP);
+                nt.elelVtxEleN_.push_back(eleN);
+                nt.elelVtxReducedChi2_.push_back(9999);
+                nt.elelVtxVxy_.push_back(9999);
+                nt.elelVtxVz_.push_back(9999);
+                nt.elelVtxSigmaVxy_.push_back(9999);
+            }
         } // j loop
     } // i loop
 } // computeVertices
@@ -332,7 +351,9 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                     tv = kvf.vertex(transient_tracks);
                     float probVtx = calcVertices(transient_tracks, tv, type, nt);
                     //choose arbitrary very loose cutoff of prob .1
-                    if ( probVtx > 0.1 ) {
+                    //if ( probVtx > 0.1 ) {
+                    if ( probVtx > 0 ) {
+                    //if ( 0.2 > 0.1 ) {
                         //std::cout << "good vertex! Tracks: " << (int)i << " positive; " << (int)j << " negative; Muons: " << (int)k << " positive; " << (int)l << " negative" << std::endl;
                         //dr of the electron pair
                         dr = reco::deltaR(part_i, part_j);
