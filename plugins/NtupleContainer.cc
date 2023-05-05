@@ -37,6 +37,16 @@ void NtupleContainer::CreateTreeBranches() {
     //recoT->Branch("Vertex_mmee_M", &mmeeVtxM_);
     //recoT->Branch("Vertex_mmee_Pt", &mmeeVtxPt_);
     
+    recoT->Branch("Vertex_mmelel_vxy", &mmelelVtxVxy_);
+    recoT->Branch("Vertex_mmelel_vz", &mmelelVtxVz_);
+    recoT->Branch("Vertex_mmelel_sigmaVxy", &mmelelVtxSigmaVxy_);
+    recoT->Branch("Vertex_mmelel_reduced_chi2", &mmelelVtxReducedChi2_);
+    recoT->Branch("Vertex_mmelel_dR", &mmelelVtxDr_);
+    recoT->Branch("Vertex_mmelel_muP", &mmelelVtxMuonP_);
+    recoT->Branch("Vertex_mmelel_muN", &mmelelVtxMuonN_);
+    recoT->Branch("Vertex_mmelel_eleP", &mmelelVtxEleP_);
+    recoT->Branch("Vertex_mmelel_eleN", &mmelelVtxEleN_);
+
     recoT->Branch("Vertex_elel_vxy", &elelVtxVxy_);
     recoT->Branch("Vertex_elel_vz", &elelVtxVz_);
     recoT->Branch("Vertex_elel_sigmaVxy", &elelVtxSigmaVxy_);
@@ -142,14 +152,28 @@ void NtupleContainer::ClearTreeBranches() {
     mmeeVtxSigmaVxy_.clear();
     mmeeVtxReducedChi2_.clear();
     mmeeVtxDr_.clear();
-    mmeeVtxM_.clear();
-    mmeeVtxPt_.clear();
-    mmeeVtxM2_.clear();
-    mmeeVtxPt2_.clear();
+    //mmeeVtxM_.clear();
+    //mmeeVtxPt_.clear();
+    //mmeeVtxM2_.clear();
+    //mmeeVtxPt2_.clear();
     mmeeVtxMuonP_.clear();
     mmeeVtxMuonN_.clear();
     mmeeVtxTrackP_.clear();
     mmeeVtxTrackN_.clear();
+
+    mmelelVtxVxy_.clear();
+    mmelelVtxVz_.clear();
+    mmelelVtxSigmaVxy_.clear();
+    mmelelVtxReducedChi2_.clear();
+    mmelelVtxDr_.clear();
+    mmelelVtxM_.clear();
+    mmelelVtxPt_.clear();
+    mmelelVtxM2_.clear();
+    mmelelVtxPt2_.clear();
+    mmelelVtxMuonP_.clear();
+    mmelelVtxMuonN_.clear();
+    mmelelVtxEleP_.clear();
+    mmelelVtxEleN_.clear();
 
     elelVtxVxy_.clear();
     elelVtxVz_.clear();

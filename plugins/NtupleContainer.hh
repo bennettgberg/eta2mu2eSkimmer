@@ -105,6 +105,8 @@ public:
     vector<uint8_t> mmeeTrxN;
     vector<uint8_t> gsfElsP;
     vector<uint8_t> gsfElsN;
+    vector<uint8_t> muonsP;
+    vector<uint8_t> muonsN;
 
     // Vertex branches
     float pvx_;
@@ -125,10 +127,22 @@ public:
     vector<float> mmeeVtxPt2_;
     vector<uint8_t> mmeeVtxMuonP_;
     vector<uint8_t> mmeeVtxMuonN_;
-    vector<uint8_t> mmeeVtxEleP_;
-    vector<uint8_t> mmeeVtxEleN_;
     vector<uint8_t> mmeeVtxTrackP_;
     vector<uint8_t> mmeeVtxTrackN_;
+
+    vector<float> mmelelVtxVxy_;
+    vector<float> mmelelVtxVz_;
+    vector<float> mmelelVtxSigmaVxy_;
+    vector<float> mmelelVtxReducedChi2_;
+    vector<float> mmelelVtxDr_;
+    vector<float> mmelelVtxPt_;
+    vector<float> mmelelVtxM_;
+    vector<float> mmelelVtxM2_;
+    vector<float> mmelelVtxPt2_;
+    vector<uint8_t> mmelelVtxMuonP_;
+    vector<uint8_t> mmelelVtxMuonN_;
+    vector<uint8_t> mmelelVtxEleP_;
+    vector<uint8_t> mmelelVtxEleN_;
 
     vector<float> elelVtxVxy_;
     vector<float> elelVtxVz_;

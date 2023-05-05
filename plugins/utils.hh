@@ -56,6 +56,9 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
 // this version for fitting the 2 electron tracks and the 2 muons all together!
 VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2, vector<pat::Muon> & coll_3, vector<pat::Muon> & coll_4, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt);
 
+// this version for fitting the 2 electron tracks and the 2 muons all together!
+void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRef> & coll_2, vector<pat::Muon> & coll_3, vector<pat::Muon> & coll_4, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt);
+
 //fix tracks with non-pos-def covariance matrices -- needed to prevent crashing
 reco::Track fix_track(const reco::Track *tk, double delta=1e-8);
 

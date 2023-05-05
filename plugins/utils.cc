@@ -35,7 +35,7 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     //    //std::cout << "probability: " << prob << std::endl;
     //}
     //TODO: keep in this || elel?? decide.
-    if ( prob > 0.1 || (prob > 0 && (type == "elel" || type == "mmee" || type == "pcpc"))) {
+    if ( prob > 0.1 ) {
         if(type == "mmee") {
             nt.mmeeVtxReducedChi2_.push_back(vtx_chi2);
             nt.mmeeVtxVxy_.push_back(vxy);
@@ -59,6 +59,12 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.mumuVtxVxy_.push_back(vxy);
             nt.mumuVtxVz_.push_back(vz);
             nt.mumuVtxSigmaVxy_.push_back(sigma_vxy);
+        }
+        else if(type == "mmelel") {
+            nt.mmelelVtxReducedChi2_.push_back(vtx_chi2);
+            nt.mmelelVtxVxy_.push_back(vxy);
+            nt.mmelelVtxVz_.push_back(vz);
+            nt.mmelelVtxSigmaVxy_.push_back(sigma_vxy);
         }
         //std::cout << "probability: " << prob << std::endl;
     }
@@ -144,8 +150,8 @@ void computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2,
             float probVtx = calcVertices(transient_tracks, tv, type, nt);
             //only fill the ntuple if the (chi2) prob is > .1
             // the rest of the ntuple info is filled in the calcVertices function (above)
-            if ( probVtx > 0 ) {
-            //if ( probVtx > 0.1 ) {
+            //if ( probVtx > 0 ) {
+            if ( probVtx > 0.1 ) {
             //if ( 0.2 > 0.1 ) {
                 dr = reco::deltaR(part_i, part_j);
                 //nt.recoVtxDr_[type].push_back(dr);
@@ -172,7 +178,7 @@ void computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2,
 void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRef> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
     for (size_t i = 0; i < coll_1.size(); i++) {
         for (size_t j = 0; j < coll_2.size(); j++) {
-            std::cout << "Vertex cand " << (int)i << " " << (int)j << std::endl;
+            //std::cout << "Vertex cand " << (int)i << " " << (int)j << std::endl;
             //reco::TrackRef part_i, part_j;
             //reco::GsfTrackRef part_i, part_j;
             reco::GsfTrackRef part_i, part_j;
@@ -187,8 +193,8 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                 transient_tracks.push_back(theB->build(part_j));
                 tv = kvf.vertex(transient_tracks);
                 float probVtx = calcVertices(transient_tracks, tv, type, nt);
-                if ( probVtx > 0 ) {
-                //if ( probVtx > 0.1 ) {
+                //if ( probVtx > 0 ) {
+                if ( probVtx > 0.1 ) {
                 //if ( 0.2 > 0.1 ) {
                     dr = reco::deltaR(*part_i, *part_j);
                     //nt.recoVtxDr_[type].push_back(dr);
@@ -282,8 +288,8 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
         TLorentzVector ele_i;
         ele_i.SetPtEtaPhiM(part_i.pt(),part_i.eta(),part_i.phi(), ele_mass);
         //now suppose this is a pion
-        TLorentzVector pi_i;
-        pi_i.SetPtEtaPhiM(part_i.pt(),part_i.eta(),part_i.phi(), pi_mass);
+        //TLorentzVector pi_i;
+        //pi_i.SetPtEtaPhiM(part_i.pt(),part_i.eta(),part_i.phi(), pi_mass);
         //if ( i > 15 ) break; // ??
         //then loop over negative tracks
         for (size_t j = 0; j < coll_2.size(); j++) {
@@ -319,12 +325,12 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                     //first compute the pT/M of the 4 particle system to make sure it's consistent with eta/eta' meson
                     //first 4-vector assumes tracks are electrons
                     TLorentzVector eta_mmee = ele_i + ele_j + mu_k + mu_l; 
-                    //this 4-vector assumes tracks are pions
-                    TLorentzVector eta_mmpp = pi_i + pi_j + mu_k + mu_l; 
+                    ////this 4-vector assumes tracks are pions
+                    //TLorentzVector eta_mmpp = pi_i + pi_j + mu_k + mu_l; 
                     float eta_Mmmee = eta_mmee.M();
-                    float eta_Mmmpp = eta_mmpp.M();
+                    //float eta_Mmmpp = eta_mmpp.M();
                     float eta_Ptmmee = eta_mmee.Pt();
-                    float eta_Ptmmpp = eta_mmpp.Pt();
+                    //float eta_Ptmmpp = eta_mmpp.Pt();
                     //if the invar. mass of the 4vector isn't in the range of interest, continue
                     bool passed_mmee = false;
                     bool passed_mmpp = false;
@@ -351,8 +357,8 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                     tv = kvf.vertex(transient_tracks);
                     float probVtx = calcVertices(transient_tracks, tv, type, nt);
                     //choose arbitrary very loose cutoff of prob .1
-                    //if ( probVtx > 0.1 ) {
-                    if ( probVtx > 0 ) {
+                    if ( probVtx > 0.1 ) {
+                    //if ( probVtx > 0 ) {
                     //if ( 0.2 > 0.1 ) {
                         //std::cout << "good vertex! Tracks: " << (int)i << " positive; " << (int)j << " negative; Muons: " << (int)k << " positive; " << (int)l << " negative" << std::endl;
                         //dr of the electron pair
@@ -371,6 +377,7 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                         if( igood[i] < 0 ) {
                             igood[i] = static_cast<int>(nt.recoNGoodTrk_);
                             nt.mmeeTrxP.push_back(nt.recoNGoodTrk_);
+                            nt.muonsP.push_back(nt.recoNGoodMuon_);
                             //std::cout << (int)i << " positive track is the " << (int)nt.recoNGoodTrk_ << " track overall." << std::endl;
                             //std::cout << "OUTSIDE boutta increment recoNGoodTrk: " << (int)nt.recoNGoodTrk_ << std::endl;
                             nt = addTrack(nt, part_i);
@@ -381,6 +388,7 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                         if( jgood[j] < 0 ) {
                             jgood[j] = static_cast<int>(nt.recoNGoodTrk_);
                             nt.mmeeTrxN.push_back(nt.recoNGoodTrk_);
+                            nt.muonsN.push_back(nt.recoNGoodMuon_);
                             //std::cout << (int)j << " negative track is the " << (int)nt.recoNGoodTrk_ << " track overall." << std::endl;
                             nt = addTrack(nt, part_j);
                             myVertTracks.tracksN.push_back(part_j);
@@ -468,6 +476,108 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
         } // j loop
     } // i loop
     return myVertTracks;
+} // computeVertices
+
+//this version for fitting the 2 GsfElectron tracks and the 2 muons all together!
+void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRef> & coll_2, vector<pat::Muon> & coll_3, vector<pat::Muon> & coll_4, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+    //unsigned int printevery = 100000;
+    //first loop over positive tracks
+    for (size_t i = 0; i < coll_1.size(); i++) {
+        for (size_t j = 0; j < coll_2.size(); j++) {
+            //std::cout << "Vertex cand " << (int)i << " " << (int)j << std::endl;
+            //reco::TrackRef part_i, part_j;
+            //reco::GsfTrackRef part_i, part_j;
+            reco::GsfTrackRef part_i, part_j;
+            part_i = coll_1[i];
+            part_j = coll_2[j];
+
+            TransientVertex tv;
+            if (part_i.isNonnull() && part_j.isNonnull() ) { // && i != j) {
+                //form 4-vectors for the two electrons
+                TLorentzVector ele_i;
+                ele_i.SetPtEtaPhiM(part_i->pt(),part_i->eta(),part_i->phi(), ele_mass);
+                TLorentzVector ele_j;
+                ele_j.SetPtEtaPhiM(part_j->pt(),part_j->eta(),part_j->phi(), ele_mass);
+                for(size_t k = 0; k < coll_3.size(); k++) {
+                    reco::Track part_k;
+                    part_k = *(coll_3[k].bestTrack());
+                    //this particle is clearly a muon.
+                    TLorentzVector mu_k;
+                    mu_k.SetPtEtaPhiM(part_k.pt(),part_k.eta(),part_k.phi(), mu_mass);
+                    //finally loop over neg muons
+                    for(size_t l = 0; l < coll_4.size(); l++) {
+                        reco::Track part_l;
+                        part_l = *(coll_4[l].bestTrack());
+                        //first make a 4 vector of the 4 particles, see if their invariant mass is in the regime of interest or nah
+                        TLorentzVector mu_l;
+                        mu_l.SetPtEtaPhiM(part_l.pt(),part_l.eta(),part_l.phi(), mu_mass);
+
+                        //first compute the pT/M of the 4 particle system to make sure it's consistent with eta/eta' meson
+                        //first 4-vector assumes tracks are electrons
+                        TLorentzVector eta_mmee = ele_i + ele_j + mu_k + mu_l; 
+                        float eta_Mmmee = eta_mmee.M();
+                        float eta_Ptmmee = eta_mmee.Pt();
+                        //if the invar. mass of the 4vector isn't in the range of interest, continue
+                        bool passed_mmee = false;
+                        bool passed_mmpp = false;
+                        if( eta_Mmmee > 0.4 && eta_Mmmee < 1.1 && eta_Ptmmee > 12 )  {
+                            passed_mmee = true;
+                        }
+                        //if( eta_Mmmpp > 0.4 && eta_Mmmpp < 1.1 && eta_Ptmmpp > 12 )  {
+                        //    passed_mmpp = true;
+                        //}
+                        if( ! (passed_mmee || passed_mmpp) ) {
+                            continue;
+                        }
+
+                        float dr = -9999;
+                        TransientVertex tv;
+                        vector<reco::TransientTrack> transient_tracks{};
+
+                        // build all 4 transient tracks ( 2 el(or pi) + 2 mu )
+                        transient_tracks.push_back(theB->build(part_i));
+                        transient_tracks.push_back(theB->build(part_j));
+                        transient_tracks.push_back(theB->build(fix_track(&part_k)));
+                        transient_tracks.push_back(theB->build(fix_track(&part_l)));
+
+                        tv = kvf.vertex(transient_tracks);
+                        float probVtx = calcVertices(transient_tracks, tv, type, nt);
+                        //choose arbitrary very loose cutoff of prob .1
+                        if ( probVtx > 0.1 ) {
+                        //if ( probVtx > 0 ) {
+                            //dr of the electron pair
+                            dr = reco::deltaR(*part_i, *part_j);
+                            //nt.recoVtxDr_[type].push_back(dr);
+                            nt.mmelelVtxDr_.push_back(dr);
+                            //save these temporarily, just for debugging!!
+                            //nt.recoVtxM_[type].push_back(eta_Mmmee);    /////
+                            //nt.recoVtxPt_[type].push_back(eta_Ptmmee);  /////
+                            //nt.mmelelVtxM_.push_back(eta_Mmmee);    /////
+                            //nt.mmelelVtxPt_.push_back(eta_Ptmmee);  /////
+                            //for this vertex, two different pointers to constituent particles
+                            // first for the tracks (electrons or pions), then for muons
+                            //  for each of the two, first 4 bits are for the positive particle, last 4 bits for the neg particle
+                            //uint8_t tracks = igood[i] + (jgood[j] << 4); 
+                            uint8_t eleP = nt.gsfElsP[i];
+                            uint8_t eleN = nt.gsfElsN[j];
+                            uint8_t muonP = nt.muonsP[k];
+                            uint8_t muonN = nt.muonsN[l];
+
+                            nt.mmelelVtxEleP_.push_back(eleP);
+                            nt.mmelelVtxEleN_.push_back(eleN);
+                            nt.mmelelVtxMuonP_.push_back(muonP);
+                            nt.mmelelVtxMuonN_.push_back(muonN);
+                            if(nt.mmelelVtxEleP_.size() != nt.mmelelVtxDr_.size()){
+                                std::cout << "Error!!!!!!!!!!" << (int)nt.mmelelVtxEleP_.size() << " vs. " << (int)nt.mmelelVtxDr_.size() << std::endl;
+                                throw std::runtime_error("what the h*ck EleP size diff from Dr size for mmelel???");
+                            }
+                        }
+                    } //l loop
+                } //k loop
+            } //if GsfTracks Nonnull
+
+        } // j loop
+    } // i loop
 } // computeVertices
 
 //got this code from Sergey Polikarpov

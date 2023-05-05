@@ -463,7 +463,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         //cout<<"just incremented NGoodElectron: " << (int)nt.recoNGoodElectron_ << "; i: " << (int)i << "; handle size: " << (int)(recoElectronHandle_->size()) << endl;
     }
 
-    cout << "Event " << (int)nt.eventNum_ << ": " << (int)nt.recoNGoodElectron_ << " good electrons total. " << (int)elTracksP.size() << " positive and " << (int)elTracksN.size() << " negative." << std::endl;
+    //cout << "Event " << (int)nt.eventNum_ << ": " << (int)nt.recoNGoodElectron_ << " good electrons total. " << (int)elTracksP.size() << " positive and " << (int)elTracksN.size() << " negative." << std::endl;
     // Also add all photons to ntuple, regardless of ID
     // Photon ID only produces 1 or 0
     //nt.recoNPhoton_ = recoPhotonHandle_->size();
@@ -738,7 +738,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         }
         if(genmatchedE && recoEtaVecE.M() > etaMassMin && recoEtaVecE.M() < etaMassMax) {
             matchedGenPtEtaE->Fill(genEtaVec.Pt());
-            std::cout << "Event " << (int)nt.eventNum_ << " : eta meson fully genmatched!" << endl;
+            //std::cout << "Event " << (int)nt.eventNum_ << " : eta meson fully genmatched!" << endl;
         }
 
         genT->Fill();
@@ -783,6 +783,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //now get the vertices for just 2 GsfElectrons
     // EL-EL 
     computeVertices(elTracksP, elTracksN, "elel", theB, kvf, nt);
+
+    //mu-mu-el-el
+    computeVertices(elTracksP, elTracksN, muonsP, muonsN, "mmelel", theB, kvf, nt);
+
     //std::cout << "computing vertices 2" << std::endl;
     //lastly get the vertices for just 2 packed candidate tracks (electrons or pions)
     // PC-PC
