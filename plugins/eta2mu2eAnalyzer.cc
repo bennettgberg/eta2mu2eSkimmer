@@ -110,6 +110,8 @@ private:
     const edm::EDGetTokenT<GenEventInfoProduct> genEvtInfoToken_;
     const edm::EDGetTokenT<reco::VertexCollection>primaryVertexToken_;
     const edm::EDGetTokenT<pat::ElectronCollection> recoElectronToken_;
+    //lowpT electrons
+    const edm::EDGetTokenT<pat::ElectronCollection> recoLowPtElectronToken_;
     const edm::EDGetTokenT<pat::PhotonCollection> recoPhotonToken_;
     const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> esToken_;
     const edm::EDGetTokenT<double> rhoToken_;
@@ -124,6 +126,8 @@ private:
     edm::Handle<std::vector<PileupSummaryInfo>> pileupInfosHandle_;
     edm::Handle<GenEventInfoProduct> genEvtInfoHandle_;
     edm::Handle<pat::ElectronCollection> recoElectronHandle_;
+    //low pT
+    edm::Handle<pat::ElectronCollection> recoLowPtElectronHandle_;
     edm::Handle<pat::PhotonCollection> recoPhotonHandle_;
     edm::Handle<double> rhoHandle_;
     edm::Handle<pat::PackedCandidateCollection> trkHandle_;
@@ -148,6 +152,7 @@ eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
     genEvtInfoToken_(consumes<GenEventInfoProduct>(ps.getParameter<edm::InputTag>("genEvt"))),
     primaryVertexToken_(consumes<reco::VertexCollection>(ps.getParameter<edm::InputTag>("primary_vertices"))),
     recoElectronToken_(consumes<pat::ElectronCollection>(ps.getParameter<edm::InputTag>("electron_collection"))),
+    recoLowPtElectronToken_(consumes<pat::ElectronCollection>(ps.getParameter<edm::InputTag>("lowpt_electron_collection"))),
     recoPhotonToken_(consumes<pat::PhotonCollection>(ps.getParameter<edm::InputTag>("photon_collection"))),
     esToken_(esConsumes<TransientTrackBuilder, TransientTrackRecord>(edm::ESInputTag("", "TransientTrackBuilder"))),
     rhoToken_(consumes<double>(ps.getParameter<edm::InputTag>("rho"))),
@@ -169,6 +174,7 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
 
     desc.add<edm::InputTag>("muon_collection", edm::InputTag("slimmedMuons"));
     desc.add<edm::InputTag>("electron_collection", edm::InputTag("slimmedElectrons"));
+    desc.add<edm::InputTag>("lowpt_electron_collection", edm::InputTag("slimmedLowPtElectrons"));
     desc.add<edm::InputTag>("photon_collection", edm::InputTag("slimmedPhotons"));
     desc.add<edm::InputTag>("primary_vertices", edm::InputTag("offlineSlimmedPrimaryVertices"));
     desc.add<edm::InputTag>("genParticle", edm::InputTag("prunedGenParticles"));
@@ -341,6 +347,7 @@ bool eta2mu2eAnalyzer::getCollections(const edm::Event& iEvent) {
     getHandle(trigResultsToken_, trigResultsHandle_, "trigResults");
     //getHandle(trigEventToken_, trigEventHandle_, "trigEvent");
     getHandle(recoElectronToken_, recoElectronHandle_, "electron_collection");
+    getHandle(recoLowPtElectronToken_, recoLowPtElectronHandle_, "lowpt_electron_collection");
     getHandle(recoPhotonToken_, recoPhotonHandle_, "photon_collection");
     getHandle(rhoToken_, rhoHandle_, "rho");
     getHandle(trkToken_, trkHandle_, "packed_candidate");
@@ -388,48 +395,107 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
     //nt.gsfNTrk_ = recoElectronHandle_->size();
     //nt.gsfNGoodTrk_ = 0;
-    for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
-        pat::ElectronRef electronRef(recoElectronHandle_, i);
+//    std::cout << "**Regular Electrons**" << std::endl;
+//    for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
+//        pat::ElectronRef electronRef(recoElectronHandle_, i);
+//        nt.recoElectronPt_.push_back(electronRef->pt());
+//        nt.recoElectronEta_.push_back(electronRef->eta());
+//        nt.recoElectronPhi_.push_back(electronRef->phi());
+//        nt.recoElectronVxy_.push_back(electronRef->trackPositionAtVtx().rho()); //?????
+//        nt.recoElectronVz_.push_back(electronRef->trackPositionAtVtx().z());
+//        nt.recoElectronCharge_.push_back(electronRef->charge());
+//        std::cout << "Electron " << (int)nt.recoNGoodElectron_ << ": pT=" << electronRef->pt() << ", eta=" << electronRef->eta() << ", phi=" << electronRef->phi() 
+//            << ", charge=" << (int)electronRef->charge() << std::endl;
+//
+//        //try getting the electron ID
+//        //if ( i == 0 ) {
+//        //    vector<IdPairf> IDsList = electronRef->electronIDs();
+//        //    std::cout << "List of available electron IDs: " << std::endl;
+//        //    for( IdPairf x : IDsList ) {
+//        //        std::cout << x.first << " : " << x.second << std::endl;
+//        //    }
+//        //}
+//
+//        //Directly from CMSSW code:
+//        //// ---- methods for electron ID ----
+//        /// Returns a specific electron ID associated to the pat::Electron given its name
+//        // For cut-based IDs, the value map has the following meaning:
+//        // 0: fails,
+//        // 1: passes electron ID only,
+//        // 2: passes electron Isolation only,
+//        // 3: passes electron ID and Isolation only,
+//        // 4: passes conversion rejection,
+//        // 5: passes conversion rejection and ID,
+//        // 6: passes conversion rejection and Isolation,
+//        // 7: passes the whole selection.
+//        // For more details have a look at:
+//        // https://twiki.cern.ch/twiki/bin/view/CMS/SimpleCutBasedEleID
+//        // https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideCategoryBasedElectronID
+//        // Note: an exception is thrown if the specified ID is not available
+//
+//        //format of my Electron ID (8 bits):
+//        // 0: wp80 ID, 1: wp80 conversion rejection, 2: wp90 ID, 3: wp90 conversion rejection, 4: loose ID, 5: loose conv. rej. (6,7: 0)
+//        uint8_t full_id = 0;
+//        int idnum = 0;
+//        //loop over the 3 different elec IDs (wp80, wp90, loose)
+//        for(std::string id : nt.electronIDs) {
+//            uint8_t thisid = electronRef->electronID(id);
+//            //std::cout << id << " : " << (int)thisid << "; ";
+//            uint8_t add_id = 0;
+//            if ( thisid % 2 == 1 ) {
+//                add_id += 1;
+//            }
+//            if ( thisid > 3 ) {
+//                add_id += 2;
+//            }
+//            full_id = full_id + (add_id << (2*idnum));
+//            idnum++;
+//        }
+//        //std::cout << "full_id : " << (int)full_id << std::endl;
+//        nt.recoElectronIDResult_.push_back( full_id );
+//        reco::GsfTrackRef eltrack = electronRef->gsfTrack();
+//
+//        nt.gsfTrkPt_.push_back(eltrack->pt());
+//        nt.gsfTrkEta_.push_back(eltrack->eta());
+//        nt.gsfTrkPhi_.push_back(eltrack->phi());
+//        nt.gsfTrkCharge_.push_back(eltrack->charge());
+//
+//
+//        if ( electronRef->charge() > 0 ) {
+//            elTracksP.push_back(eltrack);
+//            nt.gsfElsP.push_back(nt.recoNGoodElectron_);
+//        }
+//        else {
+//            elTracksN.push_back(eltrack);
+//            nt.gsfElsN.push_back(nt.recoNGoodElectron_);
+//        }
+//        //cout << "about to increment; just pushed back: " << (int)nt.recoNGoodElectron_ << "/" << (int)(recoElectronHandle_->size()) << " good electrons." << endl;
+//        nt.recoNGoodElectron_++;
+//        //cout<<"just incremented NGoodElectron: " << (int)nt.recoNGoodElectron_ << "; i: " << (int)i << "; handle size: " << (int)(recoElectronHandle_->size()) << endl;
+//    }
+
+    //now add also the Low pT electrons!!
+    //std::cout << "**Low pT Electrons**" << std::endl;
+    for (size_t i = 0; i < recoLowPtElectronHandle_->size(); i++) {
+        pat::ElectronRef electronRef(recoLowPtElectronHandle_, i);
         nt.recoElectronPt_.push_back(electronRef->pt());
         nt.recoElectronEta_.push_back(electronRef->eta());
         nt.recoElectronPhi_.push_back(electronRef->phi());
         nt.recoElectronVxy_.push_back(electronRef->trackPositionAtVtx().rho()); //?????
         nt.recoElectronVz_.push_back(electronRef->trackPositionAtVtx().z());
         nt.recoElectronCharge_.push_back(electronRef->charge());
-        //try getting the electron ID
-        //if ( i == 0 ) {
-        //    vector<IdPairf> IDsList = electronRef->electronIDs();
-        //    std::cout << "List of available electron IDs: " << std::endl;
-        //    for( IdPairf x : IDsList ) {
-        //        std::cout << x.first << " : " << x.second << std::endl;
-        //    }
-        //}
 
-        //Directly from CMSSW code:
-        //// ---- methods for electron ID ----
-        /// Returns a specific electron ID associated to the pat::Electron given its name
-        // For cut-based IDs, the value map has the following meaning:
-        // 0: fails,
-        // 1: passes electron ID only,
-        // 2: passes electron Isolation only,
-        // 3: passes electron ID and Isolation only,
-        // 4: passes conversion rejection,
-        // 5: passes conversion rejection and ID,
-        // 6: passes conversion rejection and Isolation,
-        // 7: passes the whole selection.
-        // For more details have a look at:
-        // https://twiki.cern.ch/twiki/bin/view/CMS/SimpleCutBasedEleID
-        // https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideCategoryBasedElectronID
-        // Note: an exception is thrown if the specified ID is not available
+        //std::cout << "LowPtElectron " << (int)nt.recoNGoodElectron_ <<": pT="<<electronRef->pt()<<", eta="<<electronRef->eta()<< ", phi=" <<electronRef->phi() 
+        //    << ", charge=" << (int)electronRef->charge() << std::endl;
 
         //format of my Electron ID (8 bits):
         // 0: wp80 ID, 1: wp80 conversion rejection, 2: wp90 ID, 3: wp90 conversion rejection, 4: loose ID, 5: loose conv. rej. (6,7: 0)
         uint8_t full_id = 0;
         int idnum = 0;
         //loop over the 3 different elec IDs (wp80, wp90, loose)
-        for(std::string id : nt.electronIDs) {
+        //for(std::string id : nt.electronIDs) {
+        for(std::string id : nt.lowPtElectronIDs) {
             uint8_t thisid = electronRef->electronID(id);
-            //std::cout << id << " : " << (int)thisid << "; ";
             uint8_t add_id = 0;
             if ( thisid % 2 == 1 ) {
                 add_id += 1;
@@ -440,7 +506,6 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             full_id = full_id + (add_id << (2*idnum));
             idnum++;
         }
-        //std::cout << "full_id : " << (int)full_id << std::endl;
         nt.recoElectronIDResult_.push_back( full_id );
         reco::GsfTrackRef eltrack = electronRef->gsfTrack();
 
@@ -458,9 +523,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             elTracksN.push_back(eltrack);
             nt.gsfElsN.push_back(nt.recoNGoodElectron_);
         }
-        //cout << "about to increment; just pushed back: " << (int)nt.recoNGoodElectron_ << "/" << (int)(recoElectronHandle_->size()) << " good electrons." << endl;
         nt.recoNGoodElectron_++;
-        //cout<<"just incremented NGoodElectron: " << (int)nt.recoNGoodElectron_ << "; i: " << (int)i << "; handle size: " << (int)(recoElectronHandle_->size()) << endl;
     }
 
     //cout << "Event " << (int)nt.eventNum_ << ": " << (int)nt.recoNGoodElectron_ << " good electrons total. " << (int)elTracksP.size() << " positive and " << (int)elTracksN.size() << " negative." << std::endl;
@@ -675,12 +738,14 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 }
                 alldR->Fill(mindR);
 
-                //now do the same for GsfElectrons instead of PC tracks.
+                //now do the same for pat::Electrons instead of PC tracks.
                 TLorentzVector recoLepVecE;
                 mindR = 9999.0;
-                for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
-                    pat::ElectronRef ele(recoElectronHandle_, i);
-                    //make sure the GsfElectron has the right charge!!
+                //for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
+                for (size_t i = 0; i < recoLowPtElectronHandle_->size(); i++) {
+                    //pat::ElectronRef ele(recoElectronHandle_, i);
+                    pat::ElectronRef ele(recoLowPtElectronHandle_, i);
+                    //make sure the Electron has the right charge!!
                     if(ele->charge() * (genParticle->charge()) < 0) continue;
                     float gendR = reco::deltaR(*ele, *genParticle);
                     if( gendR < mindR ) {

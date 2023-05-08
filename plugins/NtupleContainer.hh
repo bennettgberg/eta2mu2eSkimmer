@@ -16,6 +16,8 @@ public:
     vector<std::string> photonIDs = {"mvaPhoID-RunIIFall17-v2-wp80", "mvaPhoID-RunIIFall17-v2-wp90" };
     //list of electron ID names to save
     vector<std::string> electronIDs = {"mvaEleID-Fall17-noIso-V2-wp80", "mvaEleID-Fall17-noIso-V2-wp90", "mvaEleID-Fall17-noIso-V2-wpLoose" };
+    //separate list for low pT electrons
+    vector<std::string> lowPtElectronIDs = {"ID", "ptbiased", "unbiased" };
     virtual ~NtupleContainer();
     void SetRecoTree(TTree *tree);
     void SetGenTree(TTree *tree);
