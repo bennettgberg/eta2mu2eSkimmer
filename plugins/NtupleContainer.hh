@@ -69,6 +69,16 @@ public:
     vector<float> recoElectronVz_;
     vector<int8_t> recoElectronCharge_;
     vector<uint8_t> recoElectronIDResult_;
+
+    // Reco electron branches
+    uint8_t recoNGoodLowPtElectron_;
+    vector<float> recoLowPtElectronPt_;
+    vector<float> recoLowPtElectronEta_;
+    vector<float> recoLowPtElectronPhi_;
+    vector<float> recoLowPtElectronVxy_;
+    vector<float> recoLowPtElectronVz_;
+    vector<int8_t> recoLowPtElectronCharge_;
+    vector<uint8_t> recoLowPtElectronIDResult_;
     
     // Reco photon branches
     uint8_t recoNGoodPhoton_;
@@ -102,11 +112,18 @@ public:
     vector<float> gsfTrkPhi_;
     vector<int8_t> gsfTrkCharge_;
 
+    vector<float> gsfLowPtTrkPt_;
+    vector<float> gsfLowPtTrkEta_;
+    vector<float> gsfLowPtTrkPhi_;
+    vector<int8_t> gsfLowPtTrkCharge_;
+
     //mapping from the pos-only and neg-only list to the full list
     vector<uint8_t> mmeeTrxP;
     vector<uint8_t> mmeeTrxN;
     vector<uint8_t> gsfElsP;
     vector<uint8_t> gsfElsN;
+    vector<uint8_t> gsfLowPtElsP;
+    vector<uint8_t> gsfLowPtElsN;
     vector<uint8_t> muonsP;
     vector<uint8_t> muonsN;
 
@@ -145,6 +162,36 @@ public:
     vector<uint8_t> mmelelVtxMuonN_;
     vector<uint8_t> mmelelVtxEleP_;
     vector<uint8_t> mmelelVtxEleN_;
+
+    //mu-mu-lowPtElectron-lowPtElectron vertices
+    vector<float> mmlplpVtxVxy_;
+    vector<float> mmlplpVtxVz_;
+    vector<float> mmlplpVtxSigmaVxy_;
+    vector<float> mmlplpVtxReducedChi2_;
+    vector<float> mmlplpVtxDr_;
+    vector<float> mmlplpVtxPt_;
+    vector<float> mmlplpVtxM_;
+    vector<float> mmlplpVtxM2_;
+    vector<float> mmlplpVtxPt2_;
+    vector<uint8_t> mmlplpVtxMuonP_;
+    vector<uint8_t> mmlplpVtxMuonN_;
+    vector<uint8_t> mmlplpVtxEleP_;
+    vector<uint8_t> mmlplpVtxEleN_;
+
+    //lowPtElectron-lowPtElectron vertices
+    vector<float> lplpVtxVxy_;
+    vector<float> lplpVtxVz_;
+    vector<float> lplpVtxSigmaVxy_;
+    vector<float> lplpVtxReducedChi2_;
+    vector<float> lplpVtxDr_;
+    vector<float> lplpVtxPt_;
+    vector<float> lplpVtxM_;
+    vector<float> lplpVtxM2_;
+    vector<float> lplpVtxPt2_;
+    vector<uint8_t> lplpVtxEleP_;
+    vector<uint8_t> lplpVtxEleN_;
+    vector<uint8_t> lplpVtxTrackP_;
+    vector<uint8_t> lplpVtxTrackN_;
 
     vector<float> elelVtxVxy_;
     vector<float> elelVtxVz_;

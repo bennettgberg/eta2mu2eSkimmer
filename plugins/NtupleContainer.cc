@@ -12,8 +12,12 @@ void NtupleContainer::CreateTreeBranches() {
 
     mmeeTrxP = {};
     mmeeTrxN = {};
+    muonsP = {};
+    muonsN = {};
     gsfElsP = {};
     gsfElsN = {};
+    gsfLowPtElsP = {};
+    gsfLowPtElsN = {};
 
     recoT->Branch("evt", &eventNum_);
     recoT->Branch("lumi_sec", &lumiSec_);
@@ -58,6 +62,27 @@ void NtupleContainer::CreateTreeBranches() {
     //recoT->Branch("Vertex_elel_M", &elelVtxM_);
     //recoT->Branch("Vertex_elel_Pt", &elelVtxPt_);
 
+    recoT->Branch("Vertex_mmlplp_vxy", &mmlplpVtxVxy_);
+    recoT->Branch("Vertex_mmlplp_vz", &mmlplpVtxVz_);
+    recoT->Branch("Vertex_mmlplp_sigmaVxy", &mmlplpVtxSigmaVxy_);
+    recoT->Branch("Vertex_mmlplp_reduced_chi2", &mmlplpVtxReducedChi2_);
+    recoT->Branch("Vertex_mmlplp_dR", &mmlplpVtxDr_);
+    recoT->Branch("Vertex_mmlplp_muP", &mmlplpVtxMuonP_);
+    recoT->Branch("Vertex_mmlplp_muN", &mmlplpVtxMuonN_);
+    recoT->Branch("Vertex_mmlplp_eleP", &mmlplpVtxEleP_);
+    recoT->Branch("Vertex_mmlplp_eleN", &mmlplpVtxEleN_);
+
+    recoT->Branch("Vertex_lplp_vxy", &lplpVtxVxy_);
+    recoT->Branch("Vertex_lplp_vz", &lplpVtxVz_);
+    recoT->Branch("Vertex_lplp_sigmaVxy", &lplpVtxSigmaVxy_);
+    recoT->Branch("Vertex_lplp_reduced_chi2", &lplpVtxReducedChi2_);
+    recoT->Branch("Vertex_lplp_dR", &lplpVtxDr_);
+    recoT->Branch("Vertex_lplp_eleP", &lplpVtxEleP_);
+    recoT->Branch("Vertex_lplp_eleN", &lplpVtxEleN_);
+    //for debugging only, do NOT include in final ntuple (waste of space)
+    //recoT->Branch("Vertex_lplp_M", &lplpVtxM_);
+    //recoT->Branch("Vertex_lplp_Pt", &lplpVtxPt_);
+
     recoT->Branch("Vertex_pcpc_vxy", &pcpcVtxVxy_);
     recoT->Branch("Vertex_pcpc_vz", &pcpcVtxVz_);
     recoT->Branch("Vertex_pcpc_sigmaVxy", &pcpcVtxSigmaVxy_);
@@ -90,6 +115,15 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Electron_charge", &recoElectronCharge_);
     recoT->Branch("Electron_id", &recoElectronIDResult_);
 
+    recoT->Branch("nGoodLowPtElectron", &recoNGoodLowPtElectron_);
+    recoT->Branch("LowPtElectron_pt",  &recoLowPtElectronPt_);
+    recoT->Branch("LowPtElectron_eta", &recoLowPtElectronEta_);
+    recoT->Branch("LowPtElectron_phi", &recoLowPtElectronPhi_);
+    recoT->Branch("LowPtElectron_vxy", &recoLowPtElectronVxy_);
+    recoT->Branch("LowPtElectron_vz",  &recoLowPtElectronVz_);
+    recoT->Branch("LowPtElectron_charge", &recoLowPtElectronCharge_);
+    recoT->Branch("LowPtElectron_id", &recoLowPtElectronIDResult_);
+
     recoT->Branch("nGoodPhoton", &recoNGoodPhoton_);
     recoT->Branch("Photon_pt",  &recoPhotonPt_);
     recoT->Branch("Photon_eta", &recoPhotonEta_);
@@ -120,6 +154,11 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("GsfTrack_eta", &gsfTrkEta_);
     recoT->Branch("GsfTrack_phi", &gsfTrkPhi_);
     recoT->Branch("GsfTrack_charge", &gsfTrkCharge_);
+
+    recoT->Branch("GsfLowPtTrack_pt", &gsfLowPtTrkPt_);
+    recoT->Branch("GsfLowPtTrack_eta", &gsfLowPtTrkEta_);
+    recoT->Branch("GsfLowPtTrack_phi", &gsfLowPtTrkPhi_);
+    recoT->Branch("GsfLowPtTrack_charge", &gsfLowPtTrkCharge_);
     //which triggers fired?
     recoT->Branch("Triggers_fired0", &fired0_);
     recoT->Branch("Triggers_fired1", &fired1_);
@@ -175,6 +214,32 @@ void NtupleContainer::ClearTreeBranches() {
     mmelelVtxEleP_.clear();
     mmelelVtxEleN_.clear();
 
+    mmlplpVtxVxy_.clear();
+    mmlplpVtxVz_.clear();
+    mmlplpVtxSigmaVxy_.clear();
+    mmlplpVtxReducedChi2_.clear();
+    mmlplpVtxDr_.clear();
+    mmlplpVtxM_.clear();
+    mmlplpVtxPt_.clear();
+    mmlplpVtxM2_.clear();
+    mmlplpVtxPt2_.clear();
+    mmlplpVtxMuonP_.clear();
+    mmlplpVtxMuonN_.clear();
+    mmlplpVtxEleP_.clear();
+    mmlplpVtxEleN_.clear();
+
+    lplpVtxVxy_.clear();
+    lplpVtxVz_.clear();
+    lplpVtxSigmaVxy_.clear();
+    lplpVtxReducedChi2_.clear();
+    lplpVtxDr_.clear();
+    lplpVtxM_.clear();
+    lplpVtxPt_.clear();
+    lplpVtxM2_.clear();
+    lplpVtxPt2_.clear();
+    lplpVtxEleP_.clear();
+    lplpVtxEleN_.clear();
+
     elelVtxVxy_.clear();
     elelVtxVz_.clear();
     elelVtxSigmaVxy_.clear();
@@ -213,8 +278,12 @@ void NtupleContainer::ClearTreeBranches() {
 
     gsfElsP.clear();
     gsfElsN.clear();
+    gsfLowPtElsP.clear();
+    gsfLowPtElsN.clear();
     mmeeTrxP.clear();
     mmeeTrxN.clear();
+    muonsP.clear();
+    muonsN.clear();
 
     recoElectronPt_.clear();
     recoElectronEta_.clear();
@@ -223,6 +292,13 @@ void NtupleContainer::ClearTreeBranches() {
     recoElectronVz_.clear();
     recoElectronCharge_.clear();
     recoElectronIDResult_.clear();
+    recoLowPtElectronPt_.clear();
+    recoLowPtElectronEta_.clear();
+    recoLowPtElectronPhi_.clear();
+    recoLowPtElectronVxy_.clear();
+    recoLowPtElectronVz_.clear();
+    recoLowPtElectronCharge_.clear();
+    recoLowPtElectronIDResult_.clear();
     recoPhotonPt_.clear();
     recoPhotonEta_.clear();
     recoPhotonPhi_.clear();
@@ -266,6 +342,11 @@ void NtupleContainer::ClearTreeBranches() {
     gsfTrkEta_.clear();
     gsfTrkPhi_.clear();
     gsfTrkCharge_.clear();
+
+    gsfLowPtTrkPt_.clear();
+    gsfLowPtTrkEta_.clear();
+    gsfLowPtTrkPhi_.clear();
+    gsfLowPtTrkCharge_.clear();
 
     // Pile-up and event genweight
     genpuobs_ = -9999;

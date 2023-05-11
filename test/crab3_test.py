@@ -3,7 +3,7 @@ config = config()
 
 isMC = True
 #signal or MC background?
-isSig = False
+isSig = True
 
 #BParking set number, and Run letter of 2022 for the inputDataset
 # 40 different datasets total
@@ -22,7 +22,7 @@ if not isMC:
 else:
     if isSig:
         #config.General.requestName = 'test0MC_EtaTo2Mu2E'
-        config.General.requestName = 'test15MC_EtaTo2Mu2E'
+        config.General.requestName = 'test17MC_EtaTo2Mu2E'
     else:
         config.General.requestName = 'test1MC_EtaToMuMuGamma'
 config.General.workArea = 'crab_MiniAnalyzer'

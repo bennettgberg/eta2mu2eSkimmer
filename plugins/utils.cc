@@ -48,6 +48,12 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.elelVtxVz_.push_back(vz);
             nt.elelVtxSigmaVxy_.push_back(sigma_vxy);
         }
+        else if(type == "lplp") {
+            nt.lplpVtxReducedChi2_.push_back(vtx_chi2);
+            nt.lplpVtxVxy_.push_back(vxy);
+            nt.lplpVtxVz_.push_back(vz);
+            nt.lplpVtxSigmaVxy_.push_back(sigma_vxy);
+        }
         else if(type == "pcpc") {
             nt.pcpcVtxReducedChi2_.push_back(vtx_chi2);
             nt.pcpcVtxVxy_.push_back(vxy);
@@ -65,6 +71,12 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.mmelelVtxVxy_.push_back(vxy);
             nt.mmelelVtxVz_.push_back(vz);
             nt.mmelelVtxSigmaVxy_.push_back(sigma_vxy);
+        }
+        else if(type == "mmlplp") {
+            nt.mmlplpVtxReducedChi2_.push_back(vtx_chi2);
+            nt.mmlplpVtxVxy_.push_back(vxy);
+            nt.mmlplpVtxVz_.push_back(vz);
+            nt.mmlplpVtxSigmaVxy_.push_back(sigma_vxy);
         }
         //std::cout << "probability: " << prob << std::endl;
     }
@@ -197,25 +209,37 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                 if ( probVtx > 0.1 ) {
                 //if ( 0.2 > 0.1 ) {
                     dr = reco::deltaR(*part_i, *part_j);
-                    //nt.recoVtxDr_[type].push_back(dr);
-                    nt.elelVtxDr_.push_back(dr);
-                    //first 4 bits for first electron, last 4 for second electron
-                    //uint8_t full_val = nt.gsfElsP[i] + (nt.gsfElsN[j] << 4);
-                    uint8_t eleP = nt.gsfElsP[i];
-                    uint8_t eleN = nt.gsfElsN[j];
-                    //std::cout << "eleP: " << (int)eleP << "; eleN: " << (int)eleN << std::endl;
-                    //std::cout << "full vector gsfElsP: ";
-                    //for(uint8_t elp : nt.gsfElsP) std::cout << (int)elp << ", ";
-                    //std::cout << std::endl;
-                    //std::cout << "full vector gsfElsN: ";
-                    //for(uint8_t eln : nt.gsfElsN) std::cout << (int)eln << ", ";
-                    //std::cout << std::endl;
-                    //std::cout << "nGoodElectron: " << (int)nt.recoNGoodElectron_ << std::endl;
-                    //nt.recoVtxEleP_[type].push_back(eleP);
-                    //nt.recoVtxEleN_[type].push_back(eleN);
-                    nt.elelVtxEleP_.push_back(eleP);
-                    nt.elelVtxEleN_.push_back(eleN);
-                    //std::cout << "eleP: " << (int)eleP << "; eleN: " << (int)eleN;
+                    if(type == "elel") {
+                        nt.elelVtxDr_.push_back(dr);
+                        //first 4 bits for first electron, last 4 for second electron
+                        //uint8_t full_val = nt.gsfElsP[i] + (nt.gsfElsN[j] << 4);
+                        uint8_t eleP = nt.gsfElsP[i];
+                        uint8_t eleN = nt.gsfElsN[j];
+                        //std::cout << "eleP: " << (int)eleP << "; eleN: " << (int)eleN << std::endl;
+                        //std::cout << "full vector gsfElsP: ";
+                        //for(uint8_t elp : nt.gsfElsP) std::cout << (int)elp << ", ";
+                        //std::cout << std::endl;
+                        //std::cout << "full vector gsfElsN: ";
+                        //for(uint8_t eln : nt.gsfElsN) std::cout << (int)eln << ", ";
+                        //std::cout << std::endl;
+                        //std::cout << "nGoodElectron: " << (int)nt.recoNGoodElectron_ << std::endl;
+                        //nt.recoVtxEleP_[type].push_back(eleP);
+                        //nt.recoVtxEleN_[type].push_back(eleN);
+                        nt.elelVtxEleP_.push_back(eleP);
+                        nt.elelVtxEleN_.push_back(eleN);
+                        //std::cout << "eleP: " << (int)eleP << "; eleN: " << (int)eleN;
+                    } //end elel type
+                    else if(type == "lplp") {
+                        nt.lplpVtxDr_.push_back(dr);
+                        uint8_t eleP = nt.gsfLowPtElsP[i];
+                        uint8_t eleN = nt.gsfLowPtElsN[j];
+                        nt.lplpVtxEleP_.push_back(eleP);
+                        nt.lplpVtxEleN_.push_back(eleN);
+                    } //end lplp type
+                    else {
+                        std::cout << "Error!! Unrecognized vertex type " << type << std::endl;
+                        throw std::runtime_error("Error: unrecognized type for 2-lepton vertex.");
+                    }
                 }
             } //end is Nonnull 
             else { //is null ....
@@ -223,15 +247,28 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                 if(!part_i.isNonnull()) std::cout << "part i: " << (int)i << " "; 
                 if(!part_j.isNonnull()) std::cout << "part j: " << (int)j << " "; 
                 std::cout << std::endl;
-                nt.elelVtxDr_.push_back(9999);
-                uint8_t eleP = nt.gsfElsP[i];
-                uint8_t eleN = nt.gsfElsN[j];
-                nt.elelVtxEleP_.push_back(eleP);
-                nt.elelVtxEleN_.push_back(eleN);
-                nt.elelVtxReducedChi2_.push_back(9999);
-                nt.elelVtxVxy_.push_back(9999);
-                nt.elelVtxVz_.push_back(9999);
-                nt.elelVtxSigmaVxy_.push_back(9999);
+                if(type == "elel") {
+                    nt.elelVtxDr_.push_back(9999);
+                    uint8_t eleP = nt.gsfElsP[i];
+                    uint8_t eleN = nt.gsfElsN[j];
+                    nt.elelVtxEleP_.push_back(eleP);
+                    nt.elelVtxEleN_.push_back(eleN);
+                    nt.elelVtxReducedChi2_.push_back(9999);
+                    nt.elelVtxVxy_.push_back(9999);
+                    nt.elelVtxVz_.push_back(9999);
+                    nt.elelVtxSigmaVxy_.push_back(9999);
+                } //elel type
+                else if(type == "lplp") {
+                    nt.lplpVtxDr_.push_back(9999);
+                    uint8_t eleP = nt.gsfLowPtElsP[i];
+                    uint8_t eleN = nt.gsfLowPtElsN[j];
+                    nt.lplpVtxEleP_.push_back(eleP);
+                    nt.lplpVtxEleN_.push_back(eleN);
+                    nt.lplpVtxReducedChi2_.push_back(9999);
+                    nt.lplpVtxVxy_.push_back(9999);
+                    nt.lplpVtxVz_.push_back(9999);
+                    nt.lplpVtxSigmaVxy_.push_back(9999);
+                }
             }
         } // j loop
     } // i loop
@@ -377,7 +414,6 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                         if( igood[i] < 0 ) {
                             igood[i] = static_cast<int>(nt.recoNGoodTrk_);
                             nt.mmeeTrxP.push_back(nt.recoNGoodTrk_);
-                            nt.muonsP.push_back(nt.recoNGoodMuon_);
                             //std::cout << (int)i << " positive track is the " << (int)nt.recoNGoodTrk_ << " track overall." << std::endl;
                             //std::cout << "OUTSIDE boutta increment recoNGoodTrk: " << (int)nt.recoNGoodTrk_ << std::endl;
                             nt = addTrack(nt, part_i);
@@ -388,7 +424,6 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                         if( jgood[j] < 0 ) {
                             jgood[j] = static_cast<int>(nt.recoNGoodTrk_);
                             nt.mmeeTrxN.push_back(nt.recoNGoodTrk_);
-                            nt.muonsN.push_back(nt.recoNGoodMuon_);
                             //std::cout << (int)j << " negative track is the " << (int)nt.recoNGoodTrk_ << " track overall." << std::endl;
                             nt = addTrack(nt, part_j);
                             myVertTracks.tracksN.push_back(part_j);
@@ -396,12 +431,14 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                         if ( kgood[k] < 0 ) {
                             kgood[k] = static_cast<int>(nt.recoNGoodMuon_);
                             //std::cout << (int)k << " positive muon is the " << (int)nt.recoNGoodMuon_ << " muon overall." << std::endl;
+                            nt.muonsP.push_back(nt.recoNGoodMuon_);
                             nt = addMuon(nt, coll_3[k]);
                             myVertTracks.muonsP.push_back(coll_3[k]);
                         }
                         if( lgood[l] < 0 ) {
                             lgood[l] = static_cast<int>(nt.recoNGoodMuon_);
                             //std::cout << (int)l << " negative muon is the " << (int)nt.recoNGoodMuon_ << " muon overall." << std::endl;
+                            nt.muonsN.push_back(nt.recoNGoodMuon_);
                             nt = addMuon(nt, coll_4[l]);
                             myVertTracks.muonsN.push_back(coll_4[l]);
                         } 
@@ -547,8 +584,6 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                         //if ( probVtx > 0 ) {
                             //dr of the electron pair
                             dr = reco::deltaR(*part_i, *part_j);
-                            //nt.recoVtxDr_[type].push_back(dr);
-                            nt.mmelelVtxDr_.push_back(dr);
                             //save these temporarily, just for debugging!!
                             //nt.recoVtxM_[type].push_back(eta_Mmmee);    /////
                             //nt.recoVtxPt_[type].push_back(eta_Ptmmee);  /////
@@ -558,18 +593,40 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                             // first for the tracks (electrons or pions), then for muons
                             //  for each of the two, first 4 bits are for the positive particle, last 4 bits for the neg particle
                             //uint8_t tracks = igood[i] + (jgood[j] << 4); 
-                            uint8_t eleP = nt.gsfElsP[i];
-                            uint8_t eleN = nt.gsfElsN[j];
                             uint8_t muonP = nt.muonsP[k];
                             uint8_t muonN = nt.muonsN[l];
 
-                            nt.mmelelVtxEleP_.push_back(eleP);
-                            nt.mmelelVtxEleN_.push_back(eleN);
-                            nt.mmelelVtxMuonP_.push_back(muonP);
-                            nt.mmelelVtxMuonN_.push_back(muonN);
-                            if(nt.mmelelVtxEleP_.size() != nt.mmelelVtxDr_.size()){
-                                std::cout << "Error!!!!!!!!!!" << (int)nt.mmelelVtxEleP_.size() << " vs. " << (int)nt.mmelelVtxDr_.size() << std::endl;
-                                throw std::runtime_error("what the h*ck EleP size diff from Dr size for mmelel???");
+                            if(type == "mmelel") {
+                                uint8_t eleP = nt.gsfElsP[i];
+                                uint8_t eleN = nt.gsfElsN[j];
+                                //nt.recoVtxDr_[type].push_back(dr);
+                                nt.mmelelVtxDr_.push_back(dr);
+                                nt.mmelelVtxEleP_.push_back(eleP);
+                                nt.mmelelVtxEleN_.push_back(eleN);
+                                nt.mmelelVtxMuonP_.push_back(muonP);
+                                nt.mmelelVtxMuonN_.push_back(muonN);
+                                if(nt.mmelelVtxEleP_.size() != nt.mmelelVtxDr_.size()){
+                                    std::cout << "Error!!!!!!!!!!" << (int)nt.mmelelVtxEleP_.size() << " vs. " << (int)nt.mmelelVtxDr_.size() << std::endl;
+                                    throw std::runtime_error("what the h*ck EleP size diff from Dr size for mmelel???");
+                                }
+                            } //mmelel type
+                            else if(type == "mmlplp") {
+                                uint8_t eleP = nt.gsfLowPtElsP[i];
+                                uint8_t eleN = nt.gsfLowPtElsN[j];
+                                nt.mmlplpVtxDr_.push_back(dr);
+                                nt.mmlplpVtxEleP_.push_back(eleP);
+                                nt.mmlplpVtxEleN_.push_back(eleN);
+                                nt.mmlplpVtxMuonP_.push_back(muonP);
+                                nt.mmlplpVtxMuonN_.push_back(muonN);
+                                if(nt.mmlplpVtxEleP_.size() != nt.mmlplpVtxDr_.size()){
+                                    std::cout << "Error!!!!!!!!!!" << (int)nt.mmlplpVtxEleP_.size() << " vs. " << (int)nt.mmlplpVtxDr_.size() << std::endl;
+                                    throw std::runtime_error("what the h*ck EleP size diff from Dr size for mmlplp???");
+                                }
+
+                            } //mmlplp type
+                            else {
+                                std::cout << "Error!!! Unrecognized type " << type << std::endl;
+                                throw std::runtime_error("unrecognized type for 4-lepton vertex.");
                             }
                         }
                     } //l loop
