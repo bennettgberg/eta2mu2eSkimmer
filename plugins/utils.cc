@@ -134,6 +134,10 @@ void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std
             if ( probVtx > 0.1 ) {
                 dr = reco::deltaR(part_i, part_j);
                 nt.mumuVtxDr_.push_back(dr);
+                uint8_t muP = nt.muonsP[i];
+                uint8_t muN = nt.muonsN[j];
+                nt.mumuVtxMuonP_.push_back(muP);
+                nt.mumuVtxMuonN_.push_back(muN);
             }
             
         } // j loop

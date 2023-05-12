@@ -861,6 +861,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //LowPtElectron-LowPtElectron
     computeVertices(elLowPtTracksP, elLowPtTracksN, "lplp", theB, kvf, nt);
 
+    // MU-MU 
+    computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt);
+
     //mu-mu-el-el
     computeVertices(elTracksP, elTracksN, muonsP, muonsN, "mmelel", theB, kvf, nt);
     //mu-mu-LowPtElectron-LowPtElectron
