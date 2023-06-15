@@ -4,6 +4,8 @@
 // returns probability of the vertex fit (-1 if the fit failed).
 float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVertex tv, std::string type, NtupleContainer & nt) {
     float vxy = -9999;
+    float vx = -9999;
+    float vy = -9999;
     float sigma_vxy = -9999;
     float vtx_chi2 = 999999;
     float vz = -9999;
@@ -12,6 +14,8 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     //only process valid transient vertices
     if (tv.isValid()) {
         reco::Vertex vertex = reco::Vertex(tv);
+        vx = vertex.x();
+        vy = vertex.y();
         vxy = sqrt(vertex.x()*vertex.x() + vertex.y()*vertex.y());
         sigma_vxy = (1/vxy)*sqrt(vertex.x()*vertex.x()*vertex.xError()*vertex.xError() +
                 vertex.y()*vertex.y()*vertex.yError()*vertex.yError());
@@ -38,43 +42,57 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     if ( prob > 0.1 ) {
         if(type == "mmee") {
             nt.mmeeVtxReducedChi2_.push_back(vtx_chi2);
-            nt.mmeeVtxVxy_.push_back(vxy);
+            //nt.mmeeVtxVxy_.push_back(vxy);
+            nt.mmeeVtxVx_.push_back(vx);
+            nt.mmeeVtxVy_.push_back(vy);
             nt.mmeeVtxVz_.push_back(vz);
             nt.mmeeVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "elel") {
             nt.elelVtxReducedChi2_.push_back(vtx_chi2);
-            nt.elelVtxVxy_.push_back(vxy);
+            //nt.elelVtxVxy_.push_back(vxy);
+            nt.elelVtxVx_.push_back(vx);
+            nt.elelVtxVy_.push_back(vy);
             nt.elelVtxVz_.push_back(vz);
             nt.elelVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "lplp") {
             nt.lplpVtxReducedChi2_.push_back(vtx_chi2);
-            nt.lplpVtxVxy_.push_back(vxy);
+            //nt.lplpVtxVxy_.push_back(vxy);
+            nt.lplpVtxVx_.push_back(vx);
+            nt.lplpVtxVy_.push_back(vy);
             nt.lplpVtxVz_.push_back(vz);
             nt.lplpVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "pcpc") {
             nt.pcpcVtxReducedChi2_.push_back(vtx_chi2);
-            nt.pcpcVtxVxy_.push_back(vxy);
+            //nt.pcpcVtxVxy_.push_back(vxy);
+            nt.pcpcVtxVx_.push_back(vx);
+            nt.pcpcVtxVy_.push_back(vy);
             nt.pcpcVtxVz_.push_back(vz);
             nt.pcpcVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "mumu") {
             nt.mumuVtxReducedChi2_.push_back(vtx_chi2);
-            nt.mumuVtxVxy_.push_back(vxy);
+            //nt.mumuVtxVxy_.push_back(vxy);
+            nt.mumuVtxVx_.push_back(vx);
+            nt.mumuVtxVy_.push_back(vy);
             nt.mumuVtxVz_.push_back(vz);
             nt.mumuVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "mmelel") {
             nt.mmelelVtxReducedChi2_.push_back(vtx_chi2);
-            nt.mmelelVtxVxy_.push_back(vxy);
+            //nt.mmelelVtxVxy_.push_back(vxy);
+            nt.mmelelVtxVx_.push_back(vx);
+            nt.mmelelVtxVy_.push_back(vy);
             nt.mmelelVtxVz_.push_back(vz);
             nt.mmelelVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "mmlplp") {
             nt.mmlplpVtxReducedChi2_.push_back(vtx_chi2);
-            nt.mmlplpVtxVxy_.push_back(vxy);
+            //nt.mmlplpVtxVxy_.push_back(vxy);
+            nt.mmlplpVtxVx_.push_back(vx);
+            nt.mmlplpVtxVy_.push_back(vy);
             nt.mmlplpVtxVz_.push_back(vz);
             nt.mmlplpVtxSigmaVxy_.push_back(sigma_vxy);
         }
@@ -83,6 +101,39 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     return prob;
     
 } 
+
+//add a track to the ntuple
+NtupleContainer addTrack(NtupleContainer nt, reco::Track iTrack1) {
+    //can't add another if we're at the maximum
+    if(nt.recoNGoodTrk_ == 255) {
+        throw std::runtime_error("Too many good tracks!");
+    }
+    nt.recoTrkPt_.push_back(iTrack1.pt());
+    nt.recoTrkEta_.push_back(iTrack1.eta());
+    nt.recoTrkPhi_.push_back(iTrack1.phi());
+    nt.recoTrkCharge_.push_back(iTrack1.charge());
+    nt.recoTrkDxy_.push_back(iTrack1.dxy());
+    nt.recoTrkDz_.push_back(iTrack1.dz());
+    nt.recoNGoodTrk_++; 
+    //std::cout << "just incremented recoNGoodTrk: " << (int)nt.recoNGoodTrk_ << std::endl;
+    return nt;
+}
+
+//add a muon to the ntuple
+NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1) {
+    if(nt.recoNGoodMuon_ == 255) {
+        throw std::runtime_error("Too many good muons!");
+    }
+    else {
+        //std::cout << "adding muon " << (int)nt.recoNGoodMuon_ << std::endl;
+    }
+    nt.recoMuonPt_.push_back(iMuon1.pt());
+    nt.recoMuonEta_.push_back(iMuon1.eta());
+    nt.recoMuonPhi_.push_back(iMuon1.phi());
+    nt.recoMuonCharge_.push_back(iMuon1.charge());
+    nt.recoNGoodMuon_++; 
+    return nt;
+}
 
 void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
   reco::Track part_1, part_2;
@@ -97,7 +148,8 @@ void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm
   transient_tracks.push_back(theB->build(fix_track(&part_2)));
   tv = kvf.vertex(transient_tracks);
   float probVtx = calcVertices(transient_tracks, tv, type, nt);
-  if ( probVtx > 0.1 ) {
+  //if ( probVtx > 0.1 ) {
+  if ( probVtx > 0.0 ) {
     dr = reco::deltaR(part_1, part_2);
     nt.mumuVtxDr_.push_back(dr);
   }
@@ -108,6 +160,9 @@ void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm
 // (overloaded below)
 // Return type: struct VertexTracks (defined above)
 void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+    //vectors to store the index in the full list of muons for each 'good' (saved) pos and neg muon
+    vector<int> igood {}; for(size_t i = 0; i < coll_1.size(); i++) igood.push_back(-1);
+    vector<int> jgood {}; for(size_t i = 0; i < coll_2.size(); i++) jgood.push_back(-1);
     for (size_t i = 0; i < coll_1.size(); i++) {
         for (size_t j = 0; j < coll_2.size(); j++) {
             //if ( j > 15 || i > 15 ) continue;
@@ -131,11 +186,31 @@ void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std
             //    dr = reco::deltaR(part_i, part_j);
             //    nt.recoVtxDr_[type].push_back(dr);
             //}
-            if ( probVtx > 0.1 ) {
+            //if ( probVtx > 0.1 ) {
+            if ( probVtx > 0.0 ) {
                 dr = reco::deltaR(part_i, part_j);
                 nt.mumuVtxDr_.push_back(dr);
-                uint8_t muP = nt.muonsP[i];
-                uint8_t muN = nt.muonsN[j];
+                //add this muon to the muons list only if not already there.
+                if(igood[i]<0){
+                    nt.muonsP.push_back(nt.recoNGoodMuon_);
+                    igood[i] = static_cast<int>(nt.recoNGoodMuon_);
+                    nt = addMuon(nt, coll_1[i]);
+                }
+                if(jgood[j]<0){
+                    nt.muonsN.push_back(nt.recoNGoodMuon_);
+                    jgood[j] = static_cast<int>(nt.recoNGoodMuon_);
+                    nt = addMuon(nt, coll_2[j]);
+                }
+                //uint8_t muP = nt.muonsP[i];
+                //uint8_t muN = nt.muonsN[j];
+                uint8_t muP = (uint8_t)igood[i];
+                uint8_t muN = (uint8_t)jgood[j];
+                if(muN > 20) {
+                    std::cout << "muN: " << (int)muN << "; j: " << (int)j << "; jgood[j]: " << jgood[j] << "; recoNGoodMuon: " << (int)nt.recoNGoodMuon_ << std::endl;
+                    std::cout << "nt.muonsN: ";
+                    for(uint8_t k : nt.muonsN) std::cout << (int)k << ", ";
+                    std::cout << std::endl;
+                }
                 nt.mumuVtxMuonP_.push_back(muP);
                 nt.mumuVtxMuonN_.push_back(muN);
             }
@@ -166,8 +241,8 @@ void computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2,
             float probVtx = calcVertices(transient_tracks, tv, type, nt);
             //only fill the ntuple if the (chi2) prob is > .1
             // the rest of the ntuple info is filled in the calcVertices function (above)
-            //if ( probVtx > 0 ) {
-            if ( probVtx > 0.1 ) {
+            if ( probVtx > 0.0 ) {
+            //if ( probVtx > 0.1 ) {
             //if ( 0.2 > 0.1 ) {
                 dr = reco::deltaR(part_i, part_j);
                 //nt.recoVtxDr_[type].push_back(dr);
@@ -193,7 +268,17 @@ void computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2,
 // now compute vertex for two sets of GsfElectron vectors coll_1 and coll_2.
 void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRef> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
     for (size_t i = 0; i < coll_1.size(); i++) {
+        //if make sure this isn't one of the electrons matched to an Onia converted photon
+        if(type == "lplp" && std::find(nt.skipListP.begin(), nt.skipListP.end(), i) != nt.skipListP.end()) {
+            //std::cout << "Skipping posititve LowPtElectron #" << (int)i << " due to Onia matching." << std::endl;
+            continue;
+        }
         for (size_t j = 0; j < coll_2.size(); j++) {
+            //if make sure this isn't one of the electrons matched to an Onia converted photon
+            if(type == "lplp" && std::find(nt.skipListN.begin(), nt.skipListN.end(), j) != nt.skipListN.end()) {
+                //std::cout << "Skipping negative LowPtElectron #" << (int)j << " due to Onia matching." << std::endl;
+                continue;
+            }
             //std::cout << "Vertex cand " << (int)i << " " << (int)j << std::endl;
             //reco::TrackRef part_i, part_j;
             //reco::GsfTrackRef part_i, part_j;
@@ -209,8 +294,8 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                 transient_tracks.push_back(theB->build(part_j));
                 tv = kvf.vertex(transient_tracks);
                 float probVtx = calcVertices(transient_tracks, tv, type, nt);
-                //if ( probVtx > 0 ) {
-                if ( probVtx > 0.1 ) {
+                if ( probVtx > 0.0 ) {
+                //if ( probVtx > 0.1 ) {
                 //if ( 0.2 > 0.1 ) {
                     dr = reco::deltaR(*part_i, *part_j);
                     if(type == "elel") {
@@ -258,7 +343,9 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                     nt.elelVtxEleP_.push_back(eleP);
                     nt.elelVtxEleN_.push_back(eleN);
                     nt.elelVtxReducedChi2_.push_back(9999);
-                    nt.elelVtxVxy_.push_back(9999);
+                    //nt.elelVtxVxy_.push_back(9999);
+                    nt.elelVtxVx_.push_back(9999);
+                    nt.elelVtxVy_.push_back(9999);
                     nt.elelVtxVz_.push_back(9999);
                     nt.elelVtxSigmaVxy_.push_back(9999);
                 } //elel type
@@ -269,7 +356,9 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                     nt.lplpVtxEleP_.push_back(eleP);
                     nt.lplpVtxEleN_.push_back(eleN);
                     nt.lplpVtxReducedChi2_.push_back(9999);
-                    nt.lplpVtxVxy_.push_back(9999);
+                    //nt.lplpVtxVxy_.push_back(9999);
+                    nt.lplpVtxVx_.push_back(9999);
+                    nt.lplpVtxVy_.push_back(9999);
                     nt.lplpVtxVz_.push_back(9999);
                     nt.lplpVtxSigmaVxy_.push_back(9999);
                 }
@@ -277,34 +366,6 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
         } // j loop
     } // i loop
 } // computeVertices
-
-//add a track to the ntuple
-NtupleContainer addTrack(NtupleContainer nt, reco::Track iTrack1) {
-    //can't add another if we're at the maximum
-    if(nt.recoNGoodTrk_ == 255) {
-        throw std::runtime_error("Too many good tracks!");
-    }
-    nt.recoTrkPt_.push_back(iTrack1.pt());
-    nt.recoTrkEta_.push_back(iTrack1.eta());
-    nt.recoTrkPhi_.push_back(iTrack1.phi());
-    nt.recoTrkCharge_.push_back(iTrack1.charge());
-    nt.recoNGoodTrk_++; 
-    //std::cout << "just incremented recoNGoodTrk: " << (int)nt.recoNGoodTrk_ << std::endl;
-    return nt;
-}
-
-//add a muon to the ntuple
-NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1) {
-    if(nt.recoNGoodMuon_ == 255) {
-        throw std::runtime_error("Too many good muons!");
-    }
-    nt.recoMuonPt_.push_back(iMuon1.pt());
-    nt.recoMuonEta_.push_back(iMuon1.eta());
-    nt.recoMuonPhi_.push_back(iMuon1.phi());
-    nt.recoMuonCharge_.push_back(iMuon1.charge());
-    nt.recoNGoodMuon_++; 
-    return nt;
-}
 
 //this version for fitting the 2 electron tracks and the 2 muons all together!
 // this will be the first version called -- will also filter out the muons and tracks not used in any good vertex
@@ -345,6 +406,10 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
             pi_j.SetPtEtaPhiM(part_j.pt(),part_j.eta(),part_j.phi(), pi_mass);
             //now loop over pos muons
             for(size_t k = 0; k < coll_3.size(); k++) {
+                //adding here so that ALL muons are saved!!
+                //nt = addMuon(nt, coll_3[k]);
+                //nt.muonsP.push_back(nt.recoNGoodMuon_);
+                //******                        *******
                 reco::Track part_k;
                 part_k = *(coll_3[k].bestTrack());
                 //this particle is clearly a muon.
@@ -356,6 +421,10 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                 //}
                 //finally loop over neg muons
                 for(size_t l = 0; l < coll_4.size(); l++) {
+                    //adding here so that ALL muons are saved!
+                    //if(k==0) nt = addMuon(nt, coll_4[l]);
+                    //nt.muonsN.push_back(nt.recoNGoodMuon_);
+                    //*****                        *****
                     reco::Track part_l;
                     part_l = *(coll_4[l].bestTrack());
                     //first make a 4 vector of the 4 particles, see if their invariant mass is in the regime of interest or nah
@@ -398,8 +467,8 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                     tv = kvf.vertex(transient_tracks);
                     float probVtx = calcVertices(transient_tracks, tv, type, nt);
                     //choose arbitrary very loose cutoff of prob .1
-                    if ( probVtx > 0.1 ) {
-                    //if ( probVtx > 0 ) {
+                    //if ( probVtx > 0.1 ) {
+                    if ( probVtx > 0.0 ) {
                     //if ( 0.2 > 0.1 ) {
                         //std::cout << "good vertex! Tracks: " << (int)i << " positive; " << (int)j << " negative; Muons: " << (int)k << " positive; " << (int)l << " negative" << std::endl;
                         //dr of the electron pair
@@ -435,15 +504,19 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                         if ( kgood[k] < 0 ) {
                             kgood[k] = static_cast<int>(nt.recoNGoodMuon_);
                             //std::cout << (int)k << " positive muon is the " << (int)nt.recoNGoodMuon_ << " muon overall." << std::endl;
-                            nt.muonsP.push_back(nt.recoNGoodMuon_);
-                            nt = addMuon(nt, coll_3[k]);
+                            //commenting out this so that ALL muons saved!! ***
+                            //nt.muonsP.push_back(nt.recoNGoodMuon_);
+                            //nt = addMuon(nt, coll_3[k]);
+                            //********
                             myVertTracks.muonsP.push_back(coll_3[k]);
                         }
                         if( lgood[l] < 0 ) {
                             lgood[l] = static_cast<int>(nt.recoNGoodMuon_);
                             //std::cout << (int)l << " negative muon is the " << (int)nt.recoNGoodMuon_ << " muon overall." << std::endl;
-                            nt.muonsN.push_back(nt.recoNGoodMuon_);
-                            nt = addMuon(nt, coll_4[l]);
+                            //commenting out this so that ALL muons saved!! ****
+                            //nt.muonsN.push_back(nt.recoNGoodMuon_);
+                            //nt = addMuon(nt, coll_4[l]);
+                            //*****
                             myVertTracks.muonsN.push_back(coll_4[l]);
                         } 
                         //for this vertex, two different pointers to constituent particles
@@ -452,8 +525,12 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                         //uint8_t tracks = igood[i] + (jgood[j] << 4); 
                         uint8_t trackP = static_cast<uint8_t>(igood[i]); 
                         uint8_t trackN = static_cast<uint8_t>(jgood[j]); 
-                        uint8_t muonP = static_cast<uint8_t>(kgood[k]);
-                        uint8_t muonN = static_cast<uint8_t>(lgood[l]);
+                        //** changing the muon index assignment since no longer requiring to be used in 4-lepton vertex
+                        //uint8_t muonP = static_cast<uint8_t>(kgood[k]);
+                        //uint8_t muonN = static_cast<uint8_t>(lgood[l]);
+                        //***********                                                                          ******
+                        uint8_t muonP = static_cast<uint8_t>(k);
+                        uint8_t muonN = static_cast<uint8_t>(l);
 
                         //std::cout << "pushing back tracks " << (int)trackP << ", " << (int)trackN << std::endl;
                         //std::cout << "pushing back muons " << (int)muonP << ", " << (int)muonN << std::endl;
@@ -524,7 +601,15 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
     //unsigned int printevery = 100000;
     //first loop over positive tracks
     for (size_t i = 0; i < coll_1.size(); i++) {
+        //if make sure this isn't one of the electrons matched to an Onia converted photon
+        if(type == "mmlplp" && std::find(nt.skipListP.begin(), nt.skipListP.end(), i) != nt.skipListP.end()) {
+            continue;
+        }
         for (size_t j = 0; j < coll_2.size(); j++) {
+            //if make sure this isn't one of the electrons matched to an Onia converted photon
+            if(type == "mmlplp" && std::find(nt.skipListN.begin(), nt.skipListN.end(), j) != nt.skipListN.end()) {
+                continue;
+            }
             //std::cout << "Vertex cand " << (int)i << " " << (int)j << std::endl;
             //reco::TrackRef part_i, part_j;
             //reco::GsfTrackRef part_i, part_j;
@@ -584,15 +669,13 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                         tv = kvf.vertex(transient_tracks);
                         float probVtx = calcVertices(transient_tracks, tv, type, nt);
                         //choose arbitrary very loose cutoff of prob .1
-                        if ( probVtx > 0.1 ) {
-                        //if ( probVtx > 0 ) {
+                        //if ( probVtx > 0.1 ) {
+                        if ( probVtx > 0.0 ) {
                             //dr of the electron pair
                             dr = reco::deltaR(*part_i, *part_j);
                             //save these temporarily, just for debugging!!
-                            //nt.recoVtxM_[type].push_back(eta_Mmmee);    /////
-                            //nt.recoVtxPt_[type].push_back(eta_Ptmmee);  /////
-                            //nt.mmelelVtxM_.push_back(eta_Mmmee);    /////
-                            //nt.mmelelVtxPt_.push_back(eta_Ptmmee);  /////
+                            //nt.recoVtxM_[type].push_back(eta_Mmmee);   
+                            //nt.recoVtxPt_[type].push_back(eta_Ptmmee);  
                             //for this vertex, two different pointers to constituent particles
                             // first for the tracks (electrons or pions), then for muons
                             //  for each of the two, first 4 bits are for the positive particle, last 4 bits for the neg particle
@@ -609,6 +692,8 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                                 nt.mmelelVtxEleN_.push_back(eleN);
                                 nt.mmelelVtxMuonP_.push_back(muonP);
                                 nt.mmelelVtxMuonN_.push_back(muonN);
+                                nt.mmelelVtxM_.push_back(eta_Mmmee);   
+                                nt.mmelelVtxPt_.push_back(eta_Ptmmee);  
                                 if(nt.mmelelVtxEleP_.size() != nt.mmelelVtxDr_.size()){
                                     std::cout << "Error!!!!!!!!!!" << (int)nt.mmelelVtxEleP_.size() << " vs. " << (int)nt.mmelelVtxDr_.size() << std::endl;
                                     throw std::runtime_error("what the h*ck EleP size diff from Dr size for mmelel???");
@@ -622,6 +707,8 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                                 nt.mmlplpVtxEleN_.push_back(eleN);
                                 nt.mmlplpVtxMuonP_.push_back(muonP);
                                 nt.mmlplpVtxMuonN_.push_back(muonN);
+                                nt.mmlplpVtxM_.push_back(eta_Mmmee);   
+                                nt.mmlplpVtxPt_.push_back(eta_Ptmmee);  
                                 if(nt.mmlplpVtxEleP_.size() != nt.mmlplpVtxDr_.size()){
                                     std::cout << "Error!!!!!!!!!!" << (int)nt.mmlplpVtxEleP_.size() << " vs. " << (int)nt.mmlplpVtxDr_.size() << std::endl;
                                     throw std::runtime_error("what the h*ck EleP size diff from Dr size for mmlplp???");

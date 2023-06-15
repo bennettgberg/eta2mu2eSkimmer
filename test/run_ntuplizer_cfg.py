@@ -21,8 +21,9 @@ data = options.data
 testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/MiniTest/Run3_2022_BParking_MINItest.root"
 if not data:
     #signal sample
-    #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_MiniAOD/EtaTo2Mu2E_10218787_MINIAOD.root"
-    testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_MiniAOD/EtaTo2Mu2E_0_MINIAOD.root"
+    testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_0_MINIAOD_2022.root"
+    #resonant bkg sample
+    #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_1.root"
 
 process = cms.Process("USER")
 

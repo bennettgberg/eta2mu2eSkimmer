@@ -18,6 +18,11 @@ public:
     vector<std::string> electronIDs = {"mvaEleID-Fall17-noIso-V2-wp80", "mvaEleID-Fall17-noIso-V2-wp90", "mvaEleID-Fall17-noIso-V2-wpLoose" };
     //separate list for low pT electrons
     vector<std::string> lowPtElectronIDs = {"ID", "ptbiased", "unbiased" };
+    //remove from consideration for vertexing purposes any electron matched to an Onia converted photon? or nah?
+    bool removeOnia = false; // true;
+    //list of LowPtElectrons to skip whilst doing the vertex computations (because they are too similar to an Onia converted photon)
+    vector<int> skipListP;
+    vector<int> skipListN;
     virtual ~NtupleContainer();
     void SetRecoTree(TTree *tree);
     void SetGenTree(TTree *tree);
@@ -60,6 +65,23 @@ public:
     
     // Reco branches
   
+    //photon conversion candidates
+    uint8_t recoNOnia_;
+    //info for the first track for the converted photon
+    vector<float> recoOniaPt0_;
+    vector<float> recoOniaEta0_;
+    vector<float> recoOniaPhi0_;
+    vector<float> recoOniaCharge0_;
+    //infor for the second track for the converted photon
+    vector<float> recoOniaPt1_;
+    vector<float> recoOniaEta1_;
+    vector<float> recoOniaPhi1_;
+    vector<float> recoOniaCharge1_;
+    //vector<float> recoOniaVtxVxy_;
+    vector<float> recoOniaVtxVx_;
+    vector<float> recoOniaVtxVy_;
+    vector<float> recoOniaVtxVz_;
+
     // Reco electron branches
     uint8_t recoNGoodElectron_;
     vector<float> recoElectronPt_;
@@ -104,6 +126,8 @@ public:
     vector<float> recoTrkEta_;
     vector<float> recoTrkPhi_;
     vector<int8_t> recoTrkCharge_;
+    vector<float> recoTrkDxy_;
+    vector<float> recoTrkDz_;
 
     // GsfElectron track branches
     //uint8_t gsfNGoodTrk_;
@@ -111,11 +135,15 @@ public:
     vector<float> gsfTrkEta_;
     vector<float> gsfTrkPhi_;
     vector<int8_t> gsfTrkCharge_;
+    vector<float> gsfTrkDxy_;
+    vector<float> gsfTrkDz_;
 
     vector<float> gsfLowPtTrkPt_;
     vector<float> gsfLowPtTrkEta_;
     vector<float> gsfLowPtTrkPhi_;
     vector<int8_t> gsfLowPtTrkCharge_;
+    vector<float> gsfLowPtTrkDxy_;
+    vector<float> gsfLowPtTrkDz_;
 
     //mapping from the pos-only and neg-only list to the full list
     vector<uint8_t> mmeeTrxP;
@@ -135,99 +163,99 @@ public:
     //the maximum number of mmee vertices to save (if -1 no maximum)
     //int maxNmmee = -1;
 
-    vector<float> mmeeVtxVxy_;
+    //vector<float> mmeeVtxVxy_;
+    vector<float> mmeeVtxVx_;
+    vector<float> mmeeVtxVy_;
     vector<float> mmeeVtxVz_;
     vector<float> mmeeVtxSigmaVxy_;
     vector<float> mmeeVtxReducedChi2_;
     vector<float> mmeeVtxDr_;
     vector<float> mmeeVtxPt_;
     vector<float> mmeeVtxM_;
-    vector<float> mmeeVtxM2_;
-    vector<float> mmeeVtxPt2_;
     vector<uint8_t> mmeeVtxMuonP_;
     vector<uint8_t> mmeeVtxMuonN_;
     vector<uint8_t> mmeeVtxTrackP_;
     vector<uint8_t> mmeeVtxTrackN_;
 
-    vector<float> mmelelVtxVxy_;
+    //vector<float> mmelelVtxVxy_;
+    vector<float> mmelelVtxVx_;
+    vector<float> mmelelVtxVy_;
     vector<float> mmelelVtxVz_;
     vector<float> mmelelVtxSigmaVxy_;
     vector<float> mmelelVtxReducedChi2_;
     vector<float> mmelelVtxDr_;
     vector<float> mmelelVtxPt_;
     vector<float> mmelelVtxM_;
-    vector<float> mmelelVtxM2_;
-    vector<float> mmelelVtxPt2_;
     vector<uint8_t> mmelelVtxMuonP_;
     vector<uint8_t> mmelelVtxMuonN_;
     vector<uint8_t> mmelelVtxEleP_;
     vector<uint8_t> mmelelVtxEleN_;
 
     //mu-mu-lowPtElectron-lowPtElectron vertices
-    vector<float> mmlplpVtxVxy_;
+    //vector<float> mmlplpVtxVxy_;
+    vector<float> mmlplpVtxVx_;
+    vector<float> mmlplpVtxVy_;
     vector<float> mmlplpVtxVz_;
     vector<float> mmlplpVtxSigmaVxy_;
     vector<float> mmlplpVtxReducedChi2_;
     vector<float> mmlplpVtxDr_;
     vector<float> mmlplpVtxPt_;
     vector<float> mmlplpVtxM_;
-    vector<float> mmlplpVtxM2_;
-    vector<float> mmlplpVtxPt2_;
     vector<uint8_t> mmlplpVtxMuonP_;
     vector<uint8_t> mmlplpVtxMuonN_;
     vector<uint8_t> mmlplpVtxEleP_;
     vector<uint8_t> mmlplpVtxEleN_;
 
     //lowPtElectron-lowPtElectron vertices
-    vector<float> lplpVtxVxy_;
+    //vector<float> lplpVtxVxy_;
+    vector<float> lplpVtxVx_;
+    vector<float> lplpVtxVy_;
     vector<float> lplpVtxVz_;
     vector<float> lplpVtxSigmaVxy_;
     vector<float> lplpVtxReducedChi2_;
     vector<float> lplpVtxDr_;
     vector<float> lplpVtxPt_;
     vector<float> lplpVtxM_;
-    vector<float> lplpVtxM2_;
-    vector<float> lplpVtxPt2_;
     vector<uint8_t> lplpVtxEleP_;
     vector<uint8_t> lplpVtxEleN_;
     vector<uint8_t> lplpVtxTrackP_;
     vector<uint8_t> lplpVtxTrackN_;
 
-    vector<float> elelVtxVxy_;
+    //vector<float> elelVtxVxy_;
+    vector<float> elelVtxVx_;
+    vector<float> elelVtxVy_;
     vector<float> elelVtxVz_;
     vector<float> elelVtxSigmaVxy_;
     vector<float> elelVtxReducedChi2_;
     vector<float> elelVtxDr_;
     vector<float> elelVtxPt_;
     vector<float> elelVtxM_;
-    vector<float> elelVtxM2_;
-    vector<float> elelVtxPt2_;
     vector<uint8_t> elelVtxEleP_;
     vector<uint8_t> elelVtxEleN_;
     vector<uint8_t> elelVtxTrackP_;
     vector<uint8_t> elelVtxTrackN_;
 
-    vector<float> pcpcVtxVxy_;
+    //vector<float> pcpcVtxVxy_;
+    vector<float> pcpcVtxVx_;
+    vector<float> pcpcVtxVy_;
     vector<float> pcpcVtxVz_;
     vector<float> pcpcVtxSigmaVxy_;
     vector<float> pcpcVtxReducedChi2_;
     vector<float> pcpcVtxDr_;
     vector<float> pcpcVtxPt_;
     vector<float> pcpcVtxM_;
-    vector<float> pcpcVtxM2_;
-    vector<float> pcpcVtxPt2_;
     vector<uint8_t> pcpcVtxTrackP_;
     vector<uint8_t> pcpcVtxTrackN_;
 
-    vector<float> mumuVtxVxy_;
+    //vector<float> mumuVtxVxy_;
+    vector<float> mumuVtxVx_;
+    vector<float> mumuVtxVy_;
     vector<float> mumuVtxVz_;
     vector<float> mumuVtxSigmaVxy_;
     vector<float> mumuVtxReducedChi2_;
     vector<float> mumuVtxDr_;
     vector<float> mumuVtxPt_;
     vector<float> mumuVtxM_;
-    vector<float> mumuVtxM2_;
-    vector<float> mumuVtxPt2_;
     vector<uint8_t> mumuVtxMuonP_;
     vector<uint8_t> mumuVtxMuonN_;
 

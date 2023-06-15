@@ -53,6 +53,8 @@
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
+#include "DataFormats/PatCandidates/interface/UserData.h"
 
 #include "TTree.h"
 #include "TMath.h"
@@ -86,9 +88,12 @@ private:
 
     TTree *recoT, *genT;
     //for MC only
-    TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE;
+    TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE,
+        *hdRP, *hdRN;
     //max dR between gen and reco particles for a successful gen-match to be declared
     const float drCut = 0.01;
+    //max dR betwixt Converted photon (electron) track and electron for a successful match to be declared (and hence the electron is deletted)
+    const float drOniaCut = 0.05;
     //min, max invariant mass values for reco'd eta meson for a successful reco to be declared
     const float etaMassMin = 0.0;
     const float etaMassMax = 9999.0;
@@ -116,6 +121,8 @@ private:
     const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> esToken_;
     const edm::EDGetTokenT<double> rhoToken_;
     const edm::EDGetTokenT<pat::PackedCandidateCollection> trkToken_;
+    //photon conversions?
+    const edm::EDGetTokenT<pat::CompositeCandidateCollection> conToken_;
 
     // Handles
     edm::Handle<pat::MuonCollection> recoMuonHandle_;
@@ -131,6 +138,8 @@ private:
     edm::Handle<pat::PhotonCollection> recoPhotonHandle_;
     edm::Handle<double> rhoHandle_;
     edm::Handle<pat::PackedCandidateCollection> trkHandle_;
+    //for photon conversions
+    edm::Handle<pat::CompositeCandidateCollection> conHandle_;
     
     std::vector<std::string> triggerPathsWithoutVersionNum_;
     std::vector<std::string> triggerPathsWithVersionNum_;
@@ -156,7 +165,8 @@ eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
     recoPhotonToken_(consumes<pat::PhotonCollection>(ps.getParameter<edm::InputTag>("photon_collection"))),
     esToken_(esConsumes<TransientTrackBuilder, TransientTrackRecord>(edm::ESInputTag("", "TransientTrackBuilder"))),
     rhoToken_(consumes<double>(ps.getParameter<edm::InputTag>("rho"))),
-    trkToken_(consumes<pat::PackedCandidateCollection>(ps.getParameter<edm::InputTag>("packed_candidate")))
+    trkToken_(consumes<pat::PackedCandidateCollection>(ps.getParameter<edm::InputTag>("packed_candidate"))),
+    conToken_(consumes<pat::CompositeCandidateCollection>(ps.getParameter<edm::InputTag>("composite_candidate")))
 {
     usesResource("TFileService");
     m_random_generator = std::mt19937(37428479);
@@ -184,6 +194,7 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     desc.add<edm::InputTag>("genEvt", edm::InputTag("generator"));
     desc.add<edm::InputTag>("rho", edm::InputTag("fixedGridRhoFastjetAll"));
     desc.add<edm::InputTag>("packed_candidate", edm::InputTag("packedPFCandidates"));
+    desc.add<edm::InputTag>("composite_candidate", edm::InputTag("oniaPhotonCandidates", "conversions"));
     
     descriptions.add("eta2mu2eAnalyzer", desc);
 }
@@ -207,6 +218,8 @@ void eta2mu2eAnalyzer::beginJob()
         matchedGenPtEta = new TH1F("matchedGenPtEta", "matchedGenPtEta", 10000, 0., 100.);
         matchedGenPtEtaE = new TH1F("matchedGenPtEtaE", "matchedGenPtEtaE", 10000, 0., 100.);
     }
+    hdRP = new TH1F("hdRP", "hdRP", 10000, 0.0, 10.0);
+    hdRN = new TH1F("hdRN", "hdRN", 10000, 0.0, 10.0);
     nt.CreateTreeBranches();
 }
 
@@ -320,9 +333,9 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
                 LogError("TriggerError") << "Cannot find trigger path --> " << matchedPaths[0];
                 return;
             }
-            //else {
-            //    std::cout << "Seems to be no problem with trigger path " << trigPathNoVersion << " : " << matchedPaths[0] << std::endl;
-            //}
+            else {
+                std::cout << "Seems to be no problem with trigger path " << trigPathNoVersion << " : " << matchedPaths[0] << std::endl;
+            }
         }
     }
 }
@@ -351,6 +364,7 @@ bool eta2mu2eAnalyzer::getCollections(const edm::Event& iEvent) {
     getHandle(recoPhotonToken_, recoPhotonHandle_, "photon_collection");
     getHandle(rhoToken_, rhoHandle_, "rho");
     getHandle(trkToken_, trkHandle_, "packed_candidate");
+    getHandle(conToken_, conHandle_, "composite_candidate");
     if (!isData) {
         getHandle(genEvtInfoToken_, genEvtInfoHandle_, "genEventInfo");
         getHandle(genParticleToken_, genParticleHandle_, "genParticle");
@@ -460,6 +474,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         nt.gsfTrkPhi_.push_back(eltrack->phi());
         nt.gsfTrkCharge_.push_back(eltrack->charge());
 
+        nt.gsfTrkDxy_.push_back(eltrack->dxy());
+        nt.gsfTrkDz_.push_back(eltrack->dz());
 
         if ( electronRef->charge() > 0 ) {
             elTracksP.push_back(eltrack);
@@ -517,6 +533,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         nt.gsfLowPtTrkEta_.push_back(eltrack->eta());
         nt.gsfLowPtTrkPhi_.push_back(eltrack->phi());
         nt.gsfLowPtTrkCharge_.push_back(eltrack->charge());
+        nt.gsfLowPtTrkDxy_.push_back(eltrack->dxy());
+        nt.gsfLowPtTrkDz_.push_back(eltrack->dz());
 
 
         if ( electronRef->charge() > 0 ) {
@@ -645,7 +663,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             std::string trigPath = triggerPathsWithVersionNum_[i];
             //first 64 triggers belong to the first trigger word, next few to the second one.
             if(i < 64) {
+                //bool firstfired = nt.fired0_&(1<<25);
                 nt.fired0_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << i);
+                //std::cout << "Trigger bit " << (int)i << ": " << trigPath << ". New fired0: " << (int)nt.fired0_ << std::endl;
+                //if(!firstfired && (nt.fired0_&(1<<25))) std::cout << "trig bit 25 found!!!: " << trigPath << std::endl;
             }
             else {
                 nt.fired1_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << (i-64));
@@ -661,6 +682,99 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         }
     }
     
+    //std::cout << "Number of onia ConvertedPhoton Candidates: " << (int)conHandle_->size() << std::endl;
+    //std::cout << "Printing onia photons:" << std::endl;
+    ////get converted photons, see how many there are, if their electron tracks can be gen-matched to regular electrons?
+    int ctr = 0;
+    for (pat::CompositeCandidateCollection::const_iterator iCon1 = conHandle_->begin(); iCon1 != conHandle_->end(); iCon1++) {
+        //const reco::Track* trk0 = iCon1->bestTrack(); //track0;
+        //if(!trk0) {
+        //    std::cout << "ConPhot " << ctr << ": bestTrack is null!!" << std::endl;
+        //    continue;
+        //}
+        bool hasTrack0 = iCon1->hasUserData("track0");
+        if(!hasTrack0) {
+            std::cout << "No track0 :(" << std::endl;
+            continue;
+        }
+        //reco::Vertex conVert = iCon1->vertex();
+        const ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> conVert = iCon1->vertex();
+        float vx = conVert.X();
+        float vy = conVert.Y();
+        //float vxy = (std::sqrt(conVert.X()*conVert.X() + conVert.Y()*conVert.Y()));
+        float vz = conVert.Z();
+        //nt.recoOniaVtxVxy_.push_back(vxy);
+        nt.recoOniaVtxVx_.push_back(vx);
+        nt.recoOniaVtxVy_.push_back(vy);
+        nt.recoOniaVtxVz_.push_back(vz);
+        //else {
+        //    std::cout << "Has track0!!" << std::endl;
+        //}
+        const reco::Track* trk0 = iCon1->userData<reco::Track>("track0");
+        const reco::Track* trk1 = iCon1->userData<reco::Track>("track1");
+        //std::cout << "ConPhot " << ctr << " trk0: pT=" << trk0->pt() << ", eta=" << trk0->eta() << ", phi=" << trk0->phi() 
+        //   << ", charge=" << trk0->charge() << std::endl;
+        //std::cout << "ConPhot " << ctr << " trk1: pT=" << trk1->pt() << ", eta=" << trk1->eta() << ", phi=" << trk1->phi() 
+        //   << ", charge=" << trk1->charge() << std::endl;
+
+        nt.recoOniaPt0_.push_back(trk0->pt());
+        nt.recoOniaEta0_.push_back(trk0->eta());
+        nt.recoOniaPhi0_.push_back(trk0->phi());
+        nt.recoOniaCharge0_.push_back((uint8_t)trk0->charge());
+        nt.recoOniaPt1_.push_back(trk1->pt());
+        nt.recoOniaEta1_.push_back(trk1->eta());
+        nt.recoOniaPhi1_.push_back(trk1->phi());
+        nt.recoOniaCharge1_.push_back((uint8_t)trk1->charge());
+        nt.recoNOnia_++;
+
+        const reco::Track* trkP = (trk0->charge()>0 ? trk0 : trk1);
+        const reco::Track* trkN = (trk1->charge()<0 ? trk1 : trk0);
+        if(trkP == trkN) {
+            std::cout << "Error! trk0 and trk1 have same charge!! Cand " << ctr << "; Qtrk0: " << trk0->charge() << ", Qtrk1: " << trk1->charge() << std::endl;
+        }
+        //see if can genmatch with one of the electrons
+        float mindRP = 9999.0;
+        float mindRN = 9999.0;
+        //which index has the lowest dR betwixt the pos and neg track respectively?
+        int argp = -1;
+        int argn = -1;
+        //for(reco::GsfTrackRef tp : elTracksP) {
+        int ii = 0;
+        for(reco::GsfTrackRef tp : elLowPtTracksP) {
+            float dR = reco::deltaR(*trkP, *tp);
+            //std::cout << "dR: " << dR << std::endl;
+            if(dR < mindRP) {
+                mindRP = dR;
+                argp = ii;
+            }
+            ii++;
+        }
+        ii = 0;
+        //for(reco::GsfTrackRef tn : elTracksN) {
+        for(reco::GsfTrackRef tn : elLowPtTracksN) {
+            float dR = reco::deltaR(*trkN, *tn);
+            //std::cout << "dR: " << dR << std::endl;
+            if(dR < mindRN) {
+                mindRN = dR;
+                argn = ii;
+            }
+        }
+        if(mindRP<9999 && mindRN<9999) {
+            //std::cout << "mindR for Conv. phot. tracks vs. GsfElectron tracks, pos/neg: " << mindRP << "/" << mindRN << std::endl;
+            hdRP->Fill(mindRP);
+            hdRN->Fill(mindRN);
+        }
+        //now if the dR values are small enough, remove the matched electron/positron from consideration
+        if(nt.removeOnia && mindRP<drOniaCut){
+            nt.skipListP.push_back(argp);
+            //std::cout << "SKIP elecP " << argp << " out of " << (int)elLowPtTracksP.size() << ": dR=" << mindRP << std::endl;
+        }
+        if(nt.removeOnia && mindRN<drOniaCut){
+            nt.skipListN.push_back(argn);
+            //std::cout << "SKIP elecN " << argn << " out of " << (int)elLowPtTracksN.size() << ": dR=" << mindRN << std::endl;
+        }
+        ctr++;
+    } 
 
     /****** GEN INFO *******/
 
@@ -840,8 +954,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //std::cout << "     muonsN: "; for(auto mn : nt.muonsN) std::cout << (int)mn << ", "; std::cout << std::endl;
     allTracksP = primVertTrx.tracksP;
     allTracksN = primVertTrx.tracksN;
-    muonsN = primVertTrx.muonsN;
-    muonsP = primVertTrx.muonsP;
+    //*** commenting out these changes so that can use ALL muons for 2-lep vertexing!! ****//
+    //muonsN = primVertTrx.muonsN;
+    //muonsP = primVertTrx.muonsP;
+    //****                             *************                                   **                ***//
     //std::cout << "Event " << (int)nt.eventNum_ << " nGoodMuonsP: " << (int)nt.muonsP.size() << "; nGoodMuonsN: " << (int)nt.muonsN.size() << std::endl;
     //std::cout << "     muonsP: "; for(auto mp : nt.muonsP) std::cout << (int)mp << ", "; std::cout << std::endl;
     //std::cout << "     muonsN: "; for(auto mn : nt.muonsN) std::cout << (int)mn << ", "; std::cout << std::endl;
@@ -883,8 +999,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 void eta2mu2eAnalyzer::endRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
 
 void eta2mu2eAnalyzer::endJob() {
+    fs->cd();
     if(!isData) {
-        fs->cd();
         allGenPt->Write();
         matchedGenPt->Write();
         alldR->Write();
@@ -897,6 +1013,8 @@ void eta2mu2eAnalyzer::endJob() {
         matchedGenPtEta->Write();
         matchedGenPtEtaE->Write();
     }
+    hdRP->Write();
+    hdRN->Write();
 }
 
 // define this as a plug-in
