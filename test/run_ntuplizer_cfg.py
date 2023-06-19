@@ -10,6 +10,12 @@ options.register('data',
         VarParsing.VarParsing.varType.bool,
         "Run on data (1) or MC (0)"
         )
+options.register('test',
+        0,
+        VarParsing.VarParsing.multiplicity.singleton,
+        VarParsing.VarParsing.varType.int,
+        "Run for a test (1) or not (0)"
+        )
 options.parseArguments()
 
 year = 2022
@@ -25,9 +31,14 @@ if not data:
     #resonant bkg sample
     #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_1.root"
 
+outputFile = 'test.root'
+
+if options.test: 
+    options.inputFiles = testfname
+    options.outputFile = outputFile
+
 process = cms.Process("USER")
 
-outputFile = 'test.root'
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.load('Configuration.StandardSequences.Services_cff')
 process.load("Configuration.EventContent.EventContent_cff")
@@ -76,11 +87,11 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(options.maxEvents)
     )
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(testfname),
+    fileNames = cms.untracked.vstring(options.inputFiles), #testfname),
     skipBadFiles = cms.untracked.bool(True)
     )
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string(outputFile),
+    fileName = cms.string(options.outputFile),
     closeFileFast = cms.untracked.bool(True),
     overrideInputFileSplitLevels = cms.untracked.bool(True)
     )
