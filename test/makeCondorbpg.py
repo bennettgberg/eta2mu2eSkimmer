@@ -164,7 +164,7 @@ for nFile in range(0, len(dataset),mjobs) :
         #    ##aMassString = args.nickName.split('_')[-1]
         #    ##outLines.append("xrdcp root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/NANOAOD_Signal_Samples/{} inFile.root\n".format(fname))
         #    #outLines.append("xrdcp root://cmseos.fnal.gov//store/user/bgreenbe/{}/NANOAOD_Signal_Samples/{} inFile.root\n".format(args.nickName, fname))
-        outFileName = "{0:s}_{1:03d}.ntup".format(args.nickName,nFile+j)
+        outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
         #print("python HAA{}.py -f inFile.root -o {} --nickName {} --csv {} -y {} -s {} -w 1 -g {}\n".format(ttttstr, outFileName,args.nickName, args.csv, args.year, args.selection, args.genmatch))
         #outLines.append("python ntupler_4mu.py -f inFile.root -o {0:s} --nickName {1:s} --csv {2:s} -y {3:s} -w 1 -g {5:d} -d {6:s} -j {7:s}\n".format(outFileName,args.nickName, args.csv, args.year, args.selection, args.genmatch, "MC" if isMC else "Data", args.doSystematics))
         #outLines.append("python ntupler_eta.py -f inFile.root -o {0:s} --nickName {1:s} --csv {2:s} -y {3:s} -w 1 -g {5:d} -d {6:s} -j {7:s}\n".format(outFileName,args.nickName, args.csv, args.year, args.selection, args.genmatch, "MC" if isMC else "Data", args.doSystematics))
@@ -181,11 +181,12 @@ for nFile in range(0, len(dataset),mjobs) :
 
 
     allname = "all_{0:s}_{1:03d}.root".format(args.nickName, nFile+1) #can use below instead of rewriting twice.
-    outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
+    #outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
+    outLines.append("hadd -f -k all_{0:s}_{1:03d}.root {0:s}*root *weights\n".format(args.nickName,nFile+1))
     #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/eta_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
     outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
-    outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d\n")
+    outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d *.root\n")
 #        fileloop=dataset[nFile:nFile+maxx][j]
 #        outLines.append("xrdcp root://cms-xrd-global.cern.ch/{0:s} inFile.root\n".format(fileloop))
 #        outFileName = "{0:s}_{1:03d}.root".format(args.nickName,nFile+j)
