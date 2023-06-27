@@ -18,7 +18,7 @@ def main():
     year = 2022
     
     #number of root files to run in a single job
-    nroot = 5
+    nroot = 1
 
     #do systematics or nah (will take way longer)
     doSyst = False

@@ -39,7 +39,8 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     //    //std::cout << "probability: " << prob << std::endl;
     //}
     //TODO: keep in this || elel?? decide.
-    if ( prob > 0.1 ) {
+    //if ( prob > 0.1 ) {
+    if ( prob > 0.0 ) {
         if(type == "mmee") {
             nt.mmeeVtxReducedChi2_.push_back(vtx_chi2);
             //nt.mmeeVtxVxy_.push_back(vxy);
@@ -298,6 +299,11 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                 //if ( probVtx > 0.1 ) {
                 //if ( 0.2 > 0.1 ) {
                     dr = reco::deltaR(*part_i, *part_j);
+                    //make 4-vector to get M, pT
+                    TLorentzVector i4v, j4v, vert4v;
+                    i4v.SetPtEtaPhiM(part_i->pt(), part_i->eta(), part_i->phi(), ele_mass);
+                    j4v.SetPtEtaPhiM(part_j->pt(), part_j->eta(), part_j->phi(), ele_mass);
+                    vert4v = i4v + j4v;
                     if(type == "elel") {
                         nt.elelVtxDr_.push_back(dr);
                         //first 4 bits for first electron, last 4 for second electron
@@ -316,9 +322,153 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                         //nt.recoVtxEleN_[type].push_back(eleN);
                         nt.elelVtxEleP_.push_back(eleP);
                         nt.elelVtxEleN_.push_back(eleN);
+                        nt.elelVtxM_.push_back(vert4v.M());
+                        nt.elelVtxPt_.push_back(vert4v.Pt());
                         //std::cout << "eleP: " << (int)eleP << "; eleN: " << (int)eleN;
                     } //end elel type
                     else if(type == "lplp") {
+                        nt.lplpVtxDr_.push_back(dr);
+                        uint8_t eleP = nt.gsfLowPtElsP[i];
+                        uint8_t eleN = nt.gsfLowPtElsN[j];
+                        nt.lplpVtxEleP_.push_back(eleP);
+                        nt.lplpVtxEleN_.push_back(eleN);
+                        nt.lplpVtxM_.push_back(vert4v.M());
+                        nt.lplpVtxPt_.push_back(vert4v.Pt());
+                    } //end lplp type
+                    else {
+                        std::cout << "Error!! Unrecognized vertex type " << type << std::endl;
+                        throw std::runtime_error("Error: unrecognized type for 2-lepton vertex.");
+                    }
+                }
+            } //end is Nonnull 
+            else { //is null ....
+                std::cout << "Null GsfTrack! Event" << (int)nt.eventNum_ << " ";
+                if(!part_i.isNonnull()) std::cout << "part i: " << (int)i << " "; 
+                if(!part_j.isNonnull()) std::cout << "part j: " << (int)j << " "; 
+                std::cout << std::endl;
+                if(type == "elel") {
+                    nt.elelVtxDr_.push_back(9999);
+                    uint8_t eleP = nt.gsfElsP[i];
+                    uint8_t eleN = nt.gsfElsN[j];
+                    nt.elelVtxEleP_.push_back(eleP);
+                    nt.elelVtxEleN_.push_back(eleN);
+                    nt.elelVtxReducedChi2_.push_back(9999);
+                    //nt.elelVtxVxy_.push_back(9999);
+                    nt.elelVtxVx_.push_back(9999);
+                    nt.elelVtxVy_.push_back(9999);
+                    nt.elelVtxVz_.push_back(9999);
+                    nt.elelVtxSigmaVxy_.push_back(9999);
+                } //elel type
+                else if(type == "lplp") {
+                    nt.lplpVtxDr_.push_back(9999);
+                    uint8_t eleP = nt.gsfLowPtElsP[i];
+                    uint8_t eleN = nt.gsfLowPtElsN[j];
+                    nt.lplpVtxEleP_.push_back(eleP);
+                    nt.lplpVtxEleN_.push_back(eleN);
+                    nt.lplpVtxReducedChi2_.push_back(9999);
+                    //nt.lplpVtxVxy_.push_back(9999);
+                    nt.lplpVtxVx_.push_back(9999);
+                    nt.lplpVtxVy_.push_back(9999);
+                    nt.lplpVtxVz_.push_back(9999);
+                    nt.lplpVtxSigmaVxy_.push_back(9999);
+                }
+            }
+        } // j loop
+    } // i loop
+} // computeVertices
+
+//same as above but use Kinematic Fitter instead of regular Kalman!
+void computeKinematicVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRef> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+    for (size_t i = 0; i < coll_1.size(); i++) {
+        //if make sure this isn't one of the electrons matched to an Onia converted photon
+        if(type == "lplp" && std::find(nt.skipListP.begin(), nt.skipListP.end(), i) != nt.skipListP.end()) {
+            //std::cout << "Skipping posititve LowPtElectron #" << (int)i << " due to Onia matching." << std::endl;
+            continue;
+        }
+        for (size_t j = 0; j < coll_2.size(); j++) {
+            //if make sure this isn't one of the electrons matched to an Onia converted photon
+            if(type == "lplp" && std::find(nt.skipListN.begin(), nt.skipListN.end(), j) != nt.skipListN.end()) {
+                //std::cout << "Skipping negative LowPtElectron #" << (int)j << " due to Onia matching." << std::endl;
+                continue;
+            }
+            //std::cout << "Vertex cand " << (int)i << " " << (int)j << std::endl;
+            //reco::TrackRef part_i, part_j;
+            //reco::GsfTrackRef part_i, part_j;
+            reco::GsfTrackRef part_i, part_j;
+            part_i = coll_1[i];
+            part_j = coll_2[j];
+
+            float dr = -9999;
+            TransientVertex tv;
+            if (part_i.isNonnull() && part_j.isNonnull() ) { // && i != j) {
+                vector<reco::TransientTrack> transient_tracks{};
+                transient_tracks.push_back(theB->build(part_i));
+                transient_tracks.push_back(theB->build(part_j));
+                //tv = kvf.vertex(transient_tracks);
+                //float probVtx = calcVertices(transient_tracks, tv, type, nt);
+                KinematicParticleFactoryFromTransientTrack pFactory;
+                std::vector<RefCountedKinematicParticle> candidate_init;
+                float chi = 0.;
+                float ndf = 0.;
+                float PM_sigma = 1.e-7;
+                reco::TransientTrack tt0 = transient_tracks[0];
+                reco::TransientTrack tt1 = transient_tracks[1];
+                RefCountedKinematicParticle particle0 = pFactory.particle(tt0, ele_mass, chi, ndf, PM_sigma);
+                RefCountedKinematicParticle particle1 = pFactory.particle(tt1, ele_mass, chi, ndf, PM_sigma);
+                candidate_init.push_back(particle0);
+                candidate_init.push_back(particle1);
+                RefCountedKinematicTree vertexFitTree;
+                std::vector<RefCountedKinematicParticle> candidate = candidate_init;
+                KinematicParticleVertexFitter pFitter; //KinematicParticleVertexFitter
+                int fitgood = 1;
+                try
+                {
+                    vertexFitTree = pFitter.fit(candidate);
+                }
+                catch (const VertexException &)
+                {
+                    fitgood = 0;
+                }
+                if (fitgood == 0) continue;
+                // std::cout << run << ":" << event << "--" << "fittED xb " <<  std::endl;
+                if (!vertexFitTree->isValid()) continue;
+               
+                vertexFitTree->movePointerToTheTop();
+                RefCountedKinematicParticle CandMC         = vertexFitTree->currentParticle();
+                RefCountedKinematicVertex   DecayVertexMC  = vertexFitTree->currentDecayVertex();
+                if (!DecayVertexMC->vertexIsValid())  continue;
+                
+                if(DecayVertexMC->chiSquared() < 0) continue;
+                float probVtx   = TMath::Prob(DecayVertexMC->chiSquared(), (int) DecayVertexMC->degreesOfFreedom());
+                //if(Prob_tmp < 0.01) continue;
+               
+                //double mass_tmp = CandMC->currentState().mass();
+                //if(B_mass_tmp > 1.2) continue;
+                if ( probVtx > 0.0 ) {
+                    auto vertex = DecayVertexMC->position();
+                    float vx = vertex.x();
+                    float vy = vertex.y();
+                    float vz = vertex.z();
+                    float vxy = sqrt(vertex.x()*vertex.x() + vertex.y()*vertex.y());
+                    //float sigma_vxy = (1/vxy)*sqrt(vertex.x()*vertex.x()*vertex.xError()*vertex.xError() +
+                    //        vertex.y()*vertex.y()*vertex.yError()*vertex.yError());
+                    float sigma_vxy = vxy; //0.;
+                    float vtx_chi2 = DecayVertexMC->chiSquared() / DecayVertexMC->degreesOfFreedom();
+                    dr = reco::deltaR(*part_i, *part_j);
+                    if(type == "elel") {
+                        nt.elelVtxDr_.push_back(dr);
+                        uint8_t eleP = nt.gsfElsP[i];
+                        uint8_t eleN = nt.gsfElsN[j];
+                        nt.elelVtxEleP_.push_back(eleP);
+                        nt.elelVtxEleN_.push_back(eleN);
+                    } //end elel type
+                    else if(type == "lplp") {
+                        nt.lplpVtxReducedChi2_.push_back(vtx_chi2);
+                        //nt.lplpVtxVxy_.push_back(vxy);
+                        nt.lplpVtxVx_.push_back(vx);
+                        nt.lplpVtxVy_.push_back(vy);
+                        nt.lplpVtxVz_.push_back(vz);
+                        nt.lplpVtxSigmaVxy_.push_back(sigma_vxy);
                         nt.lplpVtxDr_.push_back(dr);
                         uint8_t eleP = nt.gsfLowPtElsP[i];
                         uint8_t eleN = nt.gsfLowPtElsN[j];
@@ -365,7 +515,7 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
             }
         } // j loop
     } // i loop
-} // computeVertices
+} // computeKinematicVertices
 
 //this version for fitting the 2 electron tracks and the 2 muons all together!
 // this will be the first version called -- will also filter out the muons and tracks not used in any good vertex

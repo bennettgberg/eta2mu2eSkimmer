@@ -88,8 +88,8 @@ private:
 
     TTree *recoT, *genT;
     //for MC only
-    TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE,
-        *hdRP, *hdRN;
+    TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE; //,
+        //*hdRP, *hdRN;
     //max dR between gen and reco particles for a successful gen-match to be declared
     const float drCut = 0.01;
     //max dR betwixt Converted photon (electron) track and electron for a successful match to be declared (and hence the electron is deletted)
@@ -218,8 +218,8 @@ void eta2mu2eAnalyzer::beginJob()
         matchedGenPtEta = new TH1F("matchedGenPtEta", "matchedGenPtEta", 10000, 0., 100.);
         matchedGenPtEtaE = new TH1F("matchedGenPtEtaE", "matchedGenPtEtaE", 10000, 0., 100.);
     }
-    hdRP = new TH1F("hdRP", "hdRP", 10000, 0.0, 10.0);
-    hdRN = new TH1F("hdRN", "hdRN", 10000, 0.0, 10.0);
+    //hdRP = new TH1F("hdRP", "hdRP", 10000, 0.0, 10.0);
+    //hdRN = new TH1F("hdRN", "hdRN", 10000, 0.0, 10.0);
     nt.CreateTreeBranches();
 }
 
@@ -759,11 +759,11 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 argn = ii;
             }
         }
-        if(mindRP<9999 && mindRN<9999) {
-            //std::cout << "mindR for Conv. phot. tracks vs. GsfElectron tracks, pos/neg: " << mindRP << "/" << mindRN << std::endl;
-            hdRP->Fill(mindRP);
-            hdRN->Fill(mindRN);
-        }
+        //if(mindRP<9999 && mindRN<9999) {
+        //    //std::cout << "mindR for Conv. phot. tracks vs. GsfElectron tracks, pos/neg: " << mindRP << "/" << mindRN << std::endl;
+        //    hdRP->Fill(mindRP);
+        //    hdRN->Fill(mindRN);
+        //}
         //now if the dR values are small enough, remove the matched electron/positron from consideration
         if(nt.removeOnia && mindRP<drOniaCut){
             nt.skipListP.push_back(argp);
@@ -931,7 +931,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //first get the 4-particle vertices, then get rid of all the particles/tracks that aren't involved in those.
     // EL-EL-MU-MU
     //VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muTracksP, muTracksN, "mmee", theB, kvf);
-    VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muonsP, muonsN, "mmee", theB, kvf, nt);
+    //VertexTracks primVertTrx = computeVertices(allTracksP, allTracksN, muonsP, muonsN, "mmee", theB, kvf, nt);
     //debugging
     ////std::cout << "AFTER computeVertices recoVtxTrackP_: ";
     ////for(uint8_t rvtp : nt.recoVtxTrackP_) cout << (int)rvtp << ", " ;
@@ -952,8 +952,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //std::cout << "Event " << (int)nt.eventNum_ << " nMuonsP: " << (int)nt.muonsP.size() << "; nMuonsN: " << (int)nt.muonsN.size() << std::endl;
     //std::cout << "     muonsP: "; for(auto mp : nt.muonsP) std::cout << (int)mp << ", "; std::cout << std::endl;
     //std::cout << "     muonsN: "; for(auto mn : nt.muonsN) std::cout << (int)mn << ", "; std::cout << std::endl;
-    allTracksP = primVertTrx.tracksP;
-    allTracksN = primVertTrx.tracksN;
+    //allTracksP = primVertTrx.tracksP;
+    //allTracksN = primVertTrx.tracksN;
     //*** commenting out these changes so that can use ALL muons for 2-lep vertexing!! ****//
     //muonsN = primVertTrx.muonsN;
     //muonsP = primVertTrx.muonsP;
@@ -973,22 +973,23 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //std::cout << "computing vertices 1" << std::endl;
     //now get the vertices for just 2 GsfElectrons
     // EL-EL 
-    computeVertices(elTracksP, elTracksN, "elel", theB, kvf, nt);
+    //computeVertices(elTracksP, elTracksN, "elel", theB, kvf, nt);
     //LowPtElectron-LowPtElectron
     computeVertices(elLowPtTracksP, elLowPtTracksN, "lplp", theB, kvf, nt);
+    //computeKinematicVertices(elLowPtTracksP, elLowPtTracksN, "lplp", theB, kvf, nt);
 
     // MU-MU 
     computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt);
 
     //mu-mu-el-el
-    computeVertices(elTracksP, elTracksN, muonsP, muonsN, "mmelel", theB, kvf, nt);
+    //computeVertices(elTracksP, elTracksN, muonsP, muonsN, "mmelel", theB, kvf, nt);
     //mu-mu-LowPtElectron-LowPtElectron
-    computeVertices(elLowPtTracksP, elLowPtTracksN, muonsP, muonsN, "mmlplp", theB, kvf, nt);
+    //computeVertices(elLowPtTracksP, elLowPtTracksN, muonsP, muonsN, "mmlplp", theB, kvf, nt);
 
     //std::cout << "computing vertices 2" << std::endl;
     //lastly get the vertices for just 2 packed candidate tracks (electrons or pions)
     // PC-PC
-    computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
+    //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
 
     recoT->Fill();
@@ -1013,8 +1014,8 @@ void eta2mu2eAnalyzer::endJob() {
         matchedGenPtEta->Write();
         matchedGenPtEtaE->Write();
     }
-    hdRP->Write();
-    hdRN->Write();
+    //hdRP->Write();
+    //hdRN->Write();
 }
 
 // define this as a plug-in

@@ -28,57 +28,57 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("PV_vz", &pvz_);
 
     //vertices
-    //recoT->Branch("Vertex_mmee_vxy", &mmeeVtxVxy_);
-    recoT->Branch("Vertex_mmee_vx", &mmeeVtxVx_);
-    recoT->Branch("Vertex_mmee_vy", &mmeeVtxVy_);
-    recoT->Branch("Vertex_mmee_vz", &mmeeVtxVz_);
-    recoT->Branch("Vertex_mmee_sigmaVxy", &mmeeVtxSigmaVxy_);
-    recoT->Branch("Vertex_mmee_reduced_chi2", &mmeeVtxReducedChi2_);
-    recoT->Branch("Vertex_mmee_dR", &mmeeVtxDr_);
-    recoT->Branch("Vertex_mmee_muP", &mmeeVtxMuonP_);
-    recoT->Branch("Vertex_mmee_muN", &mmeeVtxMuonN_);
-    recoT->Branch("Vertex_mmee_trackP", &mmeeVtxTrackP_);
-    recoT->Branch("Vertex_mmee_trackN", &mmeeVtxTrackN_);
-    //for debugging only, do NOT include in final ntuple (waste of space)
-    //  actually include only for MC
-    if(!isData_) {
-        recoT->Branch("Vertex_mmee_M", &mmeeVtxM_);
-        recoT->Branch("Vertex_mmee_Pt", &mmeeVtxPt_);
-    }
-    
-    //recoT->Branch("Vertex_mmelel_vxy", &mmelelVtxVxy_);
-    recoT->Branch("Vertex_mmelel_vx", &mmelelVtxVx_);
-    recoT->Branch("Vertex_mmelel_vy", &mmelelVtxVy_);
-    recoT->Branch("Vertex_mmelel_vz", &mmelelVtxVz_);
-    recoT->Branch("Vertex_mmelel_sigmaVxy", &mmelelVtxSigmaVxy_);
-    recoT->Branch("Vertex_mmelel_reduced_chi2", &mmelelVtxReducedChi2_);
-    recoT->Branch("Vertex_mmelel_dR", &mmelelVtxDr_);
-    recoT->Branch("Vertex_mmelel_muP", &mmelelVtxMuonP_);
-    recoT->Branch("Vertex_mmelel_muN", &mmelelVtxMuonN_);
-    recoT->Branch("Vertex_mmelel_eleP", &mmelelVtxEleP_);
-    recoT->Branch("Vertex_mmelel_eleN", &mmelelVtxEleN_);
-    //for debugging only, do NOT include in final ntuple (waste of space)
-    // except for MC
-    if(!isData_) {
-        recoT->Branch("Vertex_mmelel_M", &mmelelVtxM_);
-        recoT->Branch("Vertex_mmelel_Pt", &mmelelVtxPt_);
-    }
-
-    //recoT->Branch("Vertex_elel_vxy", &elelVtxVxy_);
-    recoT->Branch("Vertex_elel_vx", &elelVtxVx_);
-    recoT->Branch("Vertex_elel_vy", &elelVtxVy_);
-    recoT->Branch("Vertex_elel_vz", &elelVtxVz_);
-    recoT->Branch("Vertex_elel_sigmaVxy", &elelVtxSigmaVxy_);
-    recoT->Branch("Vertex_elel_reduced_chi2", &elelVtxReducedChi2_);
-    recoT->Branch("Vertex_elel_dR", &elelVtxDr_);
-    recoT->Branch("Vertex_elel_eleP", &elelVtxEleP_);
-    recoT->Branch("Vertex_elel_eleN", &elelVtxEleN_);
-    //for debugging only, do NOT include in final ntuple (waste of space)
-    // except for MC
-    if(!isData_) {
-        recoT->Branch("Vertex_mmlplp_M", &mmlplpVtxM_);
-        recoT->Branch("Vertex_mmlplp_Pt", &mmlplpVtxPt_);
-    }
+//    //recoT->Branch("Vertex_mmee_vxy", &mmeeVtxVxy_);
+//    recoT->Branch("Vertex_mmee_vx", &mmeeVtxVx_);
+//    recoT->Branch("Vertex_mmee_vy", &mmeeVtxVy_);
+//    recoT->Branch("Vertex_mmee_vz", &mmeeVtxVz_);
+//    recoT->Branch("Vertex_mmee_sigmaVxy", &mmeeVtxSigmaVxy_);
+//    recoT->Branch("Vertex_mmee_reduced_chi2", &mmeeVtxReducedChi2_);
+//    recoT->Branch("Vertex_mmee_dR", &mmeeVtxDr_);
+//    recoT->Branch("Vertex_mmee_muP", &mmeeVtxMuonP_);
+//    recoT->Branch("Vertex_mmee_muN", &mmeeVtxMuonN_);
+//    recoT->Branch("Vertex_mmee_trackP", &mmeeVtxTrackP_);
+//    recoT->Branch("Vertex_mmee_trackN", &mmeeVtxTrackN_);
+//    //for debugging only, do NOT include in final ntuple (waste of space)
+//    //  actually include only for MC
+//    if(!isData_) {
+//        recoT->Branch("Vertex_mmee_M", &mmeeVtxM_);
+//        recoT->Branch("Vertex_mmee_Pt", &mmeeVtxPt_);
+//    }
+//    
+//    //recoT->Branch("Vertex_mmelel_vxy", &mmelelVtxVxy_);
+//    recoT->Branch("Vertex_mmelel_vx", &mmelelVtxVx_);
+//    recoT->Branch("Vertex_mmelel_vy", &mmelelVtxVy_);
+//    recoT->Branch("Vertex_mmelel_vz", &mmelelVtxVz_);
+//    recoT->Branch("Vertex_mmelel_sigmaVxy", &mmelelVtxSigmaVxy_);
+//    recoT->Branch("Vertex_mmelel_reduced_chi2", &mmelelVtxReducedChi2_);
+//    recoT->Branch("Vertex_mmelel_dR", &mmelelVtxDr_);
+//    recoT->Branch("Vertex_mmelel_muP", &mmelelVtxMuonP_);
+//    recoT->Branch("Vertex_mmelel_muN", &mmelelVtxMuonN_);
+//    recoT->Branch("Vertex_mmelel_eleP", &mmelelVtxEleP_);
+//    recoT->Branch("Vertex_mmelel_eleN", &mmelelVtxEleN_);
+//    //for debugging only, do NOT include in final ntuple (waste of space)
+//    // except for MC
+//    if(!isData_) {
+//        recoT->Branch("Vertex_mmelel_M", &mmelelVtxM_);
+//        recoT->Branch("Vertex_mmelel_Pt", &mmelelVtxPt_);
+//    }
+//
+//    //recoT->Branch("Vertex_elel_vxy", &elelVtxVxy_);
+//    recoT->Branch("Vertex_elel_vx", &elelVtxVx_);
+//    recoT->Branch("Vertex_elel_vy", &elelVtxVy_);
+//    recoT->Branch("Vertex_elel_vz", &elelVtxVz_);
+//    recoT->Branch("Vertex_elel_sigmaVxy", &elelVtxSigmaVxy_);
+//    recoT->Branch("Vertex_elel_reduced_chi2", &elelVtxReducedChi2_);
+//    recoT->Branch("Vertex_elel_dR", &elelVtxDr_);
+//    recoT->Branch("Vertex_elel_eleP", &elelVtxEleP_);
+//    recoT->Branch("Vertex_elel_eleN", &elelVtxEleN_);
+//    //for debugging only, do NOT include in final ntuple (waste of space)
+//    // except for MC
+//    if(!isData_) {
+//        recoT->Branch("Vertex_mmlplp_M", &mmlplpVtxM_);
+//        recoT->Branch("Vertex_mmlplp_Pt", &mmlplpVtxPt_);
+//    }
 
     //recoT->Branch("Vertex_mmlplp_vxy", &mmlplpVtxVxy_);
     recoT->Branch("Vertex_mmlplp_vx", &mmlplpVtxVx_);
@@ -93,7 +93,7 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Vertex_mmlplp_eleN", &mmlplpVtxEleN_);
     if(!isData_) {
         recoT->Branch("Vertex_lplp_M", &lplpVtxM_);
-        recoT->Branch("Vertex_elel_Pt", &elelVtxPt_);
+        recoT->Branch("Vertex_lplp_Pt", &lplpVtxPt_);
     }
 
     //recoT->Branch("Vertex_lplp_vxy", &lplpVtxVxy_);
@@ -112,21 +112,21 @@ void NtupleContainer::CreateTreeBranches() {
         recoT->Branch("Vertex_lplp_Pt", &lplpVtxPt_);
     }
 
-    //recoT->Branch("Vertex_pcpc_vxy", &pcpcVtxVxy_);
-    recoT->Branch("Vertex_pcpc_vx", &pcpcVtxVx_);
-    recoT->Branch("Vertex_pcpc_vy", &pcpcVtxVy_);
-    recoT->Branch("Vertex_pcpc_vz", &pcpcVtxVz_);
-    recoT->Branch("Vertex_pcpc_sigmaVxy", &pcpcVtxSigmaVxy_);
-    recoT->Branch("Vertex_pcpc_reduced_chi2", &pcpcVtxReducedChi2_);
-    recoT->Branch("Vertex_pcpc_dR", &pcpcVtxDr_);
-    recoT->Branch("Vertex_pcpc_trackP", &pcpcVtxTrackP_);
-    recoT->Branch("Vertex_pcpc_trackN", &pcpcVtxTrackN_);
-    //for debugging only, do NOT include in final ntuple (waste of space)
-    // except for MC!
-    if(!isData_) {
-        recoT->Branch("Vertex_pcpc_M", &pcpcVtxM_);
-        recoT->Branch("Vertex_pcpc_Pt", &pcpcVtxPt_);
-    }
+//    //recoT->Branch("Vertex_pcpc_vxy", &pcpcVtxVxy_);
+//    recoT->Branch("Vertex_pcpc_vx", &pcpcVtxVx_);
+//    recoT->Branch("Vertex_pcpc_vy", &pcpcVtxVy_);
+//    recoT->Branch("Vertex_pcpc_vz", &pcpcVtxVz_);
+//    recoT->Branch("Vertex_pcpc_sigmaVxy", &pcpcVtxSigmaVxy_);
+//    recoT->Branch("Vertex_pcpc_reduced_chi2", &pcpcVtxReducedChi2_);
+//    recoT->Branch("Vertex_pcpc_dR", &pcpcVtxDr_);
+//    recoT->Branch("Vertex_pcpc_trackP", &pcpcVtxTrackP_);
+//    recoT->Branch("Vertex_pcpc_trackN", &pcpcVtxTrackN_);
+//    //for debugging only, do NOT include in final ntuple (waste of space)
+//    // except for MC!
+//    if(!isData_) {
+//        recoT->Branch("Vertex_pcpc_M", &pcpcVtxM_);
+//        recoT->Branch("Vertex_pcpc_Pt", &pcpcVtxPt_);
+//    }
 
     //recoT->Branch("Vertex_mumu_vxy", &mumuVtxVxy_);
     recoT->Branch("Vertex_mumu_vx", &mumuVtxVx_);
@@ -160,14 +160,14 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Onia_vz", &recoOniaVtxVz_);
 
     //good particles
-    recoT->Branch("nGoodElectron", &recoNGoodElectron_);
-    recoT->Branch("Electron_pt",  &recoElectronPt_);
-    recoT->Branch("Electron_eta", &recoElectronEta_);
-    recoT->Branch("Electron_phi", &recoElectronPhi_);
-    recoT->Branch("Electron_vxy", &recoElectronVxy_);
-    recoT->Branch("Electron_vz",  &recoElectronVz_);
-    recoT->Branch("Electron_charge", &recoElectronCharge_);
-    recoT->Branch("Electron_id", &recoElectronIDResult_);
+//    recoT->Branch("nGoodElectron", &recoNGoodElectron_);
+//    recoT->Branch("Electron_pt",  &recoElectronPt_);
+//    recoT->Branch("Electron_eta", &recoElectronEta_);
+//    recoT->Branch("Electron_phi", &recoElectronPhi_);
+//    recoT->Branch("Electron_vxy", &recoElectronVxy_);
+//    recoT->Branch("Electron_vz",  &recoElectronVz_);
+//    recoT->Branch("Electron_charge", &recoElectronCharge_);
+//    recoT->Branch("Electron_id", &recoElectronIDResult_);
 
     recoT->Branch("nGoodLowPtElectron", &recoNGoodLowPtElectron_);
     recoT->Branch("LowPtElectron_pt",  &recoLowPtElectronPt_);
@@ -195,23 +195,23 @@ void NtupleContainer::CreateTreeBranches() {
     //recoT->Branch("Muon_id", &recoMuonIDResult_);
 
     //PackedCandidate tracks
-    recoT->Branch("nGoodTrack", &recoNGoodTrk_);
-    recoT->Branch("Track_pt", &recoTrkPt_);
-    recoT->Branch("Track_eta", &recoTrkEta_);
-    recoT->Branch("Track_phi", &recoTrkPhi_);
-    recoT->Branch("Track_charge", &recoTrkCharge_);
-    recoT->Branch("Track_dxy", &recoTrkDxy_);
-    recoT->Branch("Track_dz", &recoTrkDz_);
+//    recoT->Branch("nGoodTrack", &recoNGoodTrk_);
+//    recoT->Branch("Track_pt", &recoTrkPt_);
+//    recoT->Branch("Track_eta", &recoTrkEta_);
+//    recoT->Branch("Track_phi", &recoTrkPhi_);
+//    recoT->Branch("Track_charge", &recoTrkCharge_);
+//    recoT->Branch("Track_dxy", &recoTrkDxy_);
+//    recoT->Branch("Track_dz", &recoTrkDz_);
 
     //gsfElectron tracks
     //there's exactly one GsfTrack for every electron so nGoodGsfTrack == nGoodElectron
     //recoT->Branch("nGoodGsfTrack", &gsfNGoodTrk_);
-    recoT->Branch("GsfTrack_pt", &gsfTrkPt_);
-    recoT->Branch("GsfTrack_eta", &gsfTrkEta_);
-    recoT->Branch("GsfTrack_phi", &gsfTrkPhi_);
-    recoT->Branch("GsfTrack_charge", &gsfTrkCharge_);
-    recoT->Branch("GsfTrack_dxy", &gsfTrkDxy_);
-    recoT->Branch("GsfTrack_dz", &gsfTrkDz_);
+//    recoT->Branch("GsfTrack_pt", &gsfTrkPt_);
+//    recoT->Branch("GsfTrack_eta", &gsfTrkEta_);
+//    recoT->Branch("GsfTrack_phi", &gsfTrkPhi_);
+//    recoT->Branch("GsfTrack_charge", &gsfTrkCharge_);
+//    recoT->Branch("GsfTrack_dxy", &gsfTrkDxy_);
+//    recoT->Branch("GsfTrack_dz", &gsfTrkDz_);
 
     recoT->Branch("GsfLowPtTrack_pt", &gsfLowPtTrkPt_);
     recoT->Branch("GsfLowPtTrack_eta", &gsfLowPtTrkEta_);

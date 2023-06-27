@@ -33,5 +33,9 @@
 <use name="RecoVertex/VertexPrimitives"/>
 <use name="RecoVertex/KalmanVertexFit"/>
 
+<!--testing these out...-->
+<use name="RecoVertex/KinematicFitPrimitives"/>
+<use name="RecoVertex/KinematicFit"/>
+
 <use name="TrackingTools/TransientTrack"/>
 <use name="TrackingTools/Records"/>
