@@ -46,39 +46,39 @@ void NtupleContainer::CreateTreeBranches() {
 //        recoT->Branch("Vertex_mmee_Pt", &mmeeVtxPt_);
 //    }
 //    
-//    //recoT->Branch("Vertex_mmelel_vxy", &mmelelVtxVxy_);
-//    recoT->Branch("Vertex_mmelel_vx", &mmelelVtxVx_);
-//    recoT->Branch("Vertex_mmelel_vy", &mmelelVtxVy_);
-//    recoT->Branch("Vertex_mmelel_vz", &mmelelVtxVz_);
-//    recoT->Branch("Vertex_mmelel_sigmaVxy", &mmelelVtxSigmaVxy_);
-//    recoT->Branch("Vertex_mmelel_reduced_chi2", &mmelelVtxReducedChi2_);
-//    recoT->Branch("Vertex_mmelel_dR", &mmelelVtxDr_);
-//    recoT->Branch("Vertex_mmelel_muP", &mmelelVtxMuonP_);
-//    recoT->Branch("Vertex_mmelel_muN", &mmelelVtxMuonN_);
-//    recoT->Branch("Vertex_mmelel_eleP", &mmelelVtxEleP_);
-//    recoT->Branch("Vertex_mmelel_eleN", &mmelelVtxEleN_);
-//    //for debugging only, do NOT include in final ntuple (waste of space)
-//    // except for MC
-//    if(!isData_) {
-//        recoT->Branch("Vertex_mmelel_M", &mmelelVtxM_);
-//        recoT->Branch("Vertex_mmelel_Pt", &mmelelVtxPt_);
-//    }
-//
-//    //recoT->Branch("Vertex_elel_vxy", &elelVtxVxy_);
-//    recoT->Branch("Vertex_elel_vx", &elelVtxVx_);
-//    recoT->Branch("Vertex_elel_vy", &elelVtxVy_);
-//    recoT->Branch("Vertex_elel_vz", &elelVtxVz_);
-//    recoT->Branch("Vertex_elel_sigmaVxy", &elelVtxSigmaVxy_);
-//    recoT->Branch("Vertex_elel_reduced_chi2", &elelVtxReducedChi2_);
-//    recoT->Branch("Vertex_elel_dR", &elelVtxDr_);
-//    recoT->Branch("Vertex_elel_eleP", &elelVtxEleP_);
-//    recoT->Branch("Vertex_elel_eleN", &elelVtxEleN_);
-//    //for debugging only, do NOT include in final ntuple (waste of space)
-//    // except for MC
-//    if(!isData_) {
-//        recoT->Branch("Vertex_mmlplp_M", &mmlplpVtxM_);
-//        recoT->Branch("Vertex_mmlplp_Pt", &mmlplpVtxPt_);
-//    }
+    //recoT->Branch("Vertex_mmelel_vxy", &mmelelVtxVxy_);
+    recoT->Branch("Vertex_mmelel_vx", &mmelelVtxVx_);
+    recoT->Branch("Vertex_mmelel_vy", &mmelelVtxVy_);
+    recoT->Branch("Vertex_mmelel_vz", &mmelelVtxVz_);
+    recoT->Branch("Vertex_mmelel_sigmaVxy", &mmelelVtxSigmaVxy_);
+    recoT->Branch("Vertex_mmelel_reduced_chi2", &mmelelVtxReducedChi2_);
+    recoT->Branch("Vertex_mmelel_dR", &mmelelVtxDr_);
+    recoT->Branch("Vertex_mmelel_muP", &mmelelVtxMuonP_);
+    recoT->Branch("Vertex_mmelel_muN", &mmelelVtxMuonN_);
+    recoT->Branch("Vertex_mmelel_eleP", &mmelelVtxEleP_);
+    recoT->Branch("Vertex_mmelel_eleN", &mmelelVtxEleN_);
+    //for debugging only, do NOT include in final ntuple (waste of space)
+    // except for MC
+    if(!isData_) {
+        recoT->Branch("Vertex_mmelel_M", &mmelelVtxM_);
+        recoT->Branch("Vertex_mmelel_Pt", &mmelelVtxPt_);
+    }
+
+    //recoT->Branch("Vertex_elel_vxy", &elelVtxVxy_);
+    recoT->Branch("Vertex_elel_vx", &elelVtxVx_);
+    recoT->Branch("Vertex_elel_vy", &elelVtxVy_);
+    recoT->Branch("Vertex_elel_vz", &elelVtxVz_);
+    recoT->Branch("Vertex_elel_sigmaVxy", &elelVtxSigmaVxy_);
+    recoT->Branch("Vertex_elel_reduced_chi2", &elelVtxReducedChi2_);
+    recoT->Branch("Vertex_elel_dR", &elelVtxDr_);
+    recoT->Branch("Vertex_elel_eleP", &elelVtxEleP_);
+    recoT->Branch("Vertex_elel_eleN", &elelVtxEleN_);
+    //for debugging only, do NOT include in final ntuple (waste of space)
+    // except for MC
+    if(!isData_) {
+        recoT->Branch("Vertex_elel_M", &elelVtxM_);
+        recoT->Branch("Vertex_elel_Pt", &elelVtxPt_);
+    }
 
     //recoT->Branch("Vertex_mmlplp_vxy", &mmlplpVtxVxy_);
     recoT->Branch("Vertex_mmlplp_vx", &mmlplpVtxVx_);
@@ -92,8 +92,8 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Vertex_mmlplp_eleP", &mmlplpVtxEleP_);
     recoT->Branch("Vertex_mmlplp_eleN", &mmlplpVtxEleN_);
     if(!isData_) {
-        recoT->Branch("Vertex_lplp_M", &lplpVtxM_);
-        recoT->Branch("Vertex_lplp_Pt", &lplpVtxPt_);
+        recoT->Branch("Vertex_mmlplp_M", &mmlplpVtxM_);
+        recoT->Branch("Vertex_mmlplp_Pt", &mmlplpVtxPt_);
     }
 
     //recoT->Branch("Vertex_lplp_vxy", &lplpVtxVxy_);
@@ -160,14 +160,14 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Onia_vz", &recoOniaVtxVz_);
 
     //good particles
-//    recoT->Branch("nGoodElectron", &recoNGoodElectron_);
-//    recoT->Branch("Electron_pt",  &recoElectronPt_);
-//    recoT->Branch("Electron_eta", &recoElectronEta_);
-//    recoT->Branch("Electron_phi", &recoElectronPhi_);
-//    recoT->Branch("Electron_vxy", &recoElectronVxy_);
-//    recoT->Branch("Electron_vz",  &recoElectronVz_);
-//    recoT->Branch("Electron_charge", &recoElectronCharge_);
-//    recoT->Branch("Electron_id", &recoElectronIDResult_);
+    recoT->Branch("nGoodElectron", &recoNGoodElectron_);
+    recoT->Branch("Electron_pt",  &recoElectronPt_);
+    recoT->Branch("Electron_eta", &recoElectronEta_);
+    recoT->Branch("Electron_phi", &recoElectronPhi_);
+    recoT->Branch("Electron_vxy", &recoElectronVxy_);
+    recoT->Branch("Electron_vz",  &recoElectronVz_);
+    recoT->Branch("Electron_charge", &recoElectronCharge_);
+    recoT->Branch("Electron_id", &recoElectronIDResult_);
 
     recoT->Branch("nGoodLowPtElectron", &recoNGoodLowPtElectron_);
     recoT->Branch("LowPtElectron_pt",  &recoLowPtElectronPt_);
@@ -206,12 +206,12 @@ void NtupleContainer::CreateTreeBranches() {
     //gsfElectron tracks
     //there's exactly one GsfTrack for every electron so nGoodGsfTrack == nGoodElectron
     //recoT->Branch("nGoodGsfTrack", &gsfNGoodTrk_);
-//    recoT->Branch("GsfTrack_pt", &gsfTrkPt_);
-//    recoT->Branch("GsfTrack_eta", &gsfTrkEta_);
-//    recoT->Branch("GsfTrack_phi", &gsfTrkPhi_);
-//    recoT->Branch("GsfTrack_charge", &gsfTrkCharge_);
-//    recoT->Branch("GsfTrack_dxy", &gsfTrkDxy_);
-//    recoT->Branch("GsfTrack_dz", &gsfTrkDz_);
+    recoT->Branch("GsfTrack_pt", &gsfTrkPt_);
+    recoT->Branch("GsfTrack_eta", &gsfTrkEta_);
+    recoT->Branch("GsfTrack_phi", &gsfTrkPhi_);
+    recoT->Branch("GsfTrack_charge", &gsfTrkCharge_);
+    recoT->Branch("GsfTrack_dxy", &gsfTrkDxy_);
+    recoT->Branch("GsfTrack_dz", &gsfTrkDz_);
 
     recoT->Branch("GsfLowPtTrack_pt", &gsfLowPtTrkPt_);
     recoT->Branch("GsfLowPtTrack_eta", &gsfLowPtTrkEta_);

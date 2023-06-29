@@ -3,7 +3,7 @@ config = config()
 
 isMC = True
 #signal or MC background?
-isSig = True
+isSig = False
 
 #doing test with central MC production?
 central = False
@@ -63,6 +63,7 @@ else:
     elif not central:
         config.Data.userInputFiles = [ 
             'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
+            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
         ]
     else:
         #is central

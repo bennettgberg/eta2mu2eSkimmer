@@ -333,9 +333,9 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
                 LogError("TriggerError") << "Cannot find trigger path --> " << matchedPaths[0];
                 return;
             }
-            else {
-                std::cout << "Seems to be no problem with trigger path " << trigPathNoVersion << " : " << matchedPaths[0] << std::endl;
-            }
+            //else {
+            //    std::cout << "Seems to be no problem with trigger path " << trigPathNoVersion << " : " << matchedPaths[0] << std::endl;
+            //}
         }
     }
 }
@@ -973,7 +973,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //std::cout << "computing vertices 1" << std::endl;
     //now get the vertices for just 2 GsfElectrons
     // EL-EL 
-    //computeVertices(elTracksP, elTracksN, "elel", theB, kvf, nt);
+    computeVertices(elTracksP, elTracksN, "elel", theB, kvf, nt);
     //LowPtElectron-LowPtElectron
     computeVertices(elLowPtTracksP, elLowPtTracksN, "lplp", theB, kvf, nt);
     //computeKinematicVertices(elLowPtTracksP, elLowPtTracksN, "lplp", theB, kvf, nt);
@@ -982,9 +982,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt);
 
     //mu-mu-el-el
-    //computeVertices(elTracksP, elTracksN, muonsP, muonsN, "mmelel", theB, kvf, nt);
+    computeVertices(elTracksP, elTracksN, muonsP, muonsN, "mmelel", theB, kvf, nt);
     //mu-mu-LowPtElectron-LowPtElectron
-    //computeVertices(elLowPtTracksP, elLowPtTracksN, muonsP, muonsN, "mmlplp", theB, kvf, nt);
+    computeVertices(elLowPtTracksP, elLowPtTracksN, muonsP, muonsN, "mmlplp", theB, kvf, nt);
 
     //std::cout << "computing vertices 2" << std::endl;
     //lastly get the vertices for just 2 packed candidate tracks (electrons or pions)
