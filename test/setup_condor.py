@@ -10,7 +10,7 @@ import sys
 def main():
     
     #submit jobs within this script (T) or just do the setup (F)
-    submit_now = False
+    submit_now = True
 
     #always delete current directory if it already exists?
     always_del = False
@@ -18,7 +18,7 @@ def main():
     year = 2022
     
     #number of root files to run in a single job
-    nroot = 5
+    nroot = 10 #5
 
     #do systematics or nah (will take way longer)
     doSyst = False
