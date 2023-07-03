@@ -41,34 +41,21 @@ def beginBatchScriptTcsh(baseFileName) :
 #    outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
     return outLines
 
-#def beginBatchScript(baseFileName) :
-#    outLines = ['#!/bin/bash\n']
-##    outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
-##    outLines.append("export SCRAM_ARCH=slc6_amd64_gcc700\n")
-##    outLines.append("eval scramv1 project CMSSW CMSSW_10_2_16_patch1\n")
-##    outLines.append("cd CMSSW_10_2_16_patch1/src\n")
-##    outLines.append("eval scramv1 runtime -sh\n")
-##    outLines.append("export X509_USER_PROXY=$1\n")
-##    outLines.append("voms-proxy-info -all\n")
-##    outLines.append("voms-proxy-info -all -file $1\n")
-##    outLines.append("echo ${_CONDOR_SCRATCH_DIR}\n")
-##    outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
-#    outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
-#    outLines.append("export X509_USER_PROXY=$1\n")
-#    outLines.append("voms-proxy-info -all\n")
-#    outLines.append("voms-proxy-info -all -file $1\n")
-#    outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
-#    outLines.append("export SCRAM_ARCH=slc6_amd64_gcc700\n")
-#    outLines.append("eval `scramv1 project CMSSW CMSSW_10_2_16_patch1`\n")
-#    outLines.append("cd CMSSW_10_2_16_patch1/src\n")
-#    outLines.append("eval `scramv1 runtime -sh`\n")
-#    outLines.append("git clone https://github.com/cms-tau-pog/TauIDSFs TauPOG/TauIDSFs\n")
-#    outLines.append("cd ${_CONDOR_SCRATCH_DIR}/CMSSW_10_2_16_patch1/src/\n")
-#    outLines.append("cp ${_CONDOR_SCRATCH_DIR}/* .\n")
-#    outLines.append("scram b -j 4\n")
-#    outLines.append("eval `scramv1 runtime -sh`\n")
-#    outLines.append("ls -altrh\n")
-#    return outLines
+def beginBatchScript(baseFileName) :
+    outLines = ['#!/bin/bash\n']
+    outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
+    outLines.append("export SCRAM_ARCH=slc7_amd64_gcc10\n")
+    cmssw_release = "CMSSW_12_4_13"
+    outLines.append("eval `scramv1 project %s`\n"%cmssw_release)
+    outLines.append("cd %s/src\n"%cmssw_release)
+    outLines.append("eval `scramv1 runtime -sh`\n")
+    outLines.append("git clone https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
+    outLines.append("cd ${_CONDOR_SCRATCH_DIR}/%s/src/eta2mu2e/eta2mu2eSkimmer/plugins\n"%(cmssw_release))
+    outLines.append("cp ${_CONDOR_SCRATCH_DIR}/* .\n")
+    outLines.append("scram b -j 4\n")
+    outLines.append("eval `scramv1 runtime -sh`\n")
+    outLines.append("cd ../test\n")
+    return outLines
 
 def getFileName(line) :
     tmp = line.split()[0].strip(',')
