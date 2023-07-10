@@ -160,7 +160,12 @@ void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm
 //compute vertices for two muons vectors coll_1 and coll_2, and add them to the ntuple.
 // (overloaded below)
 // Return type: struct VertexTracks (defined above)
-void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+    VertexTracks myVertTracks;
+    myVertTracks.tracksP = {};
+    myVertTracks.tracksN = {};
+    myVertTracks.muonsP = {};
+    myVertTracks.muonsN = {};
     //vectors to store the index in the full list of muons for each 'good' (saved) pos and neg muon
     vector<int> igood {}; for(size_t i = 0; i < coll_1.size(); i++) igood.push_back(-1);
     vector<int> jgood {}; for(size_t i = 0; i < coll_2.size(); i++) jgood.push_back(-1);
@@ -196,11 +201,13 @@ void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std
                     nt.muonsP.push_back(nt.recoNGoodMuon_);
                     igood[i] = static_cast<int>(nt.recoNGoodMuon_);
                     nt = addMuon(nt, coll_1[i]);
+                    myVertTracks.muonsP.push_back(coll_1[i]);
                 }
                 if(jgood[j]<0){
                     nt.muonsN.push_back(nt.recoNGoodMuon_);
                     jgood[j] = static_cast<int>(nt.recoNGoodMuon_);
                     nt = addMuon(nt, coll_2[j]);
+                    myVertTracks.muonsN.push_back(coll_2[j]);
                 }
                 //uint8_t muP = nt.muonsP[i];
                 //uint8_t muN = nt.muonsN[j];
@@ -218,6 +225,7 @@ void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std
             
         } // j loop
     } // i loop
+    return myVertTracks;
 } // computeVertices
 
 //compute vertices for two track vectors coll_1 and coll_2, and add them to the ntuple.
@@ -832,6 +840,7 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                             //uint8_t tracks = igood[i] + (jgood[j] << 4); 
                             uint8_t muonP = nt.muonsP[k];
                             uint8_t muonN = nt.muonsN[l];
+                            //std::cout << "muonP, muonN: " << (int)muonP << ", " << (int)muonN << "; nGoodMuon: " << (int)nt.recoNGoodMuon_ << std::endl;
 
                             if(type == "mmelel") {
                                 uint8_t eleP = nt.gsfElsP[i];

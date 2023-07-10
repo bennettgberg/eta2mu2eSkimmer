@@ -54,20 +54,23 @@ def main():
             print("new_name: " + new_name)
             os.system("mkdir -p %s"%(new_name) )
         #also make a directory on eos for it.
-        eos_path = "/eos/uscms/store/user/bgreenbe/BParking_%d/%s"%(year, samp_name)
+        #eos_path = "/eos/uscms/store/user/bgreenbe/BParking_%d/%s"%(year, samp_name)
+        eos_path = "/eos/uscms/store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name)
         #MUST delete all prior contents in the eos directory if it already exists.
         if os.path.exists(eos_path):
             if not always_del:
-                cont = raw_input("Directory %s already exists. Delete all contents? (Y to delete and continue, N to cancel.) "%(eos_path))
-                if cont not in ["Y", "y", "Yes", "yes"]:
+                cont = raw_input("Directory %s already exists. Delete all contents? (Y to delete and continue, N to cancel, O to override and proceed without deleting.) "%(eos_path))
+                if cont in ["O", "o", "override", "Override"]: 
+                    #allow to continue without deleting (MAKE SURE TO CHANGE THIS BACK!!)
+                    always_del = False
+                elif cont not in ["Y", "y", "Yes", "yes"]:
                     sys.exit()
-                    ###temporarily allow to continue without deleting (MAKE SURE TO CHANGE THIS BACK!!)
-                    ##pass
                 else:
                     always_del = True
             if always_del:
                 os.system("rm %s/*.root"%(eos_path))
-        os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
+        #os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
+        os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
         #run the setup code -- TODO: need to fix this fr!!
         os.system("cd %s ; python ../../makeCondorbpg.py --dataSet %s --nickName %s --csv bpgSamples.csv --mode anaXRD --year %d -c %d -p /uscms/homes/b/bgreenbe/x509up_u52949 -l tcsh\n"%(new_name, sample, samp_name, year, nroot))
         
