@@ -121,7 +121,7 @@ NtupleContainer addTrack(NtupleContainer nt, reco::Track iTrack1) {
 }
 
 //add a muon to the ntuple
-NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1) {
+NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1, reco::Vertex pv) {
     if(nt.recoNGoodMuon_ == 255) {
         throw std::runtime_error("Too many good muons!");
     }
@@ -132,6 +132,7 @@ NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1) {
     nt.recoMuonEta_.push_back(iMuon1.eta());
     nt.recoMuonPhi_.push_back(iMuon1.phi());
     nt.recoMuonCharge_.push_back(iMuon1.charge());
+    nt.recoMuonIDResult_.push_back( iMuon1.isLooseMuon() + 2*iMuon1.isMediumMuon() + 4*iMuon1.isTightMuon(pv) );
     nt.recoNGoodMuon_++; 
     return nt;
 }
@@ -160,7 +161,7 @@ void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm
 //compute vertices for two muons vectors coll_1 and coll_2, and add them to the ntuple.
 // (overloaded below)
 // Return type: struct VertexTracks (defined above)
-VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt, reco::Vertex pv) {
     VertexTracks myVertTracks;
     myVertTracks.tracksP = {};
     myVertTracks.tracksN = {};
@@ -200,13 +201,13 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
                 if(igood[i]<0){
                     nt.muonsP.push_back(nt.recoNGoodMuon_);
                     igood[i] = static_cast<int>(nt.recoNGoodMuon_);
-                    nt = addMuon(nt, coll_1[i]);
+                    nt = addMuon(nt, coll_1[i], pv);
                     myVertTracks.muonsP.push_back(coll_1[i]);
                 }
                 if(jgood[j]<0){
                     nt.muonsN.push_back(nt.recoNGoodMuon_);
                     jgood[j] = static_cast<int>(nt.recoNGoodMuon_);
-                    nt = addMuon(nt, coll_2[j]);
+                    nt = addMuon(nt, coll_2[j], pv);
                     myVertTracks.muonsN.push_back(coll_2[j]);
                 }
                 //uint8_t muP = nt.muonsP[i];

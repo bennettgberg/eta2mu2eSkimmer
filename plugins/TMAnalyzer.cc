@@ -535,7 +535,7 @@ void TMAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
     //now get the vertices for just 2 muons
     // MU-MU 
-    computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt);
+    computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt, pv);
     //lastly get the vertices for just 2 packed candidate tracks (electrons or pions)
     // PC-PC
     //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);

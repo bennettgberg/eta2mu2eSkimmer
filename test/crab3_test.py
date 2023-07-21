@@ -26,9 +26,9 @@ if not isMC:
 else:
     if isSig:
         #config.General.requestName = 'test0MC_EtaTo2Mu2E'
-        config.General.requestName = 'test32MC_EtaTo2Mu2E'
+        config.General.requestName = 'test33MC_EtaTo2Mu2E'
     else:
-        config.General.requestName = 'test32MC_EtaToMuMuGamma'
+        config.General.requestName = 'test33MC_EtaToMuMuGamma'
 if central:
     config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'
