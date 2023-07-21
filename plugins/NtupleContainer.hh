@@ -114,7 +114,7 @@ public:
     vector<float> recoMuonPt_;
     vector<float> recoMuonEta_;
     vector<float> recoMuonPhi_;
-    vector<int> recoMuonIDResult_;
+    vector<int8_t> recoMuonIDResult_;
     vector<int8_t> recoMuonCharge_;
     vector<float> recoMuonVxy_;
     vector<float> recoMuonVz_;
