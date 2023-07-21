@@ -1,12 +1,20 @@
 import sys
 
 #allow events that pass the trigger only?
-trg_only = False
+trg_only = True
+
+#set this true to REJECT ANY event that have a reconstructed photon!
+reject_photon = False
+#set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
+reject_etamumu = False
+#require electron_ID to be greater than 0?
+require_elID = True
 
 #what test number to label the output files with
-testnum = 30
+testnum = 324
 
 isMC = False
+#use the central MC just to test the triggers (not really useful anymore)
 central = False
 #argument is telling which files to analyze (should be about 100 files each)
 if len(sys.argv) < 2:
@@ -45,10 +53,11 @@ start = time.time()
 #lets = ['C']
 
 #nums = [0]
-mu_mass = .105
+mu_mass = .105658
 el_mass = .000511
+etamass = .547862
 
-#if true, add only the vertex with the highest chi2 prob to the histogram for mmee
+#if true, add only the vertex with the highest chi2 prob to the histogram
 singleVert = True #False
 #use low pt electrons too?
 useLowPt = True
@@ -64,24 +73,35 @@ xmin = .45
 xmax = .8
 
 #list of vertex types 
-vtypes = ["elel"]
+#2pat::Electron; 2pat::Muon-2pat::Electron; 2pat::Muon-Photon; 2pat::Muon
+vtypes = ["elel", "mmelel", "mmg", "mumu"]
 if useLowPt:
+    #2-low-pT pat::Electron; mu-mu-2-low-pT pat::Electron
     vtypes.append("lplp")
+    vtypes.append("mmlplp")
 
 #list of particle types
 ptypes = ["PCTrack", "patElectron", "lowpTElectron"]
 
-#invar mass, pT dists using tracks instead of pat::Electrons
+#invar mass, pT dists (dictionary for ease of adding new vertex types)
 hM = {}
+#mass histogram with all weights 1
+hMNoWt = {}
+#pT histogram
 hpT = {}
+#dR histogram for positive muons (MC only)
 hdRP = {}
+#"      "        negative   "
 hdRN = {}
+#separate hists for high vs. low Vxy values (cutoff 1.2 cm)
 hMhiVxy = {}
 hMloVxy = {}
 hDxyHiVxy = {}
 hDxyLoVxy = {}
 hSigmaVxyHiVxy = {}
 hSigmaVxyLoVxy = {}
+#2-d hist of invar. mass vs. pT
+hMvsPt = {}
 if isMC and not isSig:
     hMeeNoG = {}
     hMeeG = {}
@@ -90,6 +110,7 @@ if useOnia:
     hVertNoMatch = {}
 for vtype in vtypes:
     hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
+    hMNoWt[vtype] = ROOT.TH1F("hMNoWt"+vtype, "UNWEIGHTED Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
     hpT[vtype] = ROOT.TH1F("hpT"+vtype, "pT with "+vtype+" vertices", 500, 0., 100.) 
     hdRP[vtype] = ROOT.TH1F("hdRP"+vtype, "dR b/t Onia and lowPtelectrons Pos", 1000, 0, 10.)
     hdRN[vtype] = ROOT.TH1F("hdRN"+vtype, "dR b/t Onia and lowPtelectrons Neg", 1000, 0, 10.)
@@ -99,6 +120,8 @@ for vtype in vtypes:
     hDxyLoVxy[vtype] = ROOT.TH1F("hDxyLoVxy"+vtype, "Dxy with "+vtype+" vertices, Vxy<1.2", 10000, -.5, .5) 
     hSigmaVxyHiVxy[vtype] = ROOT.TH1F("hSigmaVxyHiVxy"+vtype, "#sigmaVxy with "+vtype+" vertices, Vxy>1.2", 10000, 0.0, 10.0) 
     hSigmaVxyLoVxy[vtype] = ROOT.TH1F("hSigmaVxyLoVxy"+vtype, "#sigmaVxy with "+vtype+" vertices, Vxy<1.2", 10000, 0.0, 10.0) 
+    #hMvsPt[vtype] = ROOT.TH2F("hMvsPt"+vtype, "Invar. mass as a function of pT", 1000, 0.0, 100.0, 350, .45, .8) 
+    hMvsPt[vtype] = ROOT.TH2F("hMvsPt"+vtype, "Invar. mass as a function of pT", 1000, 0.0, 100.0, 10000, .2, 10) 
     #dielectron mass withOUT photon saved
     if isMC and not isSig:
         hMeeNoG[vtype] = ROOT.TH1F("hMeeNoG"+vtype, "Invar. mass with "+vtype+" vertices for evts with NO gen photon", 1000, 0, 1.0)
@@ -182,30 +205,42 @@ printevery = 10000
 # useOnia: true to remove any tracks matched to Onia conversion candidates, false to not
 # g: gen event (if MC only, obviously)
 def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, genEtaPt=0, passedTrig=True):
+    #is good eta or nah
+    good = False
     bestj = -1
     if "elel" in vtype:
         lptstr = ""
     elif "lplp" in vtype:
         lptstr = "LowPt"
+    elif vtype in ["mumu", "mmg"]:
+        lptstr = ""
     else:
         sys.exit("Error: unrecognized vertex type %s"%(vtype)) 
     nvert = None
-    nvert = eval("len(e.Vertex_%s_reduced_chi2)"%(vtype))
+    #the string that this type of vertex was called in the ntuples
+    vstr = vtype
+    if vtype == "mmg":
+        vstr = "mumu"
+    nvert = eval("len(e.Vertex_%s_reduced_chi2)"%(vstr))
 
-    vtx_vrechi2 = eval("e.Vertex_%s_reduced_chi2"%(vtype))
-    vtx_veleP = eval("e.Vertex_%s_eleP"%(vtype))
-    vtx_veleN = eval("e.Vertex_%s_eleN"%(vtype))
-    vtx_vvx = eval("e.Vertex_%s_vx"%(vtype))
-    vtx_vvy = eval("e.Vertex_%s_vy"%(vtype))
-    vtx_svxy = eval("e.Vertex_%s_sigmaVxy"%(vtype))
-    if vtype in ["elel", "lplp"]:
+    vtx_vrechi2 = eval("e.Vertex_%s_reduced_chi2"%(vstr))
+    if "elel" in vstr or "lplp" in vstr:
+        vtx_veleP = eval("e.Vertex_%s_eleP"%(vstr))
+        vtx_veleN = eval("e.Vertex_%s_eleN"%(vstr))
+    vtx_svxy = eval("e.Vertex_%s_sigmaVxy"%(vstr))
+    try:
+        vtx_vvx = eval("e.Vertex_%s_vx"%(vstr))
+        vtx_vvy = eval("e.Vertex_%s_vy"%(vstr))
+    except:
+        vtx_vxy = eval("e.Vertex_%s_vxy"%(vstr)) 
+    if vstr in ["elel", "lplp"]:
         vtx_vmuP = e.Vertex_mumu_muP
         vtx_vmuN = e.Vertex_mumu_muN
     else:
-        vtx_vmuP = eval("e.Vertex_%s_muP"%(vtype))
-        vtx_vmuN = eval("e.Vertex_%s_muN"%(vtype))
+        vtx_vmuP = eval("e.Vertex_%s_muP"%(vstr))
+        vtx_vmuN = eval("e.Vertex_%s_muN"%(vstr))
     #if requested, genmatch the converted photon tracks to the lowPt electrons, discard any that are a match
-    if useOnia:
+    if useOnia and vtype != "mmg":
         #find the best genmatches
         for oni in range(ord(e.nOnia)):
             #make the LorentzVectors for the pos and neg onia tracks
@@ -263,9 +298,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         vtx_vrechi2.erase(vtx_vrechi2.begin() + j)
                         vtx_veleP.erase(vtx_veleP.begin() + j)
                         vtx_veleN.erase(vtx_veleN.begin() + j)
-                        #CHANGE BACK IF SWITCH back to 4-lepton vertices
-                        #vtx_vmuP.erase(vtx_vmuP.begin() + j)
-                        #vtx_vmuN.erase(vtx_vmuN.begin() + j)
+                        if vstr in ["mmelel", "mmlplp", "mmee"]:
+                            vtx_vmuP.erase(vtx_vmuP.begin() + j)
+                            vtx_vmuN.erase(vtx_vmuN.begin() + j)
                         vtx_vvx.erase(vtx_vvx.begin() + j)
                         vtx_vvy.erase(vtx_vvy.begin() + j)
                         vtx_svxy.erase(vtx_svxy.begin()+j)
@@ -280,6 +315,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             hdRP[vtype].Fill(mindRP)
             hdRN[vtype].Fill(mindRN)
 
+    #fill the pT, M histograms after looping thru all vertex candidates? or in the middle
+    fillAtEnd = (vstr not in ["mmelel", "mmlplp", "mmee", "mumu"] and singleVert)
+
     if singleVert and nvert > 0:
         #bestj, bestChi2 = min(enumerate(e.Vertex_lplp_reduced_chi2), key=lambda x: x[1])
         #bestj, bestChi2 = min(enumerate(e.Vertex_mmlplp_reduced_chi2), key=lambda x: x[1])
@@ -288,89 +326,139 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
     for j in range(nvert):
         if singleVert and j != bestj : continue
         #try a cut on the chi2 value? or on vxy??
-        vec_elP = ROOT.TLorentzVector()
-        vec_elN = ROOT.TLorentzVector()
-        elP = ord(vtx_veleP[j])
-        pt = eval("e.%sElectron_pt[elP]"%(lptstr)) 
-        eta = eval("e.%sElectron_eta[elP]"%(lptstr)) 
-        phi = eval("e.%sElectron_phi[elP]"%(lptstr))
-        vec_elP.SetPtEtaPhiM(pt, eta, phi, el_mass)
-        elN = ord(vtx_veleN[j])
-        pt = eval("e.%sElectron_pt[elN]"%(lptstr)) 
-        eta = eval("e.%sElectron_eta[elN]"%(lptstr)) 
-        phi = eval("e.%sElectron_phi[elN]"%(lptstr))
-        vec_elN.SetPtEtaPhiM(pt, eta, phi, el_mass)
-        filled = False
+        #print("evt = %d, j = %d, nvert = %d"%(i, j, nvert)) 
+        if vstr != "mumu":
+            vec_elP = ROOT.TLorentzVector()
+            vec_elN = ROOT.TLorentzVector()
+            elP = ord(vtx_veleP[j])
+            pt = eval("e.%sElectron_pt[elP]"%(lptstr)) 
+            eta = eval("e.%sElectron_eta[elP]"%(lptstr)) 
+            phi = eval("e.%sElectron_phi[elP]"%(lptstr))
+            vec_elP.SetPtEtaPhiM(pt, eta, phi, el_mass)
+            elN = ord(vtx_veleN[j])
+            if require_elID:
+                elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
+                elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
+                if elIDP == 0 or elIDN == 0:
+                    continue
+            pt = eval("e.%sElectron_pt[elN]"%(lptstr)) 
+            eta = eval("e.%sElectron_eta[elN]"%(lptstr)) 
+            phi = eval("e.%sElectron_phi[elN]"%(lptstr))
+            vec_elN.SetPtEtaPhiM(pt, eta, phi, el_mass)
+            try:
+                vxy = (vtx_vvx[j]**2 + vtx_vvy[j]**2)**0.5
+            except:
+                vxy = vtx_vxy[j] 
+            if isMC:
+                if isSig:
+                    gm = False
+                    #find the dR betwixt the track and the genElectron of the same charge
+                    for k in range(g.nGenPart):
+                        if not abs(g.GenPart_pdgId[k]) == 11 : continue
+                        if ord(g.GenPart_charge[k]) == 1 :
+                            reco_el = vec_elP
+                        else:
+                            reco_el = vec_elN
+                        gen_ele = ROOT.TLorentzVector()
+                        gen_ele.SetPtEtaPhiM(g.GenPart_pt[k], g.GenPart_eta[k], g.GenPart_phi[k], el_mass)
+                        dr = reco_el.DeltaR(gen_ele) 
+                        if "lplp" in vstr:
+                            hdR["lowpTElectron"].Fill(dr)
+                        elif "elel" in vstr:
+                            hdR["patElectron"].Fill(dr) 
+                        if dr < dRcut:
+                            gm = True 
+                            #fill half here and half for the other ele
+                            hvxy_gm[vtype].Fill(vxy, 0.5)
+                else:
+                    #not signal -- background MC
+                    #has photon or nah
+                    hasG = False
+                    for k in range(g.nGenPart):
+                        if g.GenPart_pdgId[k] == 22:
+                            hasG = True
+                            break
+                    if vstr == "lplp":
+                        mee = (vec_elP + vec_elN).M()
+                        if hasG:
+                            hMeeG[vtype].Fill(mee, evt_weight)
+                        else:
+                            hMeeNoG[vtype].Fill(mee, evt_weight)
+                if isSig and gm:
+                    hpTGenReco[vtype].Fill(genEtaPt)
+                    rec_weight[vtype] += xsec
+                    if passedTrig:
+                        hpTGenAcc[vtype].Fill(genEtaPt)
+                        acc_weight[vtype] += xsec
         nvertMu = len(vtx_vmuP)
-        vxy = (vtx_vvx[j]**2 + vtx_vvy[j]**2)**0.5
-        if isMC:
-            if isSig:
-                gm = False
-                #find the dR betwixt the track and the genElectron of the same charge
-                for k in range(g.nGenPart):
-                    if not abs(g.GenPart_pdgId[k]) == 11 : continue
-                    if ord(g.GenPart_charge[k]) == 1 :
-                        reco_el = vec_elP
-                    else:
-                        reco_el = vec_elN
-                    gen_ele = ROOT.TLorentzVector()
-                    gen_ele.SetPtEtaPhiM(g.GenPart_pt[k], g.GenPart_eta[k], g.GenPart_phi[k], el_mass)
-                    dr = reco_el.DeltaR(gen_ele) 
-                    if "lplp" in vtype:
-                        hdR["lowpTElectron"].Fill(dr)
-                    elif "elel" in vtype:
-                        hdR["patElectron"].Fill(dr) 
-                    if dr < dRcut:
-                        gm = True 
-                        #fill half here and half for the other ele
-                        hvxy_gm[vtype].Fill(vxy, 0.5)
-            else:
-                #not signal -- background MC
-                #has photon or nah
-                hasG = False
-                for k in range(g.nGenPart):
-                    if g.GenPart_pdgId[k] == 22:
-                        hasG = True
-                        break
-                if vtype == "lplp":
-                    mee = (vec_elP + vec_elN).M()
-                    if hasG:
-                        hMeeG.Fill(mee, evt_weight)
-                    else:
-                        hMeeNoG.Fill(mee, evt_weight)
-            if gm:
-                hpTGenReco[vtype].Fill(genEtaPt)
-                rec_weight[vtype] += xsec
-                if passedTrig:
-                    hpTGenAcc[vtype].Fill(genEtaPt)
-                    acc_weight[vtype] += xsec
+        bestm = 99999
+        bestpt = -1
+        bestjj = -1
         for jj in range(nvertMu):
             #for 4-lepton vertices MUST use the muons corresponding to these electrons!
-            if vtype in ["mmelel", "mmlplp"] and jj != j: continue
+            if vstr in ["mmelel", "mmlplp", "mmee", "mumu"] and jj != j: continue
             #charge stored as: 1 for positive; 255 for negative
             mp = ord(vtx_vmuP[jj]) 
             vec_muP = ROOT.TLorentzVector()
-            #print("mp: " + str(mp) + "; nGoodMuon: " + str(ord(e.nGoodMuon))) 
+            #print("mp: " + str(mp) + "; nGoodMuon: " + str(ord(e.nGoodMuon)) + "; len(mp): " + str(len(vtx_vmuP)))
             vec_muP.SetPtEtaPhiM(e.Muon_pt[mp], e.Muon_eta[mp], e.Muon_phi[mp], mu_mass)
             mm = ord(vtx_vmuN[jj]) 
+            #print("mm: " + str(mm) + "; nGoodMuon: " + str(ord(e.nGoodMuon)) + "; len(mm): " + str(len(vtx_vmuN))) 
             #make the 4-vector, fill the hists
             vec_muN = ROOT.TLorentzVector()
             vec_muN.SetPtEtaPhiM(e.Muon_pt[mm], e.Muon_eta[mm], e.Muon_phi[mm], mu_mass)
-            vec_eta = vec_muP + vec_muN + vec_elP + vec_elN
+            if vtype == "mmg":
+                #find the best photon
+                bestg = -1
+                bestM = 99999
+                vec_gams = [ ROOT.TLorentzVector() for gg in range(ord(e.nGoodPhoton)) ]
+                for gg in range(ord(e.nGoodPhoton)): 
+                    vec_gams[gg].SetPtEtaPhiM(e.Photon_pt[gg], e.Photon_eta[gg], e.Photon_phi[gg], 0)
+                    meta = (vec_muP + vec_muN + vec_gams[gg]).M()
+                    dif = abs(etamass - meta)
+                    if dif < abs(bestM - etamass):
+                        bestM = meta
+                        bestg = gg
+                if bestg == -1: continue
+                vec_eta = vec_muP + vec_muN + vec_gams[bestg]
+            elif vtype == "mumu":
+                vec_eta = vec_muP + vec_muN
+            else:
+                vec_eta = vec_muP + vec_muN + vec_elP + vec_elN
             pt = vec_eta.Pt() 
-            hpT[vtype].Fill(pt, evt_weight)
             m = vec_eta.M()
-            ##test: see what happens if fill hist ONLY for high-vxy bois
-            #if vxy > 1.2: continue
-            ###### TEST #####
+            if not fillAtEnd:
+                hpT[vtype].Fill(pt, evt_weight)
+                ##test: see what happens if fill hist ONLY for high-vxy bois
+                #if vxy > 1.2: continue
+                ###### TEST #####
+                hM[vtype].Fill(m, evt_weight)
+            #good eta if in the right mass range
+            if m > .52 and m < .58:
+                good = True
+            if not singleVert:
+                hMNoWt[vtype].Fill(m)
+                hMvsPt[vtype].Fill(pt, m, evt_weight) 
+                if vxy > 1.2:
+                    hMhiVxy[vtype].Fill(m, evt_weight)
+                else:
+                    hMloVxy[vtype].Fill(m, evt_weight)
+            else:
+                if abs(m-etamass) < abs(bestm-etamass):
+                    bestm = m
+                    bestvert = jj
+                    bestpt = pt
+        if fillAtEnd and bestjj > -1:
+            hpT[vtype].Fill(pt, evt_weight)
             hM[vtype].Fill(m, evt_weight)
+            hMNoWt[vtype].Fill(m)
+            hMvsPt[vtype].Fill(pt, m, evt_weight)
             if vxy > 1.2:
                 hMhiVxy[vtype].Fill(m, evt_weight)
             else:
                 hMloVxy[vtype].Fill(m, evt_weight)
-            if singleVert: 
-                filled = True
-            if filled: break
+
+    return good
 
 def process_file(fname, singleVert, useOnia):
     global all_weight, trg_weight
@@ -384,7 +472,7 @@ def process_file(fname, singleVert, useOnia):
         sow = t.GetEntries()
         lumi = 38.48 #fb^-1 (this is the lumi for all CMS in 2022)
         if isSig:
-            sys.path.insert(1, "/uscms_data/d3/bgreenbe/CMSSW_10_2_9/src/tm_analysis/analysis/python/utils")
+            sys.path.insert(1, "tm_analysis/analysis/python/utils")
             import blinding
             bratio = blinding.get_blinded_BR_EtaTo2Mu2E()
         else:
@@ -397,6 +485,10 @@ def process_file(fname, singleVert, useOnia):
             print("Event %d/%d"%(i+1, nTot)) 
 
         passedTrig = False
+        #true if rejected for having photon
+        failedPhot = (reject_photon and ord(e.nGoodPhoton) > 0)
+        if failedPhot: 
+            continue
         trig0 = e.Triggers_fired0
         trig1 = e.Triggers_fired1
         if trig0 > 0 or ord(trig1) > 0:
@@ -454,7 +546,8 @@ def process_file(fname, singleVert, useOnia):
                     genEtaPt = gen_eta.Pt()
 
             hpTGenAll.Fill(genEtaPt)
-            xsec = h_xsec.GetBinContent( h_xsec.FindBin( genEtaPt ) )
+            xbin = h_xsec.FindBin( genEtaPt )
+            xsec = h_xsec.GetBinContent( xbin ) * h_xsec.GetBinWidth( xbin )
             all_weight += xsec
             
             evt_weight = xsec * bratio * lumi / sow
@@ -462,20 +555,29 @@ def process_file(fname, singleVert, useOnia):
                 hpTGenTrig.Fill(genEtaPt)
                 trg_weight += xsec
             
-            for vtype in vtypes:
-                if isMC:
-                    process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g, genEtaPt, passedTrig)
-                else:
-                    process_vertices(e, vtype, singleVert, useOnia, 0, 1.0)
+        goodmumu = False
+        for vtype in vtypes:
+            if vtype in ["mmlplp", "mmelel"] and reject_etamumu and goodmumu:
+                #print("event %d rejected for etaToMuMu!"%i) 
+                continue
+            if isMC:
+                isGood = process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g, genEtaPt, passedTrig)
+            else:
+                #print("processing vertices: evt %d"%i) 
+                isGood = process_vertices(e, vtype, singleVert, useOnia, 0, 1.0)
+            if vtype == "mumu":
+                goodmumu = isGood
 
     #rm the file now that you're done with it.
-    os.system("rm %s"%fname)
+    if not (isMC and not isSig):
+        os.system("rm %s"%fname)
 
 #finish the processing and write to an output file
 def finish_processing(foutname):
     fout = ROOT.TFile.Open(foutname, "recreate") 
     for vtype in vtypes:
         hM[vtype].Write()
+        hMNoWt[vtype].Write()
         hpT[vtype].Write()
         hMhiVxy[vtype].Write()
         hMloVxy[vtype].Write()
@@ -485,6 +587,7 @@ def finish_processing(foutname):
         hSigmaVxyLoVxy[vtype].Write()
         hdRP[vtype].Write()
         hdRN[vtype].Write()
+        hMvsPt[vtype].Write()
         if isMC and not isSig:
             hMeeG[vtype].Write()
             hMeeNoG[vtype].Write()
@@ -552,12 +655,16 @@ for lnum,line in enumerate(fl):
     #if lnum > 3: break
     #fname = line.strip('/eos/uscms')
     #get rid of the /eos/uscms
-    path = line.strip()[10:]
-    fullpath = "root://cmsxrootd.fnal.gov/" + path
+    path = line.strip()#[10:]
+    #fullpath = "root://cmsxrootd.fnal.gov/" + path
+    fullpath = "root://cmseos.fnal.gov/" + path
     print("Copying file %s"%(fullpath)) 
     #print("WARNING: NOT DOING xrdcp!!!")
-    os.system("xrdcp %s ."%fullpath)
-    fname = path.split('/')[-1]
+    if not (isMC and not isSig):
+        os.system("xrdcp %s ."%fullpath)
+        fname = path.split('/')[-1]
+    else:
+        fname = fullpath
     #fname = fullpath
     process_file(fname, singleVert, useOnia)
     finish_processing(foutname)
