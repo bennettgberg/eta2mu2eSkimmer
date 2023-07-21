@@ -51,10 +51,12 @@ def beginBatchScript(baseFileName) :
     outLines.append("eval `scramv1 runtime -sh`\n")
     outLines.append("git clone https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}/%s/src/eta2mu2e/eta2mu2eSkimmer/plugins\n"%(cmssw_release))
-    outLines.append("cp ${_CONDOR_SCRATCH_DIR}/* .\n")
     outLines.append("scram b -j 4\n")
     outLines.append("eval `scramv1 runtime -sh`\n")
     outLines.append("cd ../test\n")
+    outLines.append("export X509_USER_PROXY=%s\n"%(args.proxypath))
+    outLines.append("voms-proxy-info -all\n")
+    outLines.append("voms-proxy-info -all -file %s\n"%(args.proxypath))
     return outLines
 
 def getFileName(line) :
@@ -171,7 +173,8 @@ for nFile in range(0, len(dataset),mjobs) :
     #outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
     outLines.append("hadd -f -k all_{0:s}_{1:03d}.root {0:s}*root *weights\n".format(args.nickName,nFile+1))
     #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/eta_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
-    outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+    #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+    outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
     outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d *.root\n")
 #        fileloop=dataset[nFile:nFile+maxx][j]
