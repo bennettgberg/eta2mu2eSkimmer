@@ -192,7 +192,7 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Muon_charge", &recoMuonCharge_);
     recoT->Branch("Muon_vxy", &recoMuonVxy_);
     recoT->Branch("Muon_vz", &recoMuonVz_);
-    //recoT->Branch("Muon_id", &recoMuonIDResult_);
+    recoT->Branch("Muon_id", &recoMuonIDResult_);
 
     //PackedCandidate tracks
 //    recoT->Branch("nGoodTrack", &recoNGoodTrk_);
@@ -382,7 +382,7 @@ void NtupleContainer::ClearTreeBranches() {
     recoMuonCharge_.clear();
     recoMuonVxy_.clear();
     recoMuonVz_.clear();
-    //recoMuonIDResult_.clear();
+    recoMuonIDResult_.clear();
     
     skipListP.clear();
     skipListN.clear();

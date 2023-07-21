@@ -121,7 +121,7 @@ NtupleContainer addTrack(NtupleContainer nt, reco::Track iTrack1) {
 }
 
 //add a muon to the ntuple
-NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1) {
+NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1, reco::Vertex pv) {
     if(nt.recoNGoodMuon_ == 255) {
         throw std::runtime_error("Too many good muons!");
     }
@@ -132,6 +132,7 @@ NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1) {
     nt.recoMuonEta_.push_back(iMuon1.eta());
     nt.recoMuonPhi_.push_back(iMuon1.phi());
     nt.recoMuonCharge_.push_back(iMuon1.charge());
+    nt.recoMuonIDResult_.push_back( iMuon1.isLooseMuon() + 2*iMuon1.isMediumMuon() + 4*iMuon1.isTightMuon(pv) );
     nt.recoNGoodMuon_++; 
     return nt;
 }
@@ -160,7 +161,12 @@ void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm
 //compute vertices for two muons vectors coll_1 and coll_2, and add them to the ntuple.
 // (overloaded below)
 // Return type: struct VertexTracks (defined above)
-void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
+VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt, reco::Vertex pv) {
+    VertexTracks myVertTracks;
+    myVertTracks.tracksP = {};
+    myVertTracks.tracksN = {};
+    myVertTracks.muonsP = {};
+    myVertTracks.muonsN = {};
     //vectors to store the index in the full list of muons for each 'good' (saved) pos and neg muon
     vector<int> igood {}; for(size_t i = 0; i < coll_1.size(); i++) igood.push_back(-1);
     vector<int> jgood {}; for(size_t i = 0; i < coll_2.size(); i++) jgood.push_back(-1);
@@ -195,12 +201,14 @@ void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std
                 if(igood[i]<0){
                     nt.muonsP.push_back(nt.recoNGoodMuon_);
                     igood[i] = static_cast<int>(nt.recoNGoodMuon_);
-                    nt = addMuon(nt, coll_1[i]);
+                    nt = addMuon(nt, coll_1[i], pv);
+                    myVertTracks.muonsP.push_back(coll_1[i]);
                 }
                 if(jgood[j]<0){
                     nt.muonsN.push_back(nt.recoNGoodMuon_);
                     jgood[j] = static_cast<int>(nt.recoNGoodMuon_);
-                    nt = addMuon(nt, coll_2[j]);
+                    nt = addMuon(nt, coll_2[j], pv);
+                    myVertTracks.muonsN.push_back(coll_2[j]);
                 }
                 //uint8_t muP = nt.muonsP[i];
                 //uint8_t muN = nt.muonsN[j];
@@ -218,6 +226,7 @@ void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std
             
         } // j loop
     } // i loop
+    return myVertTracks;
 } // computeVertices
 
 //compute vertices for two track vectors coll_1 and coll_2, and add them to the ntuple.
@@ -832,6 +841,7 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                             //uint8_t tracks = igood[i] + (jgood[j] << 4); 
                             uint8_t muonP = nt.muonsP[k];
                             uint8_t muonN = nt.muonsN[l];
+                            //std::cout << "muonP, muonN: " << (int)muonP << ", " << (int)muonN << "; nGoodMuon: " << (int)nt.recoNGoodMuon_ << std::endl;
 
                             if(type == "mmelel") {
                                 uint8_t eleP = nt.gsfElsP[i];

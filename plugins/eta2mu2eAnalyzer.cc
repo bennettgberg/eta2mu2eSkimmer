@@ -594,8 +594,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         else {
             muonsN.push_back(* muonRef );
         }
-        //nt.recoMuonIDResult_.push_back( (float) (muonRef->muonID("All")) );
-        //nt.recoNGoodMuon_++;
+        ////nt.recoMuonIDResult_.push_back( (float) (muonRef->muonID("All")) );
+        //NGoodMuon is set later
+        ////nt.recoNGoodMuon_++;
     }
 
     // Pick pair of muons with smallest vertex chi square fit for all collection combos
@@ -979,7 +980,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //computeKinematicVertices(elLowPtTracksP, elLowPtTracksN, "lplp", theB, kvf, nt);
 
     // MU-MU 
-    computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt);
+    VertexTracks primVertTrx = computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt, pv);
+    //save ONLY the muons that form good muon-muon vertices (otherwise will be too many)
+    muonsN = primVertTrx.muonsN;
+    muonsP = primVertTrx.muonsP;
 
     //mu-mu-el-el
     computeVertices(elTracksP, elTracksN, muonsP, muonsN, "mmelel", theB, kvf, nt);
