@@ -1,9 +1,15 @@
 import ROOT
 from array import array
 
+#if only testing, use smaller input file and do NOT overwrite output files
+test = False
+
 #make plot of xsec as a function of pT for eta->2mu!
-f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest338_ALL.root", "read")
-#f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/bparking_datatest335_1C.root", "read")
+if test:
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/bparking_datatest335_1C.root", "read")
+    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/bparking_datatest335_0.root", "read")
+else:
+    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest338_ALL.root", "read")
 
 h2d = f.Get("hMvsPtmumu")
 
@@ -80,8 +86,9 @@ ptAcc2mu2e.Divide(ptGen2mu2e)
 nb = 1
 nextbin = newbins[nb]
 
-fout = open("xsec_compare.txt", "w")
-fout.write("pT bin\tBParking Fitted Yield\tBParking Acc\tBParking XS\t\t\tRun2 Scouting Yield\tRun2 Scouting Acc\tRun2 Scouting XS\n")
+if not test:
+    fout = open("xsec_compare.txt", "w")
+    fout.write("pT bin\tBParking Fitted Yield\tBParking Acc\tBParking XS\t\t\tRun2 Scouting Yield\tRun2 Scouting Acc\tRun2 Scouting XS\n")
 
 #total number of eta mesons expected
 totEta = 0.0
@@ -110,13 +117,17 @@ for j in range(nptbins-1):
         rebin = 40
     else:
         rebin = 20
+    if test:
+        rebin *= 2
     projection.Rebin(rebin)
     #print("projection: " + str(i))
     projection.Print()
     #now do a fit to pol2 + gaussian
     #fit_func = ROOT.TF1("fit_func"+str(i), "[0] + [1]*x + [2]*x*x + [3]*exp(-0.5*((x-[4])/[5])**2)", 0.45, 0.65)
     fit_func = ROOT.TF1("fit_func"+str(nb), "[0] + [1]*x + [2]*x*x + [3]*exp(-0.5*((x-[4])/[5])**2)", 0.45, 0.65)
-    if nb == 1:
+    if test:
+        fit_func.SetParameters(14000, .1, -.1, 1000, 0.548, 0.01)
+    elif nb == 1:
         fit_func.SetParameters(400, .1, -.1, 50, 0.548, 0.01)
         #fit_func.SetRange(.5, .6)
     elif i < 16:
@@ -138,10 +149,11 @@ for j in range(nptbins-1):
     s2pi = (2*3.14159265359)**0.5
     nEta = params[3] * params[5] * s2pi / projection.GetBinWidth(1)
     ptbinwidth = nextbin - 1.0*i
-    #if i == 11:
-    #    projection.Draw()
-    #    print("nEta = %f"%nEta)
-    #    input("wait...")
+    if test and i == 11:
+        projection.Draw()
+        print("nEta = %f"%nEta)
+        input("wait...")
+        input("wait...")
     unct = ( (errors[3] / params[3])**2 + (errors[5] / params[5] )**2 )**0.5 * nEta
     print("nEta = %f +/- %f"%(nEta, unct)) 
     #if nEta < 0:
@@ -197,7 +209,8 @@ for j in range(nptbins-1):
     else:
         oldacc = oldxsUnc / oldxs
     oldyield = oldxsUnc * oldlumi * bratio
-    fout.write("%d-%d\t%.2f\t%.4f\t%.2f\t\t\t%.2f\t%.4f\t%.2f\n"%(i, int(nextbin), nEta, acc, xcor, oldyield, oldacc, oldxs))
+    if not test:
+        fout.write("%d-%d\t%.2f\t%.4f\t%.2f\t\t\t%.2f\t%.4f\t%.2f\n"%(i, int(nextbin), nEta, acc, xcor, oldyield, oldacc, oldxs))
 
     #hXsecCor.SetBinContent(i, xcor)
     hXsecCor.SetBinContent(nb, xcor)
@@ -207,8 +220,8 @@ for j in range(nptbins-1):
     nb += 1
 
 #errEta = errEta**0.5
-
-fout.close()
+if not test:
+    fout.close()
 c1 = ROOT.TCanvas()
 c1.cd()
 hXsec.Print()
@@ -252,10 +265,11 @@ leg.Draw("same")
 
 input("h")
 
-outfile = ROOT.TFile.Open("xsec2022.root", "recreate")
-hXsec.Write()
-hXsecCor.Write()
-fX.Write()
-outfile.Close()
+if not test:
+    outfile = ROOT.TFile.Open("xsec2022.root", "recreate")
+    hXsec.Write()
+    hXsecCor.Write()
+    fX.Write()
+    outfile.Close()
 
 print("**TOTAL predicted eta->2mu2e decays seen for 2022 BParking: %f**"%(totEta/3)) #, errEta)) 
