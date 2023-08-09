@@ -5,6 +5,9 @@ isMC = True
 #signal or MC background?
 isSig = False
 
+#EtaToMuMuGamma sample
+isMuMu = False #True
+
 #doing test with central MC production?
 central = False
 
@@ -27,12 +30,15 @@ else:
     if isSig:
         #config.General.requestName = 'test0MC_EtaTo2Mu2E'
         config.General.requestName = 'test33MC_EtaTo2Mu2E'
+    elif isMuMu:
+        config.General.requestName = 'test33MC_EtaToMuMu'
     else:
-        config.General.requestName = 'test33MC_EtaToMuMuGamma'
+        config.General.requestName = 'test34MC_EtaToMuMuGamma'
 if central:
     config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'
 config.General.transferOutputs = True
+config.General.transferLogs = True
 config.General.instance = 'prod'
 
 config.JobType.pluginName = 'Analysis'
@@ -59,6 +65,10 @@ else:
     if isSig:
         config.Data.userInputFiles = [
             'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(65)
+        ]
+    elif isMuMu:
+        config.Data.userInputFiles = [
+            'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2022_MINIAOD/EtaToMuMu_2022Test_MINIAOD_%d.root'%i for i in range(50)
         ]
     elif not central:
         config.Data.userInputFiles = [ 

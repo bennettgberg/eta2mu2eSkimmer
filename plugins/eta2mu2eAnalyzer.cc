@@ -826,6 +826,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
             TLorentzVector genLepVec;
             genLepVec.SetPtEtaPhiM(genParticle->pt(), genParticle->eta(), genParticle->phi(), genParticle->mass());
+            //skip particles that aren't supposed to be there
+            if(genParticle->pdgId() == 990 || genParticle->pdgId() == 221) continue;
             if(i == 0) genEtaVec = genLepVec;
             else genEtaVec = genEtaVec + genLepVec;
             //4vector for the reco'd particle
