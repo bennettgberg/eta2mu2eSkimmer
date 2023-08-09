@@ -10,10 +10,10 @@ import sys
 def main():
     
     #submit jobs within this script (T) or just do the setup (F)
-    submit_now = True
+    submit_now = False
 
     #true if running the jobs on lxplus instead of cmslpc
-    lxplus = False
+    lxplus = True
 
     #always delete current directory if it already exists?
     always_del = False
