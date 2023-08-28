@@ -6,7 +6,7 @@ isMC = True
 isSig = False
 
 #EtaToMuMuGamma sample
-isMuMu = False #True
+isMuMu = True
 
 #doing test with central MC production?
 central = False
@@ -31,7 +31,7 @@ else:
         #config.General.requestName = 'test0MC_EtaTo2Mu2E'
         config.General.requestName = 'test33MC_EtaTo2Mu2E'
     elif isMuMu:
-        config.General.requestName = 'test33MC_EtaToMuMu'
+        config.General.requestName = 'test34MC_EtaToMuMu'
     else:
         config.General.requestName = 'test34MC_EtaToMuMuGamma'
 if central:

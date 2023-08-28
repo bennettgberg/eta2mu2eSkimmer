@@ -20,9 +20,10 @@ isMC = False
 central = False
 #is EtaToMuMu MC? (will be set by arguments)
 isMuMu = False
-
 #true if running a synchronization test (so print out each event, diff nbins, etc)
 syncTest = False
+#true if simply running a test, don't need to save the results
+testOnly = False
 
 #argument is telling which files to analyze (should be about 100 files each)
 if len(sys.argv) < 2:
@@ -48,6 +49,12 @@ elif sys.argv[1] == "mumu":
     print("Running in EtaToMuMu MC mode")
     arg = -1
     isMuMu = True
+elif ".root" in sys.argv[1]:
+    print("Running on test file %s"%(sys.argv[1]))
+    isMC = False
+    arg = -1
+    testOnly = True
+    syncTest = True
 elif len(sys.argv) < 4:
     print("Error: for data you must specify the run letter and set number.\nUsage: python plot_2mu2e.py [let] [setnum] [subnum]")
     print("let: C to G ; setnum: 0 to 7 ; subnum: 0 to 31") 
@@ -229,7 +236,10 @@ else:
 
 #open file to write the event nums and masses
 if syncTest:
-    syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
+    if testOnly:
+        syncFname = "syncTest_MuMutest.txt"
+    else:
+        syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
     syncFile = open(syncFname, "w") 
 
 #count the number of error events
@@ -499,7 +509,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
-            if syncTest and vtype == "mmelel" and m < 1.0:
+            if ((testOnly and vtype == "mumu") or (not testOnly and syncTest and vtype == "mmelel")) and m < 1.0:
                 syncFile.write("%d %f\n"%(e.evt, m)) 
                 print("%d %f\n"%(e.evt, m)) 
             if isMC:
@@ -739,7 +749,7 @@ def process_file(fname, singleVert, useOnia):
                 goodmumu = isGood
 
     #rm the file now that you're done with it.
-    if not (isMC and not isSig):
+    if not testOnly and not (isMC and not isSig):
         os.system("rm %s"%fname)
 
 #finish the processing and write to an output file
@@ -804,7 +814,9 @@ def finish_processing(foutname):
         for vtype in vtypes:
             print("Acc (%s): %f%%"%(vtype, acc_weight[vtype]/all_weight*100)) 
 
-if not isMC:
+if testOnly:
+    foutname = "bparking_mumutest_test.root"
+elif not isMC:
     foutname = "bparking_test%d_%s%d_%d.root"%(testnum, let, num, arg)
 else:
     if isSig:
@@ -816,42 +828,51 @@ else:
     else:
         foutname = "bparking_bkgMCtest%d.root"%testnum
 
-if isMC:
-    if isSig:
-        flistname = "sigMCList.txt"
-    elif isMuMu:
-        flistname = "mumuMCList.txt"
-    elif central:
-        flistname = "centralMCList.txt"
-    else:
-        flistname = "bkgMCList.txt"
+if testOnly:
+    fl = [sys.argv[1]]
 else:
-    flistname = "flist_%s%d_%d.txt"%(let, num, arg)
-    #flistname = "flist_whack.txt"
-    #print("WARNING: USING WHACK FLIST!!!!!")
-    if not os.path.exists(flistname):
-        flistname = "filelists/" + flistname
+    if isMC:
+        if isSig:
+            flistname = "sigMCList.txt"
+        elif isMuMu:
+            flistname = "mumuMCList.txt"
+        elif central:
+            flistname = "centralMCList.txt"
+        else:
+            flistname = "bkgMCList.txt"
+    else:
+        flistname = "flist_%s%d_%d.txt"%(let, num, arg)
+        #flistname = "flist_whack.txt"
+        #print("WARNING: USING WHACK FLIST!!!!!")
+        if not os.path.exists(flistname):
+            flistname = "filelists/" + flistname
 
-fl = open(flistname, "r")
+    fl = open(flistname, "r")
 for lnum,line in enumerate(fl):
     ##debugging
     #if lnum > 3: break
     #fname = line.strip('/eos/uscms')
     #get rid of the /eos/uscms
     path = line.strip()#[10:]
-    #fullpath = "root://cmsxrootd.fnal.gov/" + path
-    fullpath = "root://cmseos.fnal.gov/" + path
-    print("Copying file %s"%(fullpath)) 
-    #print("WARNING: NOT DOING xrdcp!!!")
-    if not (isMC and not isSig):
-        os.system("xrdcp %s ."%fullpath)
-        fname = path.split('/')[-1]
+    if testOnly:    
+        fullpath = path
+        fname = path
     else:
-        fname = fullpath
+        #fullpath = "root://cmsxrootd.fnal.gov/" + path
+        fullpath = "root://cmseos.fnal.gov/" + path
+        print("Copying file %s"%(fullpath)) 
+        #print("WARNING: NOT DOING xrdcp!!!")
+        if not (isMC and not isSig):
+            os.system("xrdcp %s ."%fullpath)
+            fname = path.split('/')[-1]
+        else:
+            fname = fullpath
     #fname = fullpath
     process_file(fname, singleVert, useOnia)
     finish_processing(foutname)
-os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
+if not testOnly:
+    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
 if syncTest:
     syncFile.close()
-    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%syncFname )
+    if not testOnly:
+        os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%syncFname )
