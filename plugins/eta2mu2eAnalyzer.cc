@@ -56,6 +56,8 @@
 //#include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
 #include "DataFormats/PatCandidates/interface/UserData.h"
 
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
+
 #include "TTree.h"
 #include "TMath.h"
 #include <TLorentzVector.h>

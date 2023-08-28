@@ -6,7 +6,7 @@ isMC = True
 isSig = False
 
 #EtaToMuMuGamma sample
-isMuMu = True
+isMuMu = False
 
 #doing test with central MC production?
 central = False
@@ -29,11 +29,11 @@ if not isMC:
 else:
     if isSig:
         #config.General.requestName = 'test0MC_EtaTo2Mu2E'
-        config.General.requestName = 'test33MC_EtaTo2Mu2E'
+        config.General.requestName = 'test35MC_EtaTo2Mu2E'
     elif isMuMu:
-        config.General.requestName = 'test34MC_EtaToMuMu'
+        config.General.requestName = 'test35MC_EtaToMuMu'
     else:
-        config.General.requestName = 'test34MC_EtaToMuMuGamma'
+        config.General.requestName = 'test35MC_EtaToMuMuGamma2'
 if central:
     config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'
@@ -72,8 +72,9 @@ else:
         ]
     elif not central:
         config.Data.userInputFiles = [ 
-            'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
-            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
+            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
+            'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
+            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(3500) 
         ]
     else:
         #is central
