@@ -1,19 +1,19 @@
 import sys
 
 #allow events that pass the trigger only?
-trg_only = True #False
+trg_only = False
 
 #set this true to REJECT ANY event that have a reconstructed photon!
 reject_photon = False
 #set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
 reject_etamumu = False
 #require electron_ID to be greater than 0?
-require_elID = False
+require_elID = True
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 339
+testnum = 350
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -79,7 +79,7 @@ etamass = .547862
 #if true, add only the vertex with the highest chi2 prob to the histogram
 singleVert = not syncTest
 #use low pt electrons too?
-useLowPt = not syncTest
+useLowPt = False #not syncTest
 
 #if True, genmatch the Onia photon tracks to the LowPt electrons and discard any that are a match
 useOnia = False
@@ -97,7 +97,8 @@ if syncTest:
 
 #list of vertex types 
 #2pat::Electron; 2pat::Muon-2pat::Electron; 2pat::Muon-Photon; 2pat::Muon
-vtypes = ["elel", "mmelel", "mmg", "mumu"]
+#vtypes = ["elel", "mmelel", "mmg", "mumu"]
+vtypes = ["mmelel", "mumu"]
 if useLowPt:
     #2-low-pT pat::Electron; mu-mu-2-low-pT pat::Electron
     vtypes.append("lplp")
@@ -133,6 +134,9 @@ if isMC and not isSig:
 if useOnia:
     hVertMatched = {}
     hVertNoMatch = {}
+#plot of the mu-mu mass only of mmelel vertices (just to see what it looks like)
+hMNoEl = ROOT.TH1F("hMNoEl", "Invar. mass of muons ONLY with mmelel vertices", 200, 0.0, 1.0) 
+hMNoMu = ROOT.TH1F("hMNoMu", "Invar. mass of electrons ONLY with mmelel vertices", 200, 0.0, 1.0) 
 for vtype in vtypes:
     hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
     hMNoWt[vtype] = ROOT.TH1F("hMNoWt"+vtype, "UNWEIGHTED Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
@@ -388,7 +392,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
                 elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
+                #require elID on BOTH electrons
                 if elIDP == 0 or elIDN == 0:
+                ##require elID on only ONE electron
+                #if elIDP == 0 and elIDN == 0:
                     continue
             pt = eval("e.%sElectron_pt[elN]"%(lptstr)) 
             eta = eval("e.%sElectron_eta[elN]"%(lptstr)) 
@@ -447,6 +454,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 #        acc_weight[vtype] += xsec
         nvertMu = len(vtx_vmuP)
         bestm = 99999
+        bestm2mu = 99999
         bestpt = -1
         bestjj = -1
         for jj in range(nvertMu):
@@ -516,12 +524,12 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                     #hpTGenReco[vtype].Fill(genEtaPt)
                     hpTGenReco[vtype].Fill(gen_eta.Pt())
                     hEtaGenReco[vtype].Fill(gen_eta.PseudoRapidity())
-                    rec_weight[vtype] += xsec
+                    rec_weight[vtype] += evt_weight
                     if passedTrig:
                         #hpTGenAcc[vtype].Fill(genEtaPt)
                         hpTGenAcc[vtype].Fill(gen_eta.Pt())
                         hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity())
-                        acc_weight[vtype] += xsec
+                        acc_weight[vtype] += evt_weight
 
             if not fillAtEnd:
                 hpT[vtype].Fill(pt, evt_weight)
@@ -532,6 +540,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 hM[vtype].Fill(m, evt_weight)
                 hMNoWt[vtype].Fill(m)
                 hMvsPt[vtype].Fill(pt, m, evt_weight) 
+                if vtype == "mmelel":
+                    hMNoEl.Fill( (vec_muP+vec_muN).M(), evt_weight)
+                    hMNoMu.Fill( (vec_elP+vec_elN).M(), evt_weight)
             #good eta if in the right mass range
             if m > .52 and m < .58:
                 good = True
@@ -546,6 +557,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             else:
                 if abs(m-etamass) < abs(bestm-etamass):
                     bestm = m
+                    if vtype == "mmelel":
+                        bestm2mu = (vec_muP+vec_muN).M()
+                        bestm2el = (vec_elP+vec_elN).M()
                     bestjj = jj
                     bestpt = pt
         if fillAtEnd and bestjj > -1:
@@ -554,6 +568,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             hM[vtype].Fill(m, evt_weight)
             hMNoWt[vtype].Fill(m)
             hMvsPt[vtype].Fill(pt, m, evt_weight)
+            if vtype == "mmelel":
+                hMNoEl.Fill(bestm2mu, evt_weight)
+                hMNoMu.Fill(bestm2el, evt_weight)
             if vxy > 1.2:
                 hMhiVxy[vtype].Fill(m, evt_weight)
             else:
@@ -571,7 +588,8 @@ def process_file(fname, singleVert, useOnia):
         gt = f.Get("ntuples/genT") 
         #need gen pT histogram to get the event weights correct for MC
         hW = f.Get("ntuples/allGenPtEta")
-        hW.Rebin(100)
+        print("hWeight entries: %d"%(hW.GetEntries())) 
+        #hW.Rebin(100)
         #now need to merge the bins exactly like the xsec histogram!!
         newbins = [i*1.0 for i in range(6, 31)]
         for i in range(32, 41, 2):
@@ -597,8 +615,8 @@ def process_file(fname, singleVert, useOnia):
             bratio = 3.1e-4
 
     for i,e in enumerate(t):
-        #debugging
-        #if i > 202: break
+        ##debugging
+        #if i > 100000: break
         if i%printevery == (printevery-1):
             print("Event %d/%d"%(i+1, nTot)) 
 
@@ -688,17 +706,23 @@ def process_file(fname, singleVert, useOnia):
             #print("xsec0: %f, xsec1: %f"%(xsec0, xsec1))
             hxs0.append(xsec0) 
             hxs1.append(xsec1)
-            #xsec = xsec1
-            xsec = xsec0
+            xsec = xsec1
+            #xsec = xsec0
             wbin = hWeights.FindBin(genEtaPt)
             ptWeight = hWeights.GetBinContent( wbin )
-            all_weight += xsec/ptWeight
             
             evt_weight = xsec * bratio * lumi / ptWeight #nEntries
+            if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and evt_weight > 50:
+                print("***high event weight: %f***"%(evt_weight))
+                print("event: %d, genEtaPt: %f, xsec: %f, ptWeight: %f"%(i, genEtaPt, xsec, ptWeight)) 
+            if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and genEtaPt < 12 and evt_weight < 5:
+                print("******low event weight: %f***"%(evt_weight))
+                print("event: %d, genEtaPt: %f, xsec: %f, ptWeight: %f"%(i, genEtaPt, xsec, ptWeight)) 
+            all_weight += evt_weight
             if passedTrig:
                 hpTGenTrig.Fill(genEtaPt)
                 hEtaGenTrig.Fill(genEtaEta)
-                trg_weight += xsec
+                trg_weight += evt_weight
             
         goodmumu = False
         for vtype in vtypes:
@@ -743,6 +767,8 @@ def finish_processing(foutname):
             hVertNoMatch[vtype].Write()
             if isMC:
                 hpTVertMatched[vtype].Write()
+    hMNoEl.Write()
+    hMNoMu.Write()
     if inc_vertM:
         hMV.Write()
         hpTV.Write()
