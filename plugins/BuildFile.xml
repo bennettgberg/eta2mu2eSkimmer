@@ -9,6 +9,7 @@
 
 <use name="CommonTools/UtilAlgos"/>
 <use name="CommonTools/RecoAlgos"/>
+<use name="CommonTools/Egamma"/>
 
 <use name="DataFormats/Common"/>
 <use name="DataFormats/HepMCCandidate"/>

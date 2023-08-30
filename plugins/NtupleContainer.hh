@@ -91,6 +91,10 @@ public:
     vector<float> recoElectronVz_;
     vector<int8_t> recoElectronCharge_;
     vector<uint8_t> recoElectronIDResult_;
+    //conversion veto
+    vector<uint8_t> recoElectronConvVeto_;
+    //number of missing layers in tracker hits
+    vector<uint8_t> recoElectronNMhits_;
 
     // Reco electron branches
     uint8_t recoNGoodLowPtElectron_;
