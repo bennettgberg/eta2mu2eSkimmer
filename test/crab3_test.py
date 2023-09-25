@@ -29,11 +29,11 @@ if not isMC:
 else:
     if isSig:
         #config.General.requestName = 'test0MC_EtaTo2Mu2E'
-        config.General.requestName = 'test36MC_EtaTo2Mu2E'
+        config.General.requestName = 'test36MC_EtaTo2Mu2E_1'
     elif isMuMu:
         config.General.requestName = 'test35MC_EtaToMuMu'
     else:
-        config.General.requestName = 'test36MC_EtaToMuMuGamma2'
+        config.General.requestName = 'test36MC_EtaToMuMuGamma3'
 if central:
     config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'
@@ -64,7 +64,8 @@ if not isMC:
 else:
     if isSig:
         config.Data.userInputFiles = [
-            'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(65)
+            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(65)
+            'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_2/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(300)
         ]
     elif isMuMu:
         config.Data.userInputFiles = [
@@ -73,8 +74,8 @@ else:
     elif not central:
         config.Data.userInputFiles = [ 
             #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
-            'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
-            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(3500) 
+            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
+            'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(3500) 
         ]
     else:
         #is central

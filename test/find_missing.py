@@ -8,7 +8,7 @@ for let in ['F']:
         fnum = 1
         #how many root files per job were used
         fperj = 10
-        if let == 'C' and num == 0: fperj = 5
+        #if let == 'C' and num == 0: fperj = 5
         while True:
             #if let == 'E' or let == 'F':
             if 2+2 == 5:
