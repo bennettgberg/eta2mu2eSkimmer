@@ -1,29 +1,30 @@
 import sys
 
 #allow events that pass the trigger only?
-trg_only = False
+trg_only = True
 
 #set this true to REJECT ANY event that have a reconstructed photon!
 reject_photon = False
 #set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
 reject_etamumu = False
+#require the conversion veto and nMissingHits <= 3 on electrons?
+basic_cuts = True
 #require electron_ID to be greater than 0?
-require_elID = True
+require_elID = False
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 350
+testnum = 3610
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
 central = False
 #is EtaToMuMu MC? (will be set by arguments)
 isMuMu = False
+
 #true if running a synchronization test (so print out each event, diff nbins, etc)
 syncTest = False
-#true if simply running a test, don't need to save the results
-testOnly = False
 
 #argument is telling which files to analyze (should be about 100 files each)
 if len(sys.argv) < 2:
@@ -49,12 +50,6 @@ elif sys.argv[1] == "mumu":
     print("Running in EtaToMuMu MC mode")
     arg = -1
     isMuMu = True
-elif ".root" in sys.argv[1]:
-    print("Running on test file %s"%(sys.argv[1]))
-    isMC = False
-    arg = -1
-    testOnly = True
-    syncTest = True
 elif len(sys.argv) < 4:
     print("Error: for data you must specify the run letter and set number.\nUsage: python plot_2mu2e.py [let] [setnum] [subnum]")
     print("let: C to G ; setnum: 0 to 7 ; subnum: 0 to 31") 
@@ -82,9 +77,12 @@ start = time.time()
 mu_mass = .105658
 el_mass = .000511
 etamass = .547862
+pi_mass = .13957
 
 #if true, add only the vertex with the highest chi2 prob to the histogram
 singleVert = not syncTest
+#maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.6 for chi2 prob>.1) 
+rChi2Cut = 2.6
 #use low pt electrons too?
 useLowPt = False #not syncTest
 
@@ -94,8 +92,10 @@ useOnia = False
 dRcut = .002 #.05
 
 #parameters for invar mass histogram
-nbins = 350
-xmin = .45
+#nbins = 350
+nbins = 550
+#xmin = .45
+xmin = .25
 xmax = .8
 if syncTest:
     nbins = 100
@@ -105,17 +105,23 @@ if syncTest:
 #list of vertex types 
 #2pat::Electron; 2pat::Muon-2pat::Electron; 2pat::Muon-Photon; 2pat::Muon
 #vtypes = ["elel", "mmelel", "mmg", "mumu"]
-vtypes = ["mmelel", "mumu"]
+vtypes = ["mmelel", "mumu", "elel"]
 if useLowPt:
     #2-low-pT pat::Electron; mu-mu-2-low-pT pat::Electron
     vtypes.append("lplp")
     vtypes.append("mmlplp")
+
+#if True, ONLY mmelel vertices made up of 2 good 2-lepton vertices are allowed
+# ie if no good mu pair or no good el pair, cannot use the 4-lepton pair
+mmelelExclusive = False # True
 
 #list of particle types
 ptypes = ["PCTrack", "patElectron", "lowpTElectron"]
 
 #invar mass, pT dists (dictionary for ease of adding new vertex types)
 hM = {}
+#reduced chi2 of the vertices filling the histogram
+hRchi2 = {}
 #mass histogram with all weights 1
 hMNoWt = {}
 #pT histogram
@@ -133,6 +139,7 @@ hDxyHiVxy = {}
 hDxyLoVxy = {}
 hSigmaVxyHiVxy = {}
 hSigmaVxyLoVxy = {}
+hVxy = {}
 #2-d hist of invar. mass vs. pT
 hMvsPt = {}
 if isMC and not isSig:
@@ -142,10 +149,17 @@ if useOnia:
     hVertMatched = {}
     hVertNoMatch = {}
 #plot of the mu-mu mass only of mmelel vertices (just to see what it looks like)
-hMNoEl = ROOT.TH1F("hMNoEl", "Invar. mass of muons ONLY with mmelel vertices", 200, 0.0, 1.0) 
-hMNoMu = ROOT.TH1F("hMNoMu", "Invar. mass of electrons ONLY with mmelel vertices", 200, 0.0, 1.0) 
+hMNoEl = ROOT.TH1F("hMNoEl", "Invar. mass of muons ONLY in mmelel signal window", 200, 0.0, 1.0) 
+hMNoMu = ROOT.TH1F("hMNoMu", "Invar. mass of electrons ONLY in mmelel signal window", 200, 0.0, 1.0) 
+hMNoElLSide = ROOT.TH1F("hMNoElLSide", "Invar. mass of muons ONLY to LEFT of mmelel signal window (lower sideband)", 200, 0.0, 1.0) 
+hMNoMuLSide = ROOT.TH1F("hMNoMuLSide", "Invar. mass of electrons ONLY to LEFT of mmelel signal window (lower sideband)", 200, 0.0, 1.0) 
+hMNoElRSide = ROOT.TH1F("hMNoElRSide", "Invar. mass of muons ONLY to RIGHT of mmelel signal window (upper sideband)", 200, 0.0, 1.0) 
+hMNoMuRSide = ROOT.TH1F("hMNoMuRSide", "Invar. mass of electrons ONLY to RIGHT of mmelel signal window (upper sideband)", 200, 0.0, 1.0) 
+#invariant mass distribution of just electrons in the mu-mu-e-e, but assuming pion mass instead of electron mass
+hMNoMuPiM = ROOT.TH1F("hMNoMuPiM", "Invar. mass of electrons ONLY in mmelel signal window, assuming pion mass instead", 200, 0.0, 1.0) 
 for vtype in vtypes:
     hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
+    hRchi2[vtype] = ROOT.TH1F("hRchi2"+vtype, "Reduced #chi^{2} with "+vtype+" vertices", 500, 0.0, 5.0)
     hMNoWt[vtype] = ROOT.TH1F("hMNoWt"+vtype, "UNWEIGHTED Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
     hpT[vtype] = ROOT.TH1F("hpT"+vtype, "pT with "+vtype+" vertices", 500, 0., 100.) 
     #pseudorapidity distribution of the reconstructed eta mesons
@@ -160,6 +174,7 @@ for vtype in vtypes:
     hSigmaVxyLoVxy[vtype] = ROOT.TH1F("hSigmaVxyLoVxy"+vtype, "#sigmaVxy with "+vtype+" vertices, Vxy<1.2", 10000, 0.0, 10.0) 
     #hMvsPt[vtype] = ROOT.TH2F("hMvsPt"+vtype, "Invar. mass as a function of pT", 1000, 0.0, 100.0, 350, .45, .8) 
     hMvsPt[vtype] = ROOT.TH2F("hMvsPt"+vtype, "Invar. mass as a function of pT", 100, 0.0, 100.0, 8000, .2, 1.0) 
+    hVxy[vtype] = ROOT.TH1F("hVxy"+vtype, "Vxy for all "+vtype+" vertices", 1000, 0.0, 10.0) 
     #dielectron mass withOUT photon saved
     if isMC and not isSig:
         hMeeNoG[vtype] = ROOT.TH1F("hMeeNoG"+vtype, "Invar. mass with "+vtype+" vertices for evts with NO gen photon", 1000, 0, 1.0)
@@ -169,6 +184,12 @@ for vtype in vtypes:
         hVertNoMatch[vtype] = ROOT.TH2F("hVertNoMatch"+vtype, "vx vs. vy for unmatched "+vtype+" tracks", 12000, -60, 60, 12000, -60, 60)
         if isMC:
             hpTVertMatched[vtype] = ROOT.TH1F("hpTVertMatched"+vtype, "Gen pT of etas in which "+vtype+" elecs were matched to converted photons", 500, 0., 100.) 
+
+if mmelelExclusive:
+    #histogram of invariant masses that have valid mmelel vertices but either invalid mu-mu or invalid el-el vertex
+    hMdeleted = ROOT.TH1F("hMdeleted", "DELETED invar. mass with mmelel vertices", nbins, xmin, xmax) 
+    hRchi2deleted = ROOT.TH1F("hRchi2deleted", "DELETED reduced chi2 with mmelel vertices", 500, 0.0, 5.0) 
+    
 if isMC:
     #histogram of pT for all gen eta mesons
     hpTGenAll = ROOT.TH1F("hpTGenAll", "pT of all gen Eta Mesons", 500, 0., 100.)
@@ -236,10 +257,7 @@ else:
 
 #open file to write the event nums and masses
 if syncTest:
-    if testOnly:
-        syncFname = "syncTest_MuMutest.txt"
-    else:
-        syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
+    syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
     syncFile = open(syncFname, "w") 
 
 #count the number of error events
@@ -298,6 +316,53 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
     else:
         vtx_vmuP = eval("e.Vertex_%s_muP"%(vstr))
         vtx_vmuN = eval("e.Vertex_%s_muN"%(vstr))
+
+    #delet invalid mmelel vertices
+    if mmelelExclusive and vtype == "mmelel":
+        #loop thru all vertices
+        j = 0
+        while j < nvert:
+            #check if this mu pair is in the list of mu pairs
+            found_eVtx = False
+            for k in range(len(e.Vertex_elel_eleP)):
+                if ord(e.Vertex_elel_eleP[k]) == ord(vtx_veleP[j]) and ord(e.Vertex_elel_eleN[k]) == ord(vtx_veleN[j]) :
+                    found_eVtx = True
+                    break
+            found_muVtx = False
+            #don't bother wasting time on the mu vtx loop if electron vtx wasn't even found
+            if found_eVtx:
+                for k in range(len(e.Vertex_mumu_muP)):
+                    if ord(e.Vertex_mumu_muP[k]) == ord(vtx_vmuP[j]) and ord(e.Vertex_mumu_muN[k]) == ord(vtx_vmuN[j]) :
+                        found_muVtx = True
+                        break
+
+            #if the electron vertex or muon vertex was not found, delet this mmelel vertex.
+            if not (found_eVtx and found_muVtx):
+                #before deletting, fill the 'deletted' invariant mass histogram
+                vec_elP = ROOT.TLorentzVector()
+                vec_elN = ROOT.TLorentzVector()
+                vec_muP = ROOT.TLorentzVector()
+                vec_muN = ROOT.TLorentzVector()
+                vec_elP.SetPtEtaPhiM(e.Electron_pt[ord(vtx_veleP[j])], e.Electron_eta[ord(vtx_veleP[j])], e.Electron_phi[ord(vtx_veleP[j])], el_mass)
+                vec_elN.SetPtEtaPhiM(e.Electron_pt[ord(vtx_veleN[j])], e.Electron_eta[ord(vtx_veleN[j])], e.Electron_phi[ord(vtx_veleN[j])], el_mass)
+                vec_muP.SetPtEtaPhiM(e.Muon_pt[ord(vtx_vmuP[j])], e.Muon_eta[ord(vtx_vmuP[j])], e.Muon_phi[ord(vtx_vmuP[j])], mu_mass)
+                vec_muN.SetPtEtaPhiM(e.Muon_pt[ord(vtx_vmuN[j])], e.Muon_eta[ord(vtx_vmuN[j])], e.Muon_phi[ord(vtx_vmuN[j])], mu_mass)
+                mdeleted = (vec_elP + vec_elN + vec_muP + vec_muN).M()
+                hMdeleted.Fill(mdeleted)
+                hRchi2deleted.Fill(vtx_vrechi2[j]) 
+                #print("EVT " + str(i) + ": removing " + str(j) + " before: " + str(vtx_vrechi2)) 
+                vtx_vrechi2.erase(vtx_vrechi2.begin() + j)
+                vtx_veleP.erase(vtx_veleP.begin() + j)
+                vtx_veleN.erase(vtx_veleN.begin() + j)
+                vtx_vmuP.erase(vtx_vmuP.begin() + j)
+                vtx_vmuN.erase(vtx_vmuN.begin() + j)
+                vtx_vvx.erase(vtx_vvx.begin() + j)
+                vtx_vvy.erase(vtx_vvy.begin() + j)
+                vtx_svxy.erase(vtx_svxy.begin()+j)
+                j -= 1
+                nvert -= 1
+            j += 1
+
     #if requested, genmatch the converted photon tracks to the lowPt electrons, discard any that are a match
     if useOnia and vtype != "mmg":
         #find the best genmatches
@@ -379,6 +444,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
     # (for the 4-lepton vertices and mumu, only executing the loop once anyway so minus well just fill in the middle)
     fillAtEnd = (vstr not in ["mmelel", "mmlplp", "mmee", "mumu"] and singleVert)
 
+    Vxy = -1
     if singleVert and nvert > 0:
         #bestj, bestChi2 = min(enumerate(e.Vertex_lplp_reduced_chi2), key=lambda x: x[1])
         #bestj, bestChi2 = min(enumerate(e.Vertex_mmlplp_reduced_chi2), key=lambda x: x[1])
@@ -389,16 +455,29 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
         #try a cut on the chi2 value? or on vxy??
         #print("evt = %d, j = %d, nvert = %d"%(i, j, nvert)) 
         #chi2 of 2.6 corresponds to prob of .1
-        if vtx_vrechi2[j] > 2.6: continue
+        if rChi2Cut > 0 and vtx_vrechi2[j] > rChi2Cut: continue
         if vstr != "mumu":
             vec_elP = ROOT.TLorentzVector()
             vec_elN = ROOT.TLorentzVector()
+            vec_piP = ROOT.TLorentzVector()
+            vec_piN = ROOT.TLorentzVector()
             elP = ord(vtx_veleP[j])
             pt = eval("e.%sElectron_pt[elP]"%(lptstr)) 
             eta = eval("e.%sElectron_eta[elP]"%(lptstr)) 
             phi = eval("e.%sElectron_phi[elP]"%(lptstr))
             vec_elP.SetPtEtaPhiM(pt, eta, phi, el_mass)
+            vec_piP.SetPtEtaPhiM(pt, eta, phi, pi_mass)
             elN = ord(vtx_veleN[j])
+            if basic_cuts:
+                vetoP = ord(e.Electron_convVeto[elP]) != 0
+                vetoN = ord(e.Electron_convVeto[elN]) != 0
+                if vetoP or vetoN:
+                    continue
+                nMissP = ord(e.Electron_nMissingHits[elP])
+                nMissN = ord(e.Electron_nMissingHits[elN])
+                #if nMissP > 3 or nMissN > 3:
+                if nMissP > 2 or nMissN > 2:
+                    continue
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
                 elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
@@ -411,10 +490,12 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             eta = eval("e.%sElectron_eta[elN]"%(lptstr)) 
             phi = eval("e.%sElectron_phi[elN]"%(lptstr))
             vec_elN.SetPtEtaPhiM(pt, eta, phi, el_mass)
+            vec_piN.SetPtEtaPhiM(pt, eta, phi, pi_mass)
             try:
                 vxy = (vtx_vvx[j]**2 + vtx_vvy[j]**2)**0.5
             except:
                 vxy = vtx_vxy[j] 
+            Vxy = vxy
             if isMC:
                 if isSig:
                     gm = False
@@ -470,6 +551,14 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
         for jj in range(nvertMu):
             #for 4-lepton vertices MUST use the muons corresponding to these electrons!
             if vstr in ["mmelel", "mmlplp", "mmee", "mumu"] and jj != j: continue
+            if vstr == "mumu":
+                try:
+                    vxy = vtx_vxy[jj]
+                except:
+                    vxy = (vtx_vvx[jj]**2 + vtx_vvy[jj]**2)**0.5 
+            else:
+                #for all other vertex types, use the vxy including the electrons
+                vxy = Vxy
             #charge stored as: 1 for positive; 255 for negative
             mp = ord(vtx_vmuP[jj]) 
             vec_muP = ROOT.TLorentzVector()
@@ -509,7 +598,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
-            if ((testOnly and vtype == "mumu") or (not testOnly and syncTest and vtype == "mmelel")) and m < 1.0:
+            if syncTest and vtype == "mmelel" and m < 1.0:
                 syncFile.write("%d %f\n"%(e.evt, m)) 
                 print("%d %f\n"%(e.evt, m)) 
             if isMC:
@@ -550,14 +639,25 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 hM[vtype].Fill(m, evt_weight)
                 hMNoWt[vtype].Fill(m)
                 hMvsPt[vtype].Fill(pt, m, evt_weight) 
-                if vtype == "mmelel":
+                hVxy[vtype].Fill(vxy)
+                hRchi2[vtype].Fill(vtx_vrechi2[j])
+                if vtype == "mmelel" and m > .52 and m < .58:
                     hMNoEl.Fill( (vec_muP+vec_muN).M(), evt_weight)
                     hMNoMu.Fill( (vec_elP+vec_elN).M(), evt_weight)
+                    hMNoMuPiM.Fill( (vec_piP+vec_piN).M(), evt_weight)
+                #if vtype == "mmelel" and m < .52 and m > .45 :
+                if vtype == "mmelel" and m < .45 : #and m > .45 :
+                    hMNoElLSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
+                    hMNoMuLSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
+                #if vtype == "mmelel" and m > .58 and m < .8:
+                if vtype == "mmelel" and m > .65 and m < .75:
+                    hMNoElRSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
+                    hMNoMuRSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
             #good eta if in the right mass range
             if m > .52 and m < .58:
                 good = True
             if not singleVert:
-                pass
+                Vxy = vxy
                 #hMNoWt[vtype].Fill(m)
                 #hMvsPt[vtype].Fill(pt, m, evt_weight) 
                 #if vxy > 1.2:
@@ -572,15 +672,24 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         bestm2el = (vec_elP+vec_elN).M()
                     bestjj = jj
                     bestpt = pt
+                    Vxy = vxy
         if fillAtEnd and bestjj > -1:
             hpT[vtype].Fill(pt, evt_weight)
             hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
             hM[vtype].Fill(m, evt_weight)
             hMNoWt[vtype].Fill(m)
             hMvsPt[vtype].Fill(pt, m, evt_weight)
-            if vtype == "mmelel":
+            hVxy[vtype].Fill(Vxy)
+            hRchi2[vtype].Fill(bestChi2)
+            if vtype == "mmelel" and m > .52 and m < .58:
                 hMNoEl.Fill(bestm2mu, evt_weight)
                 hMNoMu.Fill(bestm2el, evt_weight)
+            if vtype == "mmelel" and m < .52 and m > .45 :
+                hMNoElLSide.Fill(bestm2mu, evt_weight)
+                hMNoMuLSide.Fill(bestm2el, evt_weight)
+            if vtype == "mmelel" and m > .58 and m < .8 :
+                hMNoElRSide.Fill(bestm2mu, evt_weight)
+                hMNoMuRSide.Fill(bestm2el, evt_weight)
             if vxy > 1.2:
                 hMhiVxy[vtype].Fill(m, evt_weight)
             else:
@@ -722,12 +831,13 @@ def process_file(fname, singleVert, useOnia):
             ptWeight = hWeights.GetBinContent( wbin )
             
             evt_weight = xsec * bratio * lumi / ptWeight #nEntries
-            if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and evt_weight > 50:
+            if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and evt_weight > 50 and genEtaPt > 20:
                 print("***high event weight: %f***"%(evt_weight))
                 print("event: %d, genEtaPt: %f, xsec: %f, ptWeight: %f"%(i, genEtaPt, xsec, ptWeight)) 
             if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and genEtaPt < 12 and evt_weight < 5:
                 print("******low event weight: %f***"%(evt_weight))
                 print("event: %d, genEtaPt: %f, xsec: %f, ptWeight: %f"%(i, genEtaPt, xsec, ptWeight)) 
+                print("dsigma/dpT: %f, binwidth: %f"%(h_xsec.GetBinContent( xbin ), h_xsec.GetBinWidth( xbin ))) 
             all_weight += evt_weight
             if passedTrig:
                 hpTGenTrig.Fill(genEtaPt)
@@ -749,7 +859,8 @@ def process_file(fname, singleVert, useOnia):
                 goodmumu = isGood
 
     #rm the file now that you're done with it.
-    if not testOnly and not (isMC and not isSig):
+    #if not (isMC and not isSig):
+    if not isMC:
         os.system("rm %s"%fname)
 
 #finish the processing and write to an output file
@@ -769,6 +880,8 @@ def finish_processing(foutname):
         hdRP[vtype].Write()
         hdRN[vtype].Write()
         hMvsPt[vtype].Write()
+        hVxy[vtype].Write()
+        hRchi2[vtype].Write()
         if isMC and not isSig:
             hMeeG[vtype].Write()
             hMeeNoG[vtype].Write()
@@ -777,8 +890,15 @@ def finish_processing(foutname):
             hVertNoMatch[vtype].Write()
             if isMC:
                 hpTVertMatched[vtype].Write()
+    if mmelelExclusive:
+        hMdeleted.Write()
+        hRchi2deleted.Write()
     hMNoEl.Write()
     hMNoMu.Write()
+    hMNoElLSide.Write()
+    hMNoMuLSide.Write()
+    hMNoElRSide.Write()
+    hMNoMuRSide.Write()
     if inc_vertM:
         hMV.Write()
         hpTV.Write()
@@ -814,9 +934,7 @@ def finish_processing(foutname):
         for vtype in vtypes:
             print("Acc (%s): %f%%"%(vtype, acc_weight[vtype]/all_weight*100)) 
 
-if testOnly:
-    foutname = "bparking_mumutest_test.root"
-elif not isMC:
+if not isMC:
     foutname = "bparking_test%d_%s%d_%d.root"%(testnum, let, num, arg)
 else:
     if isSig:
@@ -828,51 +946,43 @@ else:
     else:
         foutname = "bparking_bkgMCtest%d.root"%testnum
 
-if testOnly:
-    fl = [sys.argv[1]]
-else:
-    if isMC:
-        if isSig:
-            flistname = "sigMCList.txt"
-        elif isMuMu:
-            flistname = "mumuMCList.txt"
-        elif central:
-            flistname = "centralMCList.txt"
-        else:
-            flistname = "bkgMCList.txt"
+if isMC:
+    if isSig:
+        flistname = "sigMCList.txt"
+    elif isMuMu:
+        flistname = "mumuMCList.txt"
+    elif central:
+        flistname = "centralMCList.txt"
     else:
-        flistname = "flist_%s%d_%d.txt"%(let, num, arg)
-        #flistname = "flist_whack.txt"
-        #print("WARNING: USING WHACK FLIST!!!!!")
-        if not os.path.exists(flistname):
-            flistname = "filelists/" + flistname
+        flistname = "bkgMCList.txt"
+else:
+    flistname = "flist_%s%d_%d.txt"%(let, num, arg)
+    #flistname = "flist_whack.txt"
+    #print("WARNING: USING WHACK FLIST!!!!!")
+    if not os.path.exists(flistname):
+        flistname = "filelists/" + flistname
 
-    fl = open(flistname, "r")
+fl = open(flistname, "r")
 for lnum,line in enumerate(fl):
     ##debugging
     #if lnum > 3: break
     #fname = line.strip('/eos/uscms')
     #get rid of the /eos/uscms
     path = line.strip()#[10:]
-    if testOnly:    
-        fullpath = path
-        fname = path
+    #fullpath = "root://cmsxrootd.fnal.gov/" + path
+    fullpath = "root://cmseos.fnal.gov/" + path
+    print("Copying file %s"%(fullpath)) 
+    #print("WARNING: NOT DOING xrdcp!!!")
+    #if not (isMC and not isSig):
+    if not isMC:
+        os.system("xrdcp %s ."%fullpath)
+        fname = path.split('/')[-1]
     else:
-        #fullpath = "root://cmsxrootd.fnal.gov/" + path
-        fullpath = "root://cmseos.fnal.gov/" + path
-        print("Copying file %s"%(fullpath)) 
-        #print("WARNING: NOT DOING xrdcp!!!")
-        if not (isMC and not isSig):
-            os.system("xrdcp %s ."%fullpath)
-            fname = path.split('/')[-1]
-        else:
-            fname = fullpath
+        fname = fullpath
     #fname = fullpath
     process_file(fname, singleVert, useOnia)
     finish_processing(foutname)
-if not testOnly:
-    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
+os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
 if syncTest:
     syncFile.close()
-    if not testOnly:
-        os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%syncFname )
+    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%syncFname )

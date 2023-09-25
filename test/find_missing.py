@@ -2,8 +2,8 @@
 import os
 
 print("Nonexistent files:")
-for let in ['C', 'D', 'E', 'F', 'G']:
-#for let in ['F', 'G']:
+#for let in ['C', 'D', 'E', 'F', 'G']:
+for let in ['F']:
     for num in range(7):
         fnum = 1
         #how many root files per job were used
