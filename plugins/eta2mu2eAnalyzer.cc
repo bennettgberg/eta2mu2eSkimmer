@@ -55,6 +55,12 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 //#include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
 #include "DataFormats/PatCandidates/interface/UserData.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
+#include "DataFormats/EgammaCandidates/interface/GsfElectronFwd.h"
+
+#include "DataFormats/EgammaCandidates/interface/ConversionFwd.h"
+#include "DataFormats/EgammaCandidates/interface/Conversion.h"
+#include "CommonTools/Egamma/interface/ConversionTools.h" 
 
 #include "TTree.h"
 #include "TMath.h"
@@ -123,6 +129,8 @@ private:
     const edm::EDGetTokenT<pat::PackedCandidateCollection> trkToken_;
     //photon conversions?
     //const edm::EDGetTokenT<pat::CompositeCandidateCollection> conToken_;
+    const edm::EDGetTokenT<reco::BeamSpot> bsToken_;
+    const edm::EDGetTokenT<reco::ConversionCollection> convsToken_;
 
     // Handles
     edm::Handle<pat::MuonCollection> recoMuonHandle_;
@@ -140,6 +148,8 @@ private:
     edm::Handle<pat::PackedCandidateCollection> trkHandle_;
     //for photon conversions
     //edm::Handle<pat::CompositeCandidateCollection> conHandle_;
+    edm::Handle<reco::BeamSpot> bsHandle_;
+    edm::Handle<reco::ConversionCollection> convsHandle_;
     
     std::vector<std::string> triggerPathsWithoutVersionNum_;
     std::vector<std::string> triggerPathsWithVersionNum_;
@@ -165,8 +175,10 @@ eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
     recoPhotonToken_(consumes<pat::PhotonCollection>(ps.getParameter<edm::InputTag>("photon_collection"))),
     esToken_(esConsumes<TransientTrackBuilder, TransientTrackRecord>(edm::ESInputTag("", "TransientTrackBuilder"))),
     rhoToken_(consumes<double>(ps.getParameter<edm::InputTag>("rho"))),
-    trkToken_(consumes<pat::PackedCandidateCollection>(ps.getParameter<edm::InputTag>("packed_candidate"))) //,
+    trkToken_(consumes<pat::PackedCandidateCollection>(ps.getParameter<edm::InputTag>("packed_candidate"))),
     //conToken_(consumes<pat::CompositeCandidateCollection>(ps.getParameter<edm::InputTag>("composite_candidate")))
+    bsToken_(consumes<reco::BeamSpot>(ps.getParameter<edm::InputTag>("beamspot"))),
+    convsToken_(consumes<reco::ConversionCollection>(ps.getParameter<edm::InputTag>("conversions")))
 {
     usesResource("TFileService");
     m_random_generator = std::mt19937(37428479);
@@ -194,7 +206,9 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     desc.add<edm::InputTag>("genEvt", edm::InputTag("generator"));
     desc.add<edm::InputTag>("rho", edm::InputTag("fixedGridRhoFastjetAll"));
     desc.add<edm::InputTag>("packed_candidate", edm::InputTag("packedPFCandidates"));
-    desc.add<edm::InputTag>("composite_candidate", edm::InputTag("oniaPhotonCandidates", "conversions"));
+    //desc.add<edm::InputTag>("composite_candidate", edm::InputTag("oniaPhotonCandidates", "conversions"));
+    desc.add<edm::InputTag>("beamspot", edm::InputTag("offlineBeamSpot"));
+    desc.add<edm::InputTag>("conversions", edm::InputTag("reducedEgamma", "reducedConversions"));
     
     descriptions.add("eta2mu2eAnalyzer", desc);
 }
@@ -365,6 +379,8 @@ bool eta2mu2eAnalyzer::getCollections(const edm::Event& iEvent) {
     getHandle(rhoToken_, rhoHandle_, "rho");
     getHandle(trkToken_, trkHandle_, "packed_candidate");
     //getHandle(conToken_, conHandle_, "composite_candidate");
+    getHandle(bsToken_, bsHandle_, "beamspot");
+    getHandle(convsToken_, convsHandle_, "conversions");
     if (!isData) {
         getHandle(genEvtInfoToken_, genEvtInfoHandle_, "genEventInfo");
         getHandle(genParticleToken_, genParticleHandle_, "genParticle");
@@ -467,7 +483,26 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         }
         //std::cout << "full_id : " << (int)full_id << std::endl;
         nt.recoElectronIDResult_.push_back( full_id );
+
         reco::GsfTrackRef eltrack = electronRef->gsfTrack();
+        constexpr auto missingHitType = reco::HitPattern::MISSING_INNER_HITS;
+        uint8_t mHits = eltrack->hitPattern().numberOfLostHits(missingHitType);
+        //std::cout << "mHits: " << (int)mHits << std::endl;
+        nt.recoElectronNMhits_.push_back(mHits);
+
+        //const reco::GsfElectron *gsfElectron = static_cast<const reco::GsfElectron*>(*electronRef);
+
+        //if (gsfElectron) {
+        //    // Successfully casted to reco::GsfElectron
+        //    // Now you can use the gsfElectron object
+        //} else {
+        //    // Failed to cast, the pat::Electron is not a reco::GsfElectron
+        //    std::cout << "Error: not a good gsfElectron :/" << std::endl;
+        //}
+
+        ////see if there's a matched conversion candidate?
+        bool conversion = ConversionTools::hasMatchedConversion( *electronRef, *convsHandle_, bsHandle_->position());
+        nt.recoElectronConvVeto_.push_back(conversion);
 
         nt.gsfTrkPt_.push_back(eltrack->pt());
         nt.gsfTrkEta_.push_back(eltrack->eta());

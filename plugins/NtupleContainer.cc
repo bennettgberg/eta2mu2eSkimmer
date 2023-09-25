@@ -168,6 +168,8 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("Electron_vz",  &recoElectronVz_);
     recoT->Branch("Electron_charge", &recoElectronCharge_);
     recoT->Branch("Electron_id", &recoElectronIDResult_);
+    recoT->Branch("Electron_convVeto", &recoElectronConvVeto_);
+    recoT->Branch("Electron_nMissingHits", &recoElectronNMhits_);
 
     recoT->Branch("nGoodLowPtElectron", &recoNGoodLowPtElectron_);
     recoT->Branch("LowPtElectron_pt",  &recoLowPtElectronPt_);
@@ -365,6 +367,8 @@ void NtupleContainer::ClearTreeBranches() {
     recoElectronVz_.clear();
     recoElectronCharge_.clear();
     recoElectronIDResult_.clear();
+    recoElectronConvVeto_.clear();
+    recoElectronNMhits_.clear();
     recoLowPtElectronPt_.clear();
     recoLowPtElectronEta_.clear();
     recoLowPtElectronPhi_.clear();
