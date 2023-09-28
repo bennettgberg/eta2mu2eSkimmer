@@ -13,7 +13,7 @@ def main():
     submit_now = True
 
     #true if running the jobs on lxplus instead of cmslpc
-    lxplus = True
+    lxplus = False
 
     #always delete current directory if it already exists?
     always_del = False

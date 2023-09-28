@@ -37,6 +37,12 @@ if len(sys.argv) < 2:
     isMC = True
     isSig = True
     arg = -1
+elif sys.argv[1] == "sync":
+    syncTest = True
+    isMC = False
+    isSig = False
+    print("Running syncTest!")
+    arg = -1
 elif sys.argv[1] == "bkg":
     isMC = True
     isSig = False
@@ -272,7 +278,8 @@ else:
 #open file to write the event nums and masses
 if syncTest:
     #syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
-    syncFname = "syncTest_%d%s_%d_test%d_mumu.txt"%(num, let, arg, testnum)
+    #syncFname = "syncTest_%d%s_%d_test%d_mumu.txt"%(num, let, arg, testnum)
+    syncFname = "syncTest_test%d_mumu.txt"%(testnum)
     syncFile = open(syncFname, "w") 
     dan_events = readEvents("dan_events.txt")
 
@@ -882,7 +889,7 @@ def process_file(fname, singleVert, useOnia):
 
     #rm the file now that you're done with it.
     #if not (isMC and not isSig):
-    if not isMC:
+    if not isMC and not syncTest:
         os.system("rm %s"%fname)
 
 #finish the processing and write to an output file
@@ -957,7 +964,9 @@ def finish_processing(foutname):
         for vtype in vtypes:
             print("Acc (%s): %f%%"%(vtype, acc_weight[vtype]/all_weight*100)) 
 
-if not isMC:
+if syncTest:
+    foutname = "bparking_syncTest_test%d.root"%(testnum)
+elif not isMC:
     foutname = "bparking_test%d_%s%d_%d.root"%(testnum, let, num, arg)
 else:
     if isSig:
@@ -978,6 +987,8 @@ if isMC:
         flistname = "centralMCList.txt"
     else:
         flistname = "bkgMCList.txt"
+elif syncTest:
+    flistname = "syncList.txt"
 else:
     flistname = "flist_%s%d_%d.txt"%(let, num, arg)
     #flistname = "flist_whack.txt"
@@ -997,9 +1008,11 @@ for lnum,line in enumerate(fl):
     print("Copying file %s"%(fullpath)) 
     #print("WARNING: NOT DOING xrdcp!!!")
     #if not (isMC and not isSig):
-    if not isMC:
+    if not isMC and not syncTest:
         os.system("xrdcp %s ."%fullpath)
         fname = path.split('/')[-1]
+    elif syncTest:
+        fname = path
     else:
         fname = fullpath
     #fname = fullpath
