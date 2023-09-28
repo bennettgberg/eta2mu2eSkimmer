@@ -8,14 +8,14 @@ reject_photon = False
 #set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
 reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
-basic_cuts = True
+basic_cuts = False
 #require electron_ID to be greater than 0?
 require_elID = False
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3610
+testnum = 3613
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -23,8 +23,12 @@ central = False
 #is EtaToMuMu MC? (will be set by arguments)
 isMuMu = False
 
+nPrint = 0
 #true if running a synchronization test (so print out each event, diff nbins, etc)
-syncTest = False
+syncTest = True # False
+if syncTest:
+    import printEvent
+    nPrint = 5
 
 #argument is telling which files to analyze (should be about 100 files each)
 if len(sys.argv) < 2:
@@ -80,7 +84,7 @@ etamass = .547862
 pi_mass = .13957
 
 #if true, add only the vertex with the highest chi2 prob to the histogram
-singleVert = not syncTest
+singleVert = True #not syncTest
 #maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.6 for chi2 prob>.1) 
 rChi2Cut = 2.6
 #use low pt electrons too?
@@ -101,6 +105,16 @@ if syncTest:
     nbins = 100
     xmin = .25
     xmax = 1.0
+
+#parse an input file that lists event numbers and invariant masses; store them in a list
+def readEvents(eventsFile):
+    ef = open(eventsFile, "r")
+    events = []
+    for line in ef:
+        words = line.split()
+        evt = int(words[1])
+        events.append(evt)
+    return events
 
 #list of vertex types 
 #2pat::Electron; 2pat::Muon-2pat::Electron; 2pat::Muon-Photon; 2pat::Muon
@@ -257,8 +271,10 @@ else:
 
 #open file to write the event nums and masses
 if syncTest:
-    syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
+    #syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
+    syncFname = "syncTest_%d%s_%d_test%d_mumu.txt"%(num, let, arg, testnum)
     syncFile = open(syncFname, "w") 
+    dan_events = readEvents("dan_events.txt")
 
 #count the number of error events
 #nerr = 0
@@ -598,9 +614,15 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
-            if syncTest and vtype == "mmelel" and m < 1.0:
+            #if syncTest and vtype == "mmelel" and m < 1.0:
+            #if syncTest and vtype == "mumu" and m < .57 and m > .53:
+            if syncTest and e.evt in dan_events:
                 syncFile.write("%d %f\n"%(e.evt, m)) 
-                print("%d %f\n"%(e.evt, m)) 
+                global nPrint
+                if nPrint > 0:
+                    printEvent.printEvent(e)
+                    print("mass: %f"%m) 
+                    nPrint -= 1
             if isMC:
                 gm = False
                 #if isSig:
@@ -899,6 +921,7 @@ def finish_processing(foutname):
     hMNoMuLSide.Write()
     hMNoElRSide.Write()
     hMNoMuRSide.Write()
+    hMNoMuPiM.Write()
     if inc_vertM:
         hMV.Write()
         hpTV.Write()
