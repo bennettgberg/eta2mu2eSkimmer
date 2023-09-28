@@ -8,14 +8,14 @@ reject_photon = False
 #set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
 reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
-basic_cuts = True
+basic_cuts = False
 #require electron_ID to be greater than 0?
 require_elID = False
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3610
+testnum = 3613
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -32,6 +32,12 @@ if len(sys.argv) < 2:
     print("No argument provided so running in signal MC mode") 
     isMC = True
     isSig = True
+    arg = -1
+elif sys.argv[1] == "sync":
+    syncTest = True
+    isMC = False
+    isSig = False
+    print("Running syncTest!")
     arg = -1
 elif sys.argv[1] == "bkg":
     isMC = True
@@ -80,7 +86,7 @@ etamass = .547862
 pi_mass = .13957
 
 #if true, add only the vertex with the highest chi2 prob to the histogram
-singleVert = not syncTest
+singleVert = True #not syncTest
 #maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.6 for chi2 prob>.1) 
 rChi2Cut = 2.6
 #use low pt electrons too?
@@ -257,7 +263,9 @@ else:
 
 #open file to write the event nums and masses
 if syncTest:
-    syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
+    #syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
+    #syncFname = "syncTest_%d%s_%d_test%d_mumu.txt"%(num, let, arg, testnum)
+    syncFname = "syncTest_test%d_mumu.txt"%(testnum)
     syncFile = open(syncFname, "w") 
 
 #count the number of error events
@@ -598,7 +606,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
-            if syncTest and vtype == "mmelel" and m < 1.0:
+            #if syncTest and vtype == "mmelel" and m < 1.0:
+            if syncTest and vtype == "mumu" and m < 1.0:
                 syncFile.write("%d %f\n"%(e.evt, m)) 
                 print("%d %f\n"%(e.evt, m)) 
             if isMC:
@@ -860,7 +869,7 @@ def process_file(fname, singleVert, useOnia):
 
     #rm the file now that you're done with it.
     #if not (isMC and not isSig):
-    if not isMC:
+    if not isMC and not syncTest:
         os.system("rm %s"%fname)
 
 #finish the processing and write to an output file
@@ -934,7 +943,9 @@ def finish_processing(foutname):
         for vtype in vtypes:
             print("Acc (%s): %f%%"%(vtype, acc_weight[vtype]/all_weight*100)) 
 
-if not isMC:
+if syncTest:
+    foutname = "bparking_syncTest_test%d.root"%(testnum)
+elif not isMC:
     foutname = "bparking_test%d_%s%d_%d.root"%(testnum, let, num, arg)
 else:
     if isSig:
@@ -955,6 +966,8 @@ if isMC:
         flistname = "centralMCList.txt"
     else:
         flistname = "bkgMCList.txt"
+elif syncTest:
+    flistname = "syncList.txt"
 else:
     flistname = "flist_%s%d_%d.txt"%(let, num, arg)
     #flistname = "flist_whack.txt"
@@ -974,9 +987,11 @@ for lnum,line in enumerate(fl):
     print("Copying file %s"%(fullpath)) 
     #print("WARNING: NOT DOING xrdcp!!!")
     #if not (isMC and not isSig):
-    if not isMC:
+    if not isMC and not syncTest:
         os.system("xrdcp %s ."%fullpath)
         fname = path.split('/')[-1]
+    elif syncTest:
+        fname = path
     else:
         fname = fullpath
     #fname = fullpath
