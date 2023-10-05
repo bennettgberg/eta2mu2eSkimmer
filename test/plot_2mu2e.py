@@ -1,21 +1,22 @@
 import sys
-
+import printEvent
+import printEvent_backup
 #allow events that pass the trigger only?
-trg_only = True
+trg_only = False #True
 
 #set this true to REJECT ANY event that have a reconstructed photon!
 reject_photon = False
 #set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
 reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
-basic_cuts = False
+basic_cuts = True # False
 #require electron_ID to be greater than 0?
-require_elID = False
+require_elID = True # False
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3613
+testnum = 370
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -23,12 +24,11 @@ central = False
 #is EtaToMuMu MC? (will be set by arguments)
 isMuMu = False
 
-nPrint = 0
-#true if running a synchronization test (so print out each event, diff nbins, etc)
-syncTest = True # False
-if syncTest:
-    import printEvent
-    nPrint = 5
+nPrint = 5
+#true if running a synchronization test (so print out each event, diff nbins, etc) -- now set in args
+syncTest = False
+#set to true if running over just one single file instead of a whole subset of data
+singleFile = False
 
 #argument is telling which files to analyze (should be about 100 files each)
 if len(sys.argv) < 2:
@@ -37,7 +37,7 @@ if len(sys.argv) < 2:
     isMC = True
     isSig = True
     arg = -1
-elif sys.argv[1] == "sync":
+elif sys.argv[1] == "sync" and singleFile:
     syncTest = True
     isMC = False
     isSig = False
@@ -75,6 +75,10 @@ import time
 import os
 import array
 
+#if syncTest:
+#    import printEvent
+#    nPrint = 5
+
 if syncTest and isMC:
     print("Error: syncTest only runnable on data rn.")
     sys.exit()
@@ -91,8 +95,10 @@ pi_mass = .13957
 
 #if true, add only the vertex with the highest chi2 prob to the histogram
 singleVert = True #not syncTest
-#maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.6 for chi2 prob>.1) 
-rChi2Cut = 2.6
+##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.6 for chi2 prob>.1) 
+rChi2Cut = 2.6 # -- used only on test36 and before!!
+#-1 for no cut
+vProbCut = 0.1
 #use low pt electrons too?
 useLowPt = False #not syncTest
 
@@ -213,6 +219,8 @@ if mmelelExclusive:
 if isMC:
     #histogram of pT for all gen eta mesons
     hpTGenAll = ROOT.TH1F("hpTGenAll", "pT of all gen Eta Mesons", 500, 0., 100.)
+    #should all be exactly .548 GeV (just a cross-check)
+    hMGenAll = ROOT.TH1F("hMGenAll", "mass of all gen Eta Mesons", nbins, xmin, xmax)
     hEtaGenAll = ROOT.TH1F("hEtaGenAll", "pseudorapidity of all gen Eta Mesons", 2000, -10., 10.) 
     #gen eta mesons passing at least one trigger
     hpTGenTrig = ROOT.TH1F("hpTGenTrig", "pT of gen Eta Mesons that pass the trigger", 500, 0., 100.)
@@ -239,6 +247,8 @@ if isMC:
     hGenMupT0 = ROOT.TH1F("hGenMupT0", "pT of lead gen muon", 10000, 0.0, 100.0)
     #subleading muon pT
     hGenMupT1 = ROOT.TH1F("hGenMupT1", "pT of subleading gen muon", 10000, 0.0, 100.0)
+    #electron pT
+    hGenElpT = ROOT.TH1F("hGenElpT", "p_{T} of gen electrons", 10000, 0.0, 100.0) 
 
     if isSig:
         #dR between reconstructed tracks and gen electrons
@@ -278,10 +288,13 @@ else:
 #open file to write the event nums and masses
 if syncTest:
     #syncFname = "syncTest_%d%s_%d_test%d_mmelel.txt"%(num, let, arg, testnum)
-    #syncFname = "syncTest_%d%s_%d_test%d_mumu.txt"%(num, let, arg, testnum)
-    syncFname = "syncTest_test%d_mumu.txt"%(testnum)
+    if singleFile:
+        syncFname = "syncTest_test%d_mumu.txt"%(testnum)
+    else:
+        syncFname = "syncTest_%d%s_%d_test%d_mumu.txt"%(num, let, arg, testnum)
     syncFile = open(syncFname, "w") 
-    dan_events = readEvents("dan_events.txt")
+    #dan_events = readEvents("dan_events.txt")
+    #dan_events = [1252381000, 255683106, 84023455, 88662260, 159133159, 161102990, 31590976, 16172379, 27799808, 929840617, 180325625, 1753289604, 1643012693, 109982198, 167432072, 213243113, 116381978, 36823721, 96668538, 736907037, 3968111, 659070635, 1003626756, 724887932, 253577676, 170988683, 689521537, 56751393, 425066868, 38477461, 100496371, 189162741, 63096276, 556598561, 295236876, 359701161, 425478455, 461254064, 515194260, 533093765, 55544891, 101402745, 156781135, 322789576, 343777283, 393353420, 129540293, 67010272, 86693201, 200024995, 369027678, 542802702, 352553856, 418870343, 449833782, 461437995, 486838153, 91889663, 109820381, 140468151, 179924706, 190380376, 208883164, 215451906, 21115445, 114674252, 201263453, 308325464, 293554937, 335684854, 1222567, 79356789, 173556494, 189350488, 9957903, 208319643, 224977439, 234933701, 239712271, 244513764, 267369315, 323270357, 189912824, 196241515, 312950201, 318608138, 327006733, 556395426, 567335894, 489155856, 117458397, 158789347, 194052281, 133899391, 143485971, 252632883, 142734183, 204462307, 241026028, 73494602]
 
 #count the number of error events
 #nerr = 0
@@ -321,9 +334,15 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
     vstr = vtype
     if vtype == "mmg":
         vstr = "mumu"
-    nvert = eval("len(e.Vertex_%s_reduced_chi2)"%(vstr))
+    nvert = eval("len(e.Vertex_%s_vz)"%(vstr))
 
-    vtx_vrechi2 = eval("e.Vertex_%s_reduced_chi2"%(vstr))
+    try:
+        vtx_vchi2 = eval("e.Vertex_%s_chi2"%(vstr))
+        vtx_vndof = eval("e.Vertex_%s_ndof"%(vstr))
+        vtx_vrechi2 = [vtx_vchi2[a] / vtx_vndof[a] for a in range(nvert)] 
+        vtx_vprob = [ROOT.TMath.Prob(vtx_vchi2[a], vtx_vndof[a]) for a in range(nvert)] 
+    except:
+        vtx_vrechi2 = eval("e.Vertex_%s_reduced_chi2"%(vstr))
     if "elel" in vstr or "lplp" in vstr:
         vtx_veleP = eval("e.Vertex_%s_eleP"%(vstr))
         vtx_veleN = eval("e.Vertex_%s_eleN"%(vstr))
@@ -374,7 +393,13 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 hMdeleted.Fill(mdeleted)
                 hRchi2deleted.Fill(vtx_vrechi2[j]) 
                 #print("EVT " + str(i) + ": removing " + str(j) + " before: " + str(vtx_vrechi2)) 
-                vtx_vrechi2.erase(vtx_vrechi2.begin() + j)
+                try:
+                    vtx_vchi2.erase(vtx_vchi2.begin() + j)
+                    vtx_vndof.erase(vtx_vndof.begin() + j)
+                    vtx_vrechi2.remove(j)
+                    vtx_vprob.remove(j)
+                except:
+                    vtx_vrechi2.erase(vtx_vrechi2.begin() + j)
                 vtx_veleP.erase(vtx_veleP.begin() + j)
                 vtx_veleN.erase(vtx_veleN.begin() + j)
                 vtx_vmuP.erase(vtx_vmuP.begin() + j)
@@ -443,7 +468,13 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 while j < nvert:
                     if (ord(vtx_veleP[j]) == minelP and mindRP < dRcut) or (ord(vtx_veleN[j]) == minelN and mindRN < dRcut):
                         #print("EVT " + str(i) + ": removing " + str(j) + " before: " + str(vtx_vrechi2)) 
-                        vtx_vrechi2.erase(vtx_vrechi2.begin() + j)
+                        try:
+                            vtx_vchi2.erase(vtx_vchi2.begin() + j)
+                            vtx_vndof.erase(vtx_vndof.begin() + j)
+                            vtx_vrechi2.remove(j)
+                            vtx_vprob.remove(j)
+                        except:
+                            vtx_vrechi2.erase(vtx_vrechi2.begin() + j)
                         vtx_veleP.erase(vtx_veleP.begin() + j)
                         vtx_veleN.erase(vtx_veleN.begin() + j)
                         if vstr in ["mmelel", "mmlplp", "mmee"]:
@@ -465,20 +496,41 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
 
     #fill the pT, M histograms after looping thru all vertex candidates? or in the middle
     # (for the 4-lepton vertices and mumu, only executing the loop once anyway so minus well just fill in the middle)
-    fillAtEnd = (vstr not in ["mmelel", "mmlplp", "mmee", "mumu"] and singleVert)
+    # JK now executing multiple times so fill at end for 4-leptons!!!
+    #fillAtEnd = (vstr not in ["mmelel", "mmlplp", "mmee", "mumu"] and singleVert)
+    fillAtEnd =  singleVert
+
+    #danEvent = False
 
     Vxy = -1
     if singleVert and nvert > 0:
         #bestj, bestChi2 = min(enumerate(e.Vertex_lplp_reduced_chi2), key=lambda x: x[1])
         #bestj, bestChi2 = min(enumerate(e.Vertex_mmlplp_reduced_chi2), key=lambda x: x[1])
         #bestj, bestChi2 = min(enumerate(e.Vertex_mmlplp_reduced_chi2), key=lambda x: x[1])
-        bestj, bestChi2 = min(enumerate(vtx_vrechi2), key=lambda x: x[1])
+        #no longer really used for anything!!
+        #bestj, bestChi2 = min(enumerate(vtx_vrechi2), key=lambda x: x[1])
+        try:
+            bestj, bestprob = max(enumerate(vtx_vprob), key=lambda x: x[1])
+            bestChi2 = vtx_vrechi2[bestj]
+        except:
+            bestj, bestChi2 = min(enumerate(vtx_vrechi2), key=lambda x: x[1])
+    bestm = 99999
+    bestm2mu = 99999
+    bestm2el = 99999
+    bestpt = -1
     for j in range(nvert):
-        if singleVert and j != bestj : continue
+        #commenting out to enable choosing best invariant mass instead of lowest rChi2
+        #if singleVert and j != bestj : continue
         #try a cut on the chi2 value? or on vxy??
         #print("evt = %d, j = %d, nvert = %d"%(i, j, nvert)) 
         #chi2 of 2.6 corresponds to prob of .1
-        if rChi2Cut > 0 and vtx_vrechi2[j] > rChi2Cut: continue
+        #if rChi2Cut > 0 and vtx_vrechi2[j] > rChi2Cut: continue
+        try:
+            failed = vProbCut > 0 and vtx_vprob[j] < vProbCut
+        except:
+            failed = rChi2Cut > 0 and vtx_vrechi2[j] > rChi2Cut
+        if failed: continue
+
         if vstr != "mumu":
             vec_elP = ROOT.TLorentzVector()
             vec_elN = ROOT.TLorentzVector()
@@ -567,9 +619,6 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 #        hpTGenAcc[vtype].Fill(gen_eta.Pt())
                 #        acc_weight[vtype] += xsec
         nvertMu = len(vtx_vmuP)
-        bestm = 99999
-        bestm2mu = 99999
-        bestpt = -1
         bestjj = -1
         for jj in range(nvertMu):
             #for 4-lepton vertices MUST use the muons corresponding to these electrons!
@@ -621,15 +670,6 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
-            #if syncTest and vtype == "mmelel" and m < 1.0:
-            #if syncTest and vtype == "mumu" and m < .57 and m > .53:
-            if syncTest and e.evt in dan_events:
-                syncFile.write("%d %f\n"%(e.evt, m)) 
-                global nPrint
-                if nPrint > 0:
-                    printEvent.printEvent(e)
-                    print("mass: %f"%m) 
-                    nPrint -= 1
             if isMC:
                 gm = False
                 #if isSig:
@@ -658,6 +698,20 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         hpTGenAcc[vtype].Fill(gen_eta.Pt())
                         hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity())
                         acc_weight[vtype] += evt_weight
+            #danEvent = False
+
+            #if syncTest and vtype == "mumu" and m < .58 and m > .52:
+            ##if syncTest and vtype == "mumu" and e.evt in dan_events:
+            #    danEvent = True
+            global nPrint
+            if isMC and vtype == "mmelel" and m > .52 and m < .58 and nPrint > 0:
+                #global nPrint
+                try:
+                    printEvent.printEvent(e)
+                except:
+                    printEvent_backup.printEvent(e)
+                print(vtype + " mass: %f"%m) 
+                #nPrint -= 1
 
             if not fillAtEnd:
                 hpT[vtype].Fill(pt, evt_weight)
@@ -682,6 +736,19 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 if vtype == "mmelel" and m > .65 and m < .75:
                     hMNoElRSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
                     hMNoMuRSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
+                #if syncTest and vtype == "mmelel" and m < 1.0:
+                #if danEvent and m > .52 and m < .58:
+                if syncTest and vtype == "mumu" and m > .52 and m < .58:
+                #if syncTest and vtype == "mumu" and e.evt in dan_events:
+                    syncFile.write("%d %f\n"%(e.evt, m)) 
+                    #global nPrint
+                    if nPrint > 0:
+                        try:
+                            printEvent.printEvent(e)
+                        except:
+                            printEvent_backup.printEvent(e)
+                        print("mass: %f"%m) 
+                        nPrint -= 1
             #good eta if in the right mass range
             if m > .52 and m < .58:
                 good = True
@@ -705,9 +772,21 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
         if fillAtEnd and bestjj > -1:
             hpT[vtype].Fill(pt, evt_weight)
             hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
-            hM[vtype].Fill(m, evt_weight)
-            hMNoWt[vtype].Fill(m)
-            hMvsPt[vtype].Fill(pt, m, evt_weight)
+            #if danEvent and bestm > .52 and bestm < .58:
+            if syncTest and vtype == "mumu" and bestm > .52 and bestm < .58:
+                syncFile.write("%d %f\n"%(e.evt, bestm)) 
+                try:
+                    printEvent.printEvent(e)
+                except:
+                    printEvent_backup.printEvent(e)
+                print("mass: %f"%bestm) 
+            #why m instead of bestm???
+            #hM[vtype].Fill(m, evt_weight)
+            #hMNoWt[vtype].Fill(m)
+            #hMvsPt[vtype].Fill(pt, m, evt_weight)
+            hM[vtype].Fill(bestm, evt_weight)
+            hMNoWt[vtype].Fill(bestm)
+            hMvsPt[vtype].Fill(bestpt, bestm, evt_weight)
             hVxy[vtype].Fill(Vxy)
             hRchi2[vtype].Fill(bestChi2)
             if vtype == "mmelel" and m > .52 and m < .58:
@@ -720,9 +799,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 hMNoElRSide.Fill(bestm2mu, evt_weight)
                 hMNoMuRSide.Fill(bestm2el, evt_weight)
             if vxy > 1.2:
-                hMhiVxy[vtype].Fill(m, evt_weight)
+                #hMhiVxy[vtype].Fill(m, evt_weight)
+                hMhiVxy[vtype].Fill(bestm, evt_weight)
             else:
-                hMloVxy[vtype].Fill(m, evt_weight)
+                hMloVxy[vtype].Fill(bestm, evt_weight)
 
     return good
 
@@ -836,6 +916,8 @@ def process_file(fname, singleVert, useOnia):
                             else:
                                 hGenMupT0.Fill(g.GenPart_pt[j])
                                 hGenMupT1.Fill(pTmu)
+                    elif abs(gid) == 11:
+                        hGenElpT.Fill(g.GenPart_pt[j]) 
                 #only 4 gen particles max probably
                 if j == (g.nGenPart-1) and genEtaPt == 0:
                     genEtaPt = gen_eta.Pt()
@@ -846,6 +928,7 @@ def process_file(fname, singleVert, useOnia):
             #if genEtaPt > 65:
             #    print("genEtaPt: %f; nGenPart:%d"%(genEtaPt, g.nGenPart)) 
             hpTGenAll.Fill(genEtaPt)
+            hMGenAll.Fill(gen_eta.M()) 
             hEtaGenAll.Fill(genEtaEta)
             xbin = h_xsec.FindBin( genEtaPt )
             xsec0 = h_xsec.GetBinContent( xbin ) * h_xsec.GetBinWidth( xbin )
@@ -934,6 +1017,7 @@ def finish_processing(foutname):
         hpTV.Write()
     if isMC:
         hpTGenAll.Write()
+        hMGenAll.Write()
         hEtaGenAll.Write()
         for vtype in vtypes:
             hpTGenReco[vtype].Write()
@@ -946,6 +1030,7 @@ def finish_processing(foutname):
         hGenMudR.Write()
         hGenMupT0.Write()
         hGenMupT1.Write()
+        hGenElpT.Write()
         if isSig:
             for ptype in ptypes:
                 hdR[ptype].Write()
@@ -964,7 +1049,7 @@ def finish_processing(foutname):
         for vtype in vtypes:
             print("Acc (%s): %f%%"%(vtype, acc_weight[vtype]/all_weight*100)) 
 
-if syncTest:
+if syncTest and singleFile:
     foutname = "bparking_syncTest_test%d.root"%(testnum)
 elif not isMC:
     foutname = "bparking_test%d_%s%d_%d.root"%(testnum, let, num, arg)
@@ -987,7 +1072,7 @@ if isMC:
         flistname = "centralMCList.txt"
     else:
         flistname = "bkgMCList.txt"
-elif syncTest:
+elif syncTest and singleFile:
     flistname = "syncList.txt"
 else:
     flistname = "flist_%s%d_%d.txt"%(let, num, arg)
@@ -1012,7 +1097,7 @@ for lnum,line in enumerate(fl):
         os.system("xrdcp %s ."%fullpath)
         fname = path.split('/')[-1]
     elif syncTest:
-        fname = path
+        fname = fullpath #path
     else:
         fname = fullpath
     #fname = fullpath
