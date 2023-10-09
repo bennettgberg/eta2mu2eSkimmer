@@ -3,7 +3,7 @@ config = config()
 
 isMC = True
 #signal or MC background?
-isSig = True
+isSig = False
 
 #EtaToMuMuGamma sample
 isMuMu = False
@@ -29,11 +29,11 @@ if not isMC:
 else:
     if isSig:
         #config.General.requestName = 'test0MC_EtaTo2Mu2E'
-        config.General.requestName = 'test36MC_EtaTo2Mu2E_1'
+        config.General.requestName = 'test37MC_EtaTo2Mu2E2'
     elif isMuMu:
-        config.General.requestName = 'test35MC_EtaToMuMu'
+        config.General.requestName = 'test37MC_EtaToMuMu'
     else:
-        config.General.requestName = 'test36MC_EtaToMuMuGamma3'
+        config.General.requestName = 'test37MC_EtaToMuMuGamma3'
 if central:
     config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'

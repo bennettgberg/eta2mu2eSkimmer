@@ -2,12 +2,17 @@ import ROOT
 from array import array
 
 #if only testing, use smaller input file and do NOT overwrite output files
-test = False
+test = True
+
+#include the Run2 Scouting result on the same plot for comparison? or nah
+inc_run2 = False
 
 #make plot of xsec as a function of pT for eta->2mu!
 if test:
     #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/bparking_datatest335_1C.root", "read")
-    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/bparking_datatest335_0.root", "read")
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/bparking_datatest335_0.root", "read")
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/bparking_datatest3613_1C.root", "read")
+    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/bparking_datatest3615_1C.root", "read")
 else:
     f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest338_ALL.root", "read")
 
@@ -61,7 +66,7 @@ hXsecCor = ROOT.TH1F("hXsecCor", "hXsecCor", newnptbins, array('d', newbins))
 hXsecCor.Sumw2()
 
 #get efficiency histograms for correction purposes
-f2mu = ROOT.TFile.Open("bparking_mumuMCtest338.root")
+f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest338.root")
 ptGen = f2mu.Get("hpTGenAll")
 ptGen.SetName("hpTGenAllmumu")
 ptGen.Rebin(5)
@@ -72,7 +77,7 @@ ptAcc.Sumw2()
 ptAcc.Divide(ptGen)
 
 #get efficiency histograms for correction purposes
-f2mu2e = ROOT.TFile.Open("bparking_sigMCtest335.root")
+f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest335.root")
 ptGen2mu2e = f2mu2e.Get("hpTGenAll")
 ptGen2mu2e.Rebin(5)
 #ptAcc2mu2e = f2mu2e.Get("hpTGenAccmmelel")
@@ -118,15 +123,16 @@ for j in range(nptbins-1):
     else:
         rebin = 20
     if test:
-        rebin *= 2
+        rebin = 25 #*= 2
     projection.Rebin(rebin)
     #print("projection: " + str(i))
     projection.Print()
     #now do a fit to pol2 + gaussian
     #fit_func = ROOT.TF1("fit_func"+str(i), "[0] + [1]*x + [2]*x*x + [3]*exp(-0.5*((x-[4])/[5])**2)", 0.45, 0.65)
-    fit_func = ROOT.TF1("fit_func"+str(nb), "[0] + [1]*x + [2]*x*x + [3]*exp(-0.5*((x-[4])/[5])**2)", 0.45, 0.65)
+    #fit_func = ROOT.TF1("fit_func"+str(nb), "[0] + [1]*x + [2]*x*x + [3]*exp(-0.5*((x-[4])/[5])**2)", 0.45, 0.65)
+    fit_func = ROOT.TF1("fit_func"+str(nb), "[0] + [1]*x + [2]*x*x + [6]*x*x*x + [3]*exp(-0.5*((x-[4])/[5])**2)", 0.45, 0.65)
     if test:
-        fit_func.SetParameters(14000, .1, -.1, 1000, 0.548, 0.01)
+        fit_func.SetParameters(14000, .1, -.1, 1000, 0.548, 0.01, .1)
     elif nb == 1:
         fit_func.SetParameters(400, .1, -.1, 50, 0.548, 0.01)
         #fit_func.SetRange(.5, .6)
@@ -149,13 +155,21 @@ for j in range(nptbins-1):
     s2pi = (2*3.14159265359)**0.5
     nEta = params[3] * params[5] * s2pi / projection.GetBinWidth(1)
     ptbinwidth = nextbin - 1.0*i
-    if test and i == 11:
-        projection.Draw()
-        print("nEta = %f"%nEta)
-        input("wait...")
-        input("wait...")
     unct = ( (errors[3] / params[3])**2 + (errors[5] / params[5] )**2 )**0.5 * nEta
     print("nEta = %f +/- %f"%(nEta, unct)) 
+    if test and i == 11 :
+    #if test and i == 15 :
+        ctest = ROOT.TCanvas()
+        ctest.cd()
+        projection.SetMarkerStyle(20)
+        projection.Draw("PE")
+        projection.GetXaxis().SetRangeUser(.45, .65) 
+        projection.GetXaxis().SetTitle("Invariant mass (GeV)")
+        projection.GetYaxis().SetTitle("Events / .0025 GeV")
+        projection.SetTitle("Invariant mass spectrum for %.1f < p_{T} < %.1f"%(h2d.GetXaxis().GetBinLowEdge(i), h2d.GetXaxis().GetBinLowEdge(int(nextbin)))) 
+        #print("nEta = %f"%nEta)
+        input("wait...")
+        input("wait...")
     #if nEta < 0:
     #    print("nEta < 0 ????????????")
     #    projection.Draw("hist")
@@ -248,19 +262,21 @@ c1.SetLogx()
 c1.SetLogy()
 hXsecCor.GetYaxis().SetRangeUser(10000, 100000000000)
 
-hXsecRun2.SetLineColor(ROOT.kBlue)
-hXsecRun2.SetLineWidth(2)
-hXsecRun2.Draw("same") 
-hXsecRun2Unc.SetLineColor(ROOT.kCyan)
-hXsecRun2Unc.SetMarkerColor(ROOT.kCyan)
-hXsecRun2Unc.SetLineWidth(2)
-hXsecRun2Unc.Draw("same") 
+if inc_run2:
+    hXsecRun2.SetLineColor(ROOT.kBlue)
+    hXsecRun2.SetLineWidth(2)
+    hXsecRun2.Draw("same") 
+    hXsecRun2Unc.SetLineColor(ROOT.kCyan)
+    hXsecRun2Unc.SetMarkerColor(ROOT.kCyan)
+    hXsecRun2Unc.SetLineWidth(2)
+    hXsecRun2Unc.Draw("same") 
 
 leg = ROOT.TLegend()
 leg.AddEntry(hXsecCor, "Corrected by CMS efficiency")
 leg.AddEntry(hXsec, "Uncorrected")
-leg.AddEntry(hXsecRun2, "Run2 corrected")
-leg.AddEntry(hXsecRun2Unc, "Run2 Uncorrected")
+if inc_run2:
+    leg.AddEntry(hXsecRun2, "Run2 corrected")
+    leg.AddEntry(hXsecRun2Unc, "Run2 Uncorrected")
 leg.Draw("same")
 
 input("h")
