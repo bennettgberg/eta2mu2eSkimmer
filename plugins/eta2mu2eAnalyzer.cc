@@ -5,6 +5,7 @@
 #include <vector>
 #include <boost/format.hpp>
 #include <boost/any.hpp>
+#include <limits>
 
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 //#include "CommonTools/Utils/interface/InvariantMass.h"
@@ -72,6 +73,9 @@
 #include "TVectorD.h"    // for fixing tracks
 #include "TMatrixDSym.h" // for fixing tracks
 
+//include for random number generator
+#include <cstdlib>
+
 class eta2mu2eAnalyzer : public edm::one::EDAnalyzer<edm::one::WatchRuns, edm::one::SharedResources> {
 
 public:
@@ -94,7 +98,8 @@ private:
 
     TTree *recoT, *genT;
     //for MC only
-    TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE; //,
+    TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *allGenPtEl,
+        *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE; //,
         //*hdRP, *hdRN;
     //max dR between gen and reco particles for a successful gen-match to be declared
     const float drCut = 0.01;
@@ -227,11 +232,22 @@ void eta2mu2eAnalyzer::beginJob()
         alldRE = new TH1F("alldRE", "alldRE", 10000, 0., 1.);
         alldRMu = new TH1F("alldRMu", "alldRMu", 10000, 0., 1.);
         allGenPtMu = new TH1F("allGenPtMu", "allGenPtMu", 10000, 0., 100.);
+        allGenPtEl = new TH1F("allGenPtEl", "allGenPtEl", 10000, 0., 100.);
         matchedGenPtMu = new TH1F("matchedGenPtMu", "matchedGenPtMu", 10000, 0., 100.);
         allGenPtEta = new TH1F("allGenPtEta", "allGenPtEta", 10000, 0., 100.);
         matchedGenPtEta = new TH1F("matchedGenPtEta", "matchedGenPtEta", 10000, 0., 100.);
         matchedGenPtEtaE = new TH1F("matchedGenPtEtaE", "matchedGenPtEtaE", 10000, 0., 100.);
+
+        srand(time(NULL));
+
+        // Generate a random number.
+        int randomInt = rand();
+
+        // Print the random integer
+        std::cout << "Random Integer: " << randomInt << std::endl;
+        nt.MClumiblock_ = randomInt;
     }
+
     //hdRP = new TH1F("hdRP", "hdRP", 10000, 0.0, 10.0);
     //hdRN = new TH1F("hdRN", "hdRN", 10000, 0.0, 10.0);
     nt.CreateTreeBranches();
@@ -404,7 +420,13 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
     // Event information
     nt.eventNum_ = iEvent.id().event();
-    nt.lumiSec_ = iEvent.luminosityBlock();
+    std::cout << "Event " << (int)nt.eventNum_ << std::endl;
+    if(!isData) {
+        nt.lumiSec_ = nt.MClumiblock_;
+    }
+    else {
+        nt.lumiSec_ = iEvent.luminosityBlock();
+    }
     nt.runNum_ = iEvent.id().run();
     //nt.npv_ = *primaryVertexFilterHandle_;
     nt.npv_ = primaryVertexHandle_->size();
@@ -868,6 +890,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             //4vector for the reco'd particle
             TLorentzVector recoLepVec;
             if(fabs(genParticle->pdgId()) == 11) {
+                allGenPtEl->Fill(genParticle->pt());
                 //for MC for electrons, do genmatching for allTracksP to find the best track corr. to the gen particle; fill the histogram
                     // so that later can calculate reco efficiency
                 //TLorentzVector genpart;
@@ -1030,6 +1053,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //std::cout << "computing vertices 2" << std::endl;
     //lastly get the vertices for just 2 packed candidate tracks (electrons or pions)
     // PC-PC
+    //cout << "all tracks" << std::endl;
     //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
 
@@ -1049,6 +1073,7 @@ void eta2mu2eAnalyzer::endJob() {
         matchedGenPtE->Write();
         alldRE->Write();
         allGenPtMu->Write();
+        allGenPtEl->Write();
         matchedGenPtMu->Write();
         alldRMu->Write();
         allGenPtEta->Write();
