@@ -8,6 +8,7 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     float vy = -9999;
     float sigma_vxy = -9999;
     float vtx_chi2 = 999999;
+    int vtx_ndof = 999999;
     float vz = -9999;
     float prob = -1.0;
 
@@ -20,11 +21,14 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
         sigma_vxy = (1/vxy)*sqrt(vertex.x()*vertex.x()*vertex.xError()*vertex.xError() +
                 vertex.y()*vertex.y()*vertex.yError()*vertex.yError());
         //sigma_vxy = (1/vxy)*(vertex.x()*vertex.xError() + vertex.y()*vertex.yError());
-        vtx_chi2 = vertex.normalizedChi2();
+        //vtx_chi2 = vertex.normalizedChi2() * vertex.ndof();
+        vtx_chi2 = vertex.chi2();
+        vtx_ndof = vertex.ndof();
         vz = vertex.z();
 
         //get probability for this vertex
         prob = TMath::Prob( vertex.chi2() , vertex.ndof() );
+        std::cout << "vertex type: " << type << "; chi2: " << vtx_chi2 << "; Normalized chi2: " << vertex.normalizedChi2() << "; ndof: " << vtx_ndof << "; prob: " << prob << std::endl;
     }
     else {
         return prob;
@@ -42,7 +46,9 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
     //if ( prob > 0.1 ) {
     if ( prob > 0.0 ) {
         if(type == "mmee") {
-            nt.mmeeVtxReducedChi2_.push_back(vtx_chi2);
+            //nt.mmeeVtxReducedChi2_.push_back(vtx_chi2);
+            nt.mmeeVtxChi2_.push_back(vtx_chi2);
+            nt.mmeeVtxNdof_.push_back(vtx_ndof);
             //nt.mmeeVtxVxy_.push_back(vxy);
             nt.mmeeVtxVx_.push_back(vx);
             nt.mmeeVtxVy_.push_back(vy);
@@ -50,7 +56,9 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.mmeeVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "elel") {
-            nt.elelVtxReducedChi2_.push_back(vtx_chi2);
+            //nt.elelVtxReducedChi2_.push_back(vtx_chi2);
+            nt.elelVtxChi2_.push_back(vtx_chi2);
+            nt.elelVtxNdof_.push_back(vtx_ndof);
             //nt.elelVtxVxy_.push_back(vxy);
             nt.elelVtxVx_.push_back(vx);
             nt.elelVtxVy_.push_back(vy);
@@ -58,7 +66,9 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.elelVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "lplp") {
-            nt.lplpVtxReducedChi2_.push_back(vtx_chi2);
+            //nt.lplpVtxReducedChi2_.push_back(vtx_chi2);
+            nt.lplpVtxChi2_.push_back(vtx_chi2);
+            nt.lplpVtxNdof_.push_back(vtx_ndof);
             //nt.lplpVtxVxy_.push_back(vxy);
             nt.lplpVtxVx_.push_back(vx);
             nt.lplpVtxVy_.push_back(vy);
@@ -66,7 +76,9 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.lplpVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "pcpc") {
-            nt.pcpcVtxReducedChi2_.push_back(vtx_chi2);
+            //nt.pcpcVtxReducedChi2_.push_back(vtx_chi2);
+            nt.pcpcVtxChi2_.push_back(vtx_chi2);
+            nt.pcpcVtxNdof_.push_back(vtx_ndof);
             //nt.pcpcVtxVxy_.push_back(vxy);
             nt.pcpcVtxVx_.push_back(vx);
             nt.pcpcVtxVy_.push_back(vy);
@@ -74,7 +86,9 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.pcpcVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "mumu") {
-            nt.mumuVtxReducedChi2_.push_back(vtx_chi2);
+            //nt.mumuVtxReducedChi2_.push_back(vtx_chi2);
+            nt.mumuVtxChi2_.push_back(vtx_chi2);
+            nt.mumuVtxNdof_.push_back(vtx_ndof);
             //nt.mumuVtxVxy_.push_back(vxy);
             nt.mumuVtxVx_.push_back(vx);
             nt.mumuVtxVy_.push_back(vy);
@@ -82,7 +96,9 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.mumuVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "mmelel") {
-            nt.mmelelVtxReducedChi2_.push_back(vtx_chi2);
+            //nt.mmelelVtxReducedChi2_.push_back(vtx_chi2);
+            nt.mmelelVtxChi2_.push_back(vtx_chi2);
+            nt.mmelelVtxNdof_.push_back(vtx_ndof);
             //nt.mmelelVtxVxy_.push_back(vxy);
             nt.mmelelVtxVx_.push_back(vx);
             nt.mmelelVtxVy_.push_back(vy);
@@ -90,7 +106,9 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
             nt.mmelelVtxSigmaVxy_.push_back(sigma_vxy);
         }
         else if(type == "mmlplp") {
-            nt.mmlplpVtxReducedChi2_.push_back(vtx_chi2);
+            //nt.mmlplpVtxReducedChi2_.push_back(vtx_chi2);
+            nt.mmlplpVtxChi2_.push_back(vtx_chi2);
+            nt.mmlplpVtxNdof_.push_back(vtx_ndof);
             //nt.mmlplpVtxVxy_.push_back(vxy);
             nt.mmlplpVtxVx_.push_back(vx);
             nt.mmlplpVtxVy_.push_back(vy);
@@ -171,12 +189,14 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
     vector<int> igood {}; for(size_t i = 0; i < coll_1.size(); i++) igood.push_back(-1);
     vector<int> jgood {}; for(size_t i = 0; i < coll_2.size(); i++) jgood.push_back(-1);
     for (size_t i = 0; i < coll_1.size(); i++) {
+        std::cout << "muon+" << (int)i << "pt=" << coll_1[i].pt() << ", eta=" << coll_1[i].eta() << ", phi=" << coll_1[i].phi() << std::endl;
         for (size_t j = 0; j < coll_2.size(); j++) {
             //if ( j > 15 || i > 15 ) continue;
             reco::Track part_i, part_j;
             part_i = *(coll_1[i].bestTrack());
             part_j = *(coll_2[j].bestTrack());
 
+            std::cout << "muon-" << (int)j << "pt=" << coll_2[j].pt() << ", eta=" << coll_2[j].eta() << ", phi=" << coll_2[j].phi() << std::endl;
             //first build the transient vertex and transient tracks.
             float dr = -9999;
             TransientVertex tv;
@@ -220,6 +240,7 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
                     for(uint8_t k : nt.muonsN) std::cout << (int)k << ", ";
                     std::cout << std::endl;
                 }
+                std::cout << "vtx muP: " << (int)muP << "; muN: " << (int)muN << std::endl;
                 nt.mumuVtxMuonP_.push_back(muP);
                 nt.mumuVtxMuonN_.push_back(muN);
             }
@@ -361,7 +382,9 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                     uint8_t eleN = nt.gsfElsN[j];
                     nt.elelVtxEleP_.push_back(eleP);
                     nt.elelVtxEleN_.push_back(eleN);
-                    nt.elelVtxReducedChi2_.push_back(9999);
+                    //nt.elelVtxReducedChi2_.push_back(9999);
+                    nt.elelVtxChi2_.push_back(9999);
+                    nt.elelVtxNdof_.push_back(9999);
                     //nt.elelVtxVxy_.push_back(9999);
                     nt.elelVtxVx_.push_back(9999);
                     nt.elelVtxVy_.push_back(9999);
@@ -374,7 +397,9 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                     uint8_t eleN = nt.gsfLowPtElsN[j];
                     nt.lplpVtxEleP_.push_back(eleP);
                     nt.lplpVtxEleN_.push_back(eleN);
-                    nt.lplpVtxReducedChi2_.push_back(9999);
+                    //nt.lplpVtxReducedChi2_.push_back(9999);
+                    nt.lplpVtxChi2_.push_back(9999);
+                    nt.lplpVtxNdof_.push_back(9999);
                     //nt.lplpVtxVxy_.push_back(9999);
                     nt.lplpVtxVx_.push_back(9999);
                     nt.lplpVtxVy_.push_back(9999);
@@ -462,7 +487,9 @@ void computeKinematicVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::G
                     //float sigma_vxy = (1/vxy)*sqrt(vertex.x()*vertex.x()*vertex.xError()*vertex.xError() +
                     //        vertex.y()*vertex.y()*vertex.yError()*vertex.yError());
                     float sigma_vxy = vxy; //0.;
-                    float vtx_chi2 = DecayVertexMC->chiSquared() / DecayVertexMC->degreesOfFreedom();
+                    float vtx_chi2 = DecayVertexMC->chiSquared() ; // / DecayVertexMC->degreesOfFreedom();
+                    int vtx_ndof = DecayVertexMC->degreesOfFreedom();
+                    //std::cout << "**Kinematic vertex**" << " chi2: " << vtx_chi2 << "; Normalized chi2: " << (vtx_chi2/vtx_ndof) << "; ndof: " << vtx_ndof << std::endl;
                     dr = reco::deltaR(*part_i, *part_j);
                     if(type == "elel") {
                         nt.elelVtxDr_.push_back(dr);
@@ -472,7 +499,9 @@ void computeKinematicVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::G
                         nt.elelVtxEleN_.push_back(eleN);
                     } //end elel type
                     else if(type == "lplp") {
-                        nt.lplpVtxReducedChi2_.push_back(vtx_chi2);
+                        //nt.lplpVtxReducedChi2_.push_back(vtx_chi2);
+                        nt.lplpVtxChi2_.push_back(vtx_chi2);
+                        nt.lplpVtxNdof_.push_back(vtx_ndof);
                         //nt.lplpVtxVxy_.push_back(vxy);
                         nt.lplpVtxVx_.push_back(vx);
                         nt.lplpVtxVy_.push_back(vy);
@@ -501,7 +530,9 @@ void computeKinematicVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::G
                     uint8_t eleN = nt.gsfElsN[j];
                     nt.elelVtxEleP_.push_back(eleP);
                     nt.elelVtxEleN_.push_back(eleN);
-                    nt.elelVtxReducedChi2_.push_back(9999);
+                    //nt.elelVtxReducedChi2_.push_back(9999);
+                    nt.elelVtxChi2_.push_back(9999);
+                    nt.elelVtxNdof_.push_back(9999);
                     //nt.elelVtxVxy_.push_back(9999);
                     nt.elelVtxVx_.push_back(9999);
                     nt.elelVtxVy_.push_back(9999);
@@ -514,7 +545,9 @@ void computeKinematicVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::G
                     uint8_t eleN = nt.gsfLowPtElsN[j];
                     nt.lplpVtxEleP_.push_back(eleP);
                     nt.lplpVtxEleN_.push_back(eleN);
-                    nt.lplpVtxReducedChi2_.push_back(9999);
+                    //nt.lplpVtxReducedChi2_.push_back(9999);
+                    nt.lplpVtxChi2_.push_back(9999);
+                    nt.lplpVtxNdof_.push_back(9999);
                     //nt.lplpVtxVxy_.push_back(9999);
                     nt.lplpVtxVx_.push_back(9999);
                     nt.lplpVtxVy_.push_back(9999);

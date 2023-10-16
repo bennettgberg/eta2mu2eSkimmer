@@ -38,6 +38,7 @@ public:
     unsigned long long runNum_;
     unsigned long long lumiSec_;
 
+    unsigned long long MClumiblock_;
     //uint32_t METFiltersFailBits_;
 
     // Gen branches
@@ -171,7 +172,9 @@ public:
     vector<float> mmeeVtxVy_;
     vector<float> mmeeVtxVz_;
     vector<float> mmeeVtxSigmaVxy_;
-    vector<float> mmeeVtxReducedChi2_;
+    //vector<float> mmeeVtxReducedChi2_;
+    vector<float> mmeeVtxChi2_;
+    vector<int> mmeeVtxNdof_;
     vector<float> mmeeVtxDr_;
     vector<float> mmeeVtxPt_;
     vector<float> mmeeVtxM_;
@@ -185,7 +188,9 @@ public:
     vector<float> mmelelVtxVy_;
     vector<float> mmelelVtxVz_;
     vector<float> mmelelVtxSigmaVxy_;
-    vector<float> mmelelVtxReducedChi2_;
+    //vector<float> mmelelVtxReducedChi2_;
+    vector<float> mmelelVtxChi2_;
+    vector<int> mmelelVtxNdof_;
     vector<float> mmelelVtxDr_;
     vector<float> mmelelVtxPt_;
     vector<float> mmelelVtxM_;
@@ -200,7 +205,9 @@ public:
     vector<float> mmlplpVtxVy_;
     vector<float> mmlplpVtxVz_;
     vector<float> mmlplpVtxSigmaVxy_;
-    vector<float> mmlplpVtxReducedChi2_;
+    //vector<float> mmlplpVtxReducedChi2_;
+    vector<float> mmlplpVtxChi2_;
+    vector<int> mmlplpVtxNdof_;
     vector<float> mmlplpVtxDr_;
     vector<float> mmlplpVtxPt_;
     vector<float> mmlplpVtxM_;
@@ -215,7 +222,9 @@ public:
     vector<float> lplpVtxVy_;
     vector<float> lplpVtxVz_;
     vector<float> lplpVtxSigmaVxy_;
-    vector<float> lplpVtxReducedChi2_;
+    //vector<float> lplpVtxReducedChi2_;
+    vector<float> lplpVtxChi2_;
+    vector<int> lplpVtxNdof_;
     vector<float> lplpVtxDr_;
     vector<float> lplpVtxPt_;
     vector<float> lplpVtxM_;
@@ -229,7 +238,9 @@ public:
     vector<float> elelVtxVy_;
     vector<float> elelVtxVz_;
     vector<float> elelVtxSigmaVxy_;
-    vector<float> elelVtxReducedChi2_;
+    //vector<float> elelVtxReducedChi2_;
+    vector<float> elelVtxChi2_;
+    vector<int> elelVtxNdof_;
     vector<float> elelVtxDr_;
     vector<float> elelVtxPt_;
     vector<float> elelVtxM_;
@@ -243,7 +254,9 @@ public:
     vector<float> pcpcVtxVy_;
     vector<float> pcpcVtxVz_;
     vector<float> pcpcVtxSigmaVxy_;
-    vector<float> pcpcVtxReducedChi2_;
+    //vector<float> pcpcVtxReducedChi2_;
+    vector<float> pcpcVtxChi2_;
+    vector<int> pcpcVtxNdof_;
     vector<float> pcpcVtxDr_;
     vector<float> pcpcVtxPt_;
     vector<float> pcpcVtxM_;
@@ -255,7 +268,9 @@ public:
     vector<float> mumuVtxVy_;
     vector<float> mumuVtxVz_;
     vector<float> mumuVtxSigmaVxy_;
-    vector<float> mumuVtxReducedChi2_;
+    //vector<float> mumuVtxReducedChi2_;
+    vector<float> mumuVtxChi2_;
+    vector<int> mumuVtxNdof_;
     vector<float> mumuVtxDr_;
     vector<float> mumuVtxPt_;
     vector<float> mumuVtxM_;

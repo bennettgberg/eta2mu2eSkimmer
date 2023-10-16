@@ -706,8 +706,13 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
-            if danEvent:
+            if danEvent and vtype == "mumu" and isMC:
                 print(vtype + " vtx " + str(jj) + " mass: %f"%m) 
+
+            #if syncTest and vtype == "mmelel" and m < 1.0:
+            if syncTest and vtype == "mumu" and m > .53 and m < .57: # m < 1.0:
+                syncFile.write("%d %f\n"%(e.evt, m)) 
+                print("%d %f\n"%(e.evt, m)) 
 
             if isMC:
                 gm = False
