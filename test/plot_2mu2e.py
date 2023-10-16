@@ -2,7 +2,7 @@ import sys
 import printEvent
 import printEvent_backup
 #allow events that pass the trigger only?
-trg_only = False #True
+trg_only = True
 
 #set this true to REJECT ANY event that have a reconstructed photon!
 reject_photon = False
@@ -16,7 +16,7 @@ require_elID = True # False
 require_muID = False
 
 #what test number to label the output files with
-testnum = 370
+testnum = 374
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -95,10 +95,10 @@ pi_mass = .13957
 
 #if true, add only the vertex with the highest chi2 prob to the histogram
 singleVert = True #not syncTest
-##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.6 for chi2 prob>.1) 
-rChi2Cut = 2.6 # -- used only on test36 and before!!
+##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.70554 for chi2 prob>.1 for 2-lep vertices; 1.84727 for 4-lepton) 
+#rChi2Cut = -1 #10.0 #2.6 # -- used only on test36 and before!!
 #-1 for no cut
-vProbCut = 0.1
+vProbCut = 0.5 #0.1
 #use low pt electrons too?
 useLowPt = False #not syncTest
 
@@ -136,6 +136,8 @@ if useLowPt:
     #2-low-pT pat::Electron; mu-mu-2-low-pT pat::Electron
     vtypes.append("lplp")
     vtypes.append("mmlplp")
+if isMuMu:
+    vtypes = ["mumu"]
 
 #if True, ONLY mmelel vertices made up of 2 good 2-lepton vertices are allowed
 # ie if no good mu pair or no good el pair, cannot use the 4-lepton pair
@@ -230,10 +232,13 @@ if isMC:
     hEtaGenReco = {}
     hEtaGenAcc = {}
     hvxy_gm = {}
+    hEventWeight = {}
     #2d hist to compare 2 different xsection measurements
     hxs0 = []
     hxs1 = []
     for vtype in vtypes:
+        #histogram of surviving event weights
+        hEventWeight[vtype] = ROOT.TH1F("hEventWeight"+vtype, "Event weights surviving all cuts", 1000, 0.0, 100.0)
         #gen eta mesons reco'd using packed candidates
         hpTGenReco[vtype] = ROOT.TH1F("hpTGenReco"+vtype, "pT of gen Eta Mesons that are reconstructed with "+vtype+" vertices", 500, 0., 100.)
         hEtaGenReco[vtype] = ROOT.TH1F("hEtaGenReco"+vtype, "pseudorapidity of gen Eta Mesons that are reco'd w/"+vtype+" vertices", 2000, -10., 10.) 
@@ -295,6 +300,14 @@ if syncTest:
     syncFile = open(syncFname, "w") 
     #dan_events = readEvents("dan_events.txt")
     #dan_events = [1252381000, 255683106, 84023455, 88662260, 159133159, 161102990, 31590976, 16172379, 27799808, 929840617, 180325625, 1753289604, 1643012693, 109982198, 167432072, 213243113, 116381978, 36823721, 96668538, 736907037, 3968111, 659070635, 1003626756, 724887932, 253577676, 170988683, 689521537, 56751393, 425066868, 38477461, 100496371, 189162741, 63096276, 556598561, 295236876, 359701161, 425478455, 461254064, 515194260, 533093765, 55544891, 101402745, 156781135, 322789576, 343777283, 393353420, 129540293, 67010272, 86693201, 200024995, 369027678, 542802702, 352553856, 418870343, 449833782, 461437995, 486838153, 91889663, 109820381, 140468151, 179924706, 190380376, 208883164, 215451906, 21115445, 114674252, 201263453, 308325464, 293554937, 335684854, 1222567, 79356789, 173556494, 189350488, 9957903, 208319643, 224977439, 234933701, 239712271, 244513764, 267369315, 323270357, 189912824, 196241515, 312950201, 318608138, 327006733, 556395426, 567335894, 489155856, 117458397, 158789347, 194052281, 133899391, 143485971, 252632883, 142734183, 204462307, 241026028, 73494602]
+dan_events = [189162741, 63096276, 556598561, 295236876, 359701161, 425478455, 461254064, 515194260, 533093765, 55544891, 101402745, 156781135,
+              322789576, 343777283, 393353420, 129540293, 67010272, 86693201, 200024995, 369027678, 542802702, 352553856, 418870343, 449833782, 
+              461437995, 486838153, 91889663, 109820381, 140468151, 179924706, 190380376, 208883164, 215451906, 21115445, 114674252, 201263453, 
+              308325464, 293554937, 335684854, 1222567, 79356789, 173556494, 189350488, 9957903, 208319643, 224977439, 234933701, 239712271, 244513764, 
+              267369315, 323270357, 189912824, 196241515, 312950201, 318608138, 327006733, 556395426, 567335894, 489155856, 117458397, 158789347, 
+              194052281, 133899391, 143485971, 252632883, 142734183, 204462307, 241026028, 73494602, 83114373, 93761341, 81246997, 97268700, 135274694, 
+              8803122, 443340708, 458782443, 529594248, 561936648, 60413852, 79824158, 149910570, 323957197, 818848720, 217471031, 277337666, 326637734, 
+              368337444, 459341632, 515062994, 892677800, 194857241, 249530988, 290755482, 436528947, 716163036, 743084009, 928840179, 984456588, 1052912373]
 
 #count the number of error events
 #nerr = 0
@@ -317,6 +330,8 @@ printevery = 10000
 # g: gen event (if MC only, obviously)
 #def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, genEtaPt=0, passedTrig=True):
 def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, gen_eta=None, passedTrig=True):
+
+    #print("vtx %s Run %d ls %d evt %d"%(vtype, e.run, e.lumi_sec, e.evt)) 
 
     #is good eta or nah
     good = False
@@ -494,13 +509,27 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             hdRP[vtype].Fill(mindRP)
             hdRN[vtype].Fill(mindRN)
 
+    danEvent = False
+    if vtype == "mumu" and e.evt in dan_events:
+        print("**danEvent**")
+        danEvent = True
+        try:
+            printEvent.printEvent(e)
+        except:
+            printEvent_backup.printEvent(e)
+
     #fill the pT, M histograms after looping thru all vertex candidates? or in the middle
     # (for the 4-lepton vertices and mumu, only executing the loop once anyway so minus well just fill in the middle)
     # JK now executing multiple times so fill at end for 4-leptons!!!
     #fillAtEnd = (vstr not in ["mmelel", "mmlplp", "mmee", "mumu"] and singleVert)
     fillAtEnd =  singleVert
 
-    #danEvent = False
+    if vProbCut > 0:
+        rChi2Cut = 1.84727
+        if vtype in ["mumu", "elel", "lplp", "pcpc"]:
+            rChi2Cut = 2.70554
+    else:
+        rChi2Cut = -1
 
     Vxy = -1
     if singleVert and nvert > 0:
@@ -518,6 +547,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
     bestm2mu = 99999
     bestm2el = 99999
     bestpt = -1
+    reco_filled = False
+    acc_filled = False
     for j in range(nvert):
         #commenting out to enable choosing best invariant mass instead of lowest rChi2
         #if singleVert and j != bestj : continue
@@ -530,6 +561,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
         except:
             failed = rChi2Cut > 0 and vtx_vrechi2[j] > rChi2Cut
         if failed: continue
+
+        if danEvent:
+            print(vtype + " vtx " + str(j)) 
 
         if vstr != "mumu":
             vec_elP = ROOT.TLorentzVector()
@@ -551,7 +585,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 nMissP = ord(e.Electron_nMissingHits[elP])
                 nMissN = ord(e.Electron_nMissingHits[elN])
                 #if nMissP > 3 or nMissN > 3:
-                if nMissP > 2 or nMissN > 2:
+                #if nMissP > 2 or nMissN > 2:
+                #if nMissP > 1 or nMissN > 1:
+                if nMissP > 0 or nMissN > 0:
                     continue
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
@@ -670,6 +706,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
+            if danEvent:
+                print(vtype + " vtx " + str(jj) + " mass: %f"%m) 
+
             if isMC:
                 gm = False
                 #if isSig:
@@ -688,16 +727,24 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 #    gm = True
                 if m > .52 and m < .58:
                     gm = True
-                if gm: 
-                    #hpTGenReco[vtype].Fill(genEtaPt)
+                #make sure you only fill once per event
+                if not reco_filled:
+                    #reco def is just enough particles now; doesn't need to be in right mass range
                     hpTGenReco[vtype].Fill(gen_eta.Pt())
                     hEtaGenReco[vtype].Fill(gen_eta.PseudoRapidity())
                     rec_weight[vtype] += evt_weight
-                    if passedTrig:
+                    reco_filled = True
+                if gm: 
+                    #hpTGenReco[vtype].Fill(genEtaPt)
+                    #hpTGenReco[vtype].Fill(gen_eta.Pt())
+                    #hEtaGenReco[vtype].Fill(gen_eta.PseudoRapidity())
+                    #rec_weight[vtype] += evt_weight
+                    if passedTrig and not acc_filled:
                         #hpTGenAcc[vtype].Fill(genEtaPt)
                         hpTGenAcc[vtype].Fill(gen_eta.Pt())
                         hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity())
                         acc_weight[vtype] += evt_weight
+                        acc_filled = True
             #danEvent = False
 
             #if syncTest and vtype == "mumu" and m < .58 and m > .52:
@@ -710,12 +757,14 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                     printEvent.printEvent(e)
                 except:
                     printEvent_backup.printEvent(e)
-                print(vtype + " mass: %f"%m) 
-                #nPrint -= 1
+                print(vtype + " vtx " + str(jj) + " mass: %f"%m) 
+                nPrint -= 1
 
             if not fillAtEnd:
                 hpT[vtype].Fill(pt, evt_weight)
                 hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
+                if isMC:
+                    hEventWeight[vtype].Fill(evt_weight)
                 ##test: see what happens if fill hist ONLY for high-vxy bois
                 #if vxy > 1.2: continue
                 ###### TEST #####
@@ -772,6 +821,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
         if fillAtEnd and bestjj > -1:
             hpT[vtype].Fill(pt, evt_weight)
             hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
+            if isMC:
+                hEventWeight[vtype].Fill(evt_weight) 
             #if danEvent and bestm > .52 and bestm < .58:
             if syncTest and vtype == "mumu" and bestm > .52 and bestm < .58:
                 syncFile.write("%d %f\n"%(e.evt, bestm)) 
@@ -848,6 +899,8 @@ def process_file(fname, singleVert, useOnia):
         if i%printevery == (printevery-1):
             print("Event %d/%d"%(i+1, nTot)) 
 
+        #if i < 100:
+        #    print("Run %d ls %d evt %d"%(e.run, e.lumi_sec, e.evt)) 
         passedTrig = False
         #true if rejected for having photon
         failedPhot = (reject_photon and ord(e.nGoodPhoton) > 0)
@@ -860,6 +913,9 @@ def process_file(fname, singleVert, useOnia):
         #if trig0 & ((1<<27) + (1<<26)) > 0:
             passedTrig = True
         elif trg_only:
+            if not isMC:
+                print("Error!!! Data event failed trigger???")
+                printEvent_backup.printEvent(e)
             continue
 
         #weight is 1 for data, different for MC
@@ -941,6 +997,8 @@ def process_file(fname, singleVert, useOnia):
             #xsec = xsec0
             wbin = hWeights.FindBin(genEtaPt)
             ptWeight = hWeights.GetBinContent( wbin )
+            if ptWeight == 0:
+                print("ptWeight = 0 !!!!! genEtaPt = %f, wbin = %d"%(genEtaPt, wbin)) 
             
             evt_weight = xsec * bratio * lumi / ptWeight #nEntries
             if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and evt_weight > 50 and genEtaPt > 20:
@@ -1020,6 +1078,7 @@ def finish_processing(foutname):
         hMGenAll.Write()
         hEtaGenAll.Write()
         for vtype in vtypes:
+            hEventWeight[vtype].Write()
             hpTGenReco[vtype].Write()
             hpTGenAcc[vtype].Write()
             hEtaGenReco[vtype].Write()
