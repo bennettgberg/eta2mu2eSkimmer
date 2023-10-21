@@ -1057,6 +1057,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
 
+    std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
     recoT->Fill();
 
     return;
