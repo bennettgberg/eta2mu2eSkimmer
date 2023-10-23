@@ -427,7 +427,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         nt.lumiSec_ = iEvent.luminosityBlock();
     }
     nt.runNum_ = iEvent.id().run();
-    std::cout << "Run " << (int)nt.runNum_ << ", LS " << (int)nt.lumiSec_ << ", Event " << (int)nt.eventNum_  << std::endl;
+    //std::cout << "Run " << (int)nt.runNum_ << ", LS " << (int)nt.lumiSec_ << ", Event " << (int)nt.eventNum_  << std::endl;
     //nt.npv_ = *primaryVertexFilterHandle_;
     nt.npv_ = primaryVertexHandle_->size();
 
@@ -1057,7 +1057,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
 
-    std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
+    //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
     recoT->Fill();
 
     return;
