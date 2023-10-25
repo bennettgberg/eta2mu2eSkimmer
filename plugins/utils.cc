@@ -28,7 +28,7 @@ float calcVertices(vector<reco::TransientTrack> transient_tracks, TransientVerte
 
         //get probability for this vertex
         prob = TMath::Prob( vertex.chi2() , vertex.ndof() );
-        std::cout << "vertex type: " << type << "; chi2: " << vtx_chi2 << "; Normalized chi2: " << vertex.normalizedChi2() << "; ndof: " << vtx_ndof << "; prob: " << prob << std::endl;
+        //std::cout << "vertex type: " << type << "; chi2: " << vtx_chi2 << "; Normalized chi2: " << vertex.normalizedChi2() << "; ndof: " << vtx_ndof << "; prob: " << prob << std::endl;
     }
     else {
         return prob;
@@ -189,14 +189,14 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
     vector<int> igood {}; for(size_t i = 0; i < coll_1.size(); i++) igood.push_back(-1);
     vector<int> jgood {}; for(size_t i = 0; i < coll_2.size(); i++) jgood.push_back(-1);
     for (size_t i = 0; i < coll_1.size(); i++) {
-        std::cout << "muon+" << (int)i << "pt=" << coll_1[i].pt() << ", eta=" << coll_1[i].eta() << ", phi=" << coll_1[i].phi() << std::endl;
+        //std::cout << "muon+" << (int)i << "pt=" << coll_1[i].pt() << ", eta=" << coll_1[i].eta() << ", phi=" << coll_1[i].phi() << std::endl;
         for (size_t j = 0; j < coll_2.size(); j++) {
             //if ( j > 15 || i > 15 ) continue;
             reco::Track part_i, part_j;
             part_i = *(coll_1[i].bestTrack());
             part_j = *(coll_2[j].bestTrack());
 
-            std::cout << "muon-" << (int)j << "pt=" << coll_2[j].pt() << ", eta=" << coll_2[j].eta() << ", phi=" << coll_2[j].phi() << std::endl;
+            //std::cout << "muon-" << (int)j << "pt=" << coll_2[j].pt() << ", eta=" << coll_2[j].eta() << ", phi=" << coll_2[j].phi() << std::endl;
             //first build the transient vertex and transient tracks.
             float dr = -9999;
             TransientVertex tv;
@@ -240,7 +240,7 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
                     for(uint8_t k : nt.muonsN) std::cout << (int)k << ", ";
                     std::cout << std::endl;
                 }
-                std::cout << "vtx muP: " << (int)muP << "; muN: " << (int)muN << std::endl;
+                //std::cout << "vtx muP: " << (int)muP << "; muN: " << (int)muN << std::endl;
                 nt.mumuVtxMuonP_.push_back(muP);
                 nt.mumuVtxMuonN_.push_back(muN);
             }

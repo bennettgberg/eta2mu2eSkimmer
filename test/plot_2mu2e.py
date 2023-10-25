@@ -1,6 +1,6 @@
 import sys
-import printEvent
-import printEvent_backup
+#import printEvent
+#import printEvent_backup
 #allow events that pass the trigger only?
 trg_only = True
 
@@ -9,14 +9,14 @@ reject_photon = False
 #set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
 reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
-basic_cuts = True # False
+basic_cuts = False #True # False
 #require electron_ID to be greater than 0?
-require_elID = True # False
+require_elID = False
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 374
+testnum = 375
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -26,9 +26,9 @@ isMuMu = False
 
 nPrint = 5
 #true if running a synchronization test (so print out each event, diff nbins, etc) -- now set in args
-syncTest = False
+syncTest = True #False
 #set to true if running over just one single file instead of a whole subset of data
-singleFile = False
+singleFile = True #False
 
 #argument is telling which files to analyze (should be about 100 files each)
 if len(sys.argv) < 2:
@@ -98,7 +98,7 @@ singleVert = True #not syncTest
 ##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.70554 for chi2 prob>.1 for 2-lep vertices; 1.84727 for 4-lepton) 
 #rChi2Cut = -1 #10.0 #2.6 # -- used only on test36 and before!!
 #-1 for no cut
-vProbCut = 0.5 #0.1
+vProbCut = -1 #0.5 #0.1
 #use low pt electrons too?
 useLowPt = False #not syncTest
 
@@ -513,10 +513,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
     if vtype == "mumu" and e.evt in dan_events:
         print("**danEvent**")
         danEvent = True
-        try:
-            printEvent.printEvent(e)
-        except:
-            printEvent_backup.printEvent(e)
+        #try:
+        #    printEvent.printEvent(e)
+        #except:
+        #    printEvent_backup.printEvent(e)
 
     #fill the pT, M histograms after looping thru all vertex candidates? or in the middle
     # (for the 4-lepton vertices and mumu, only executing the loop once anyway so minus well just fill in the middle)
@@ -758,10 +758,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             global nPrint
             if isMC and vtype == "mmelel" and m > .52 and m < .58 and nPrint > 0:
                 #global nPrint
-                try:
-                    printEvent.printEvent(e)
-                except:
-                    printEvent_backup.printEvent(e)
+                #try:
+                #    printEvent.printEvent(e)
+                #except:
+                #    printEvent_backup.printEvent(e)
                 print(vtype + " vtx " + str(jj) + " mass: %f"%m) 
                 nPrint -= 1
 
@@ -797,10 +797,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                     syncFile.write("%d %f\n"%(e.evt, m)) 
                     #global nPrint
                     if nPrint > 0:
-                        try:
-                            printEvent.printEvent(e)
-                        except:
-                            printEvent_backup.printEvent(e)
+                        #try:
+                        #    printEvent.printEvent(e)
+                        #except:
+                        #    printEvent_backup.printEvent(e)
                         print("mass: %f"%m) 
                         nPrint -= 1
             #good eta if in the right mass range
@@ -831,10 +831,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #if danEvent and bestm > .52 and bestm < .58:
             if syncTest and vtype == "mumu" and bestm > .52 and bestm < .58:
                 syncFile.write("%d %f\n"%(e.evt, bestm)) 
-                try:
-                    printEvent.printEvent(e)
-                except:
-                    printEvent_backup.printEvent(e)
+                #try:
+                #    printEvent.printEvent(e)
+                #except:
+                #    printEvent_backup.printEvent(e)
                 print("mass: %f"%bestm) 
             #why m instead of bestm???
             #hM[vtype].Fill(m, evt_weight)
@@ -920,7 +920,7 @@ def process_file(fname, singleVert, useOnia):
         elif trg_only:
             if not isMC:
                 print("Error!!! Data event failed trigger???")
-                printEvent_backup.printEvent(e)
+                #printEvent_backup.printEvent(e)
             continue
 
         #weight is 1 for data, different for MC
@@ -1152,8 +1152,10 @@ for lnum,line in enumerate(fl):
     #fname = line.strip('/eos/uscms')
     #get rid of the /eos/uscms
     path = line.strip()#[10:]
-    #fullpath = "root://cmsxrootd.fnal.gov/" + path
-    fullpath = "root://cmseos.fnal.gov/" + path
+    if singleFile:
+        fullpath = path
+    else:
+        fullpath = "root://cmseos.fnal.gov/" + path
     print("Copying file %s"%(fullpath)) 
     #print("WARNING: NOT DOING xrdcp!!!")
     #if not (isMC and not isSig):

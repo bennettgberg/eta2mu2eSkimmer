@@ -6,7 +6,7 @@ isMC = True
 isSig = False
 
 #EtaToMuMuGamma sample
-isMuMu = False
+isMuMu = True
 
 #doing test with central MC production?
 central = False
