@@ -24,7 +24,8 @@ data = options.data
 
 #test file name
 #BParking data
-testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/MiniTest/Run3_2022_BParking_MINItest.root"
+#testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/MiniTest/Run3_2022_BParking_MINItest.root"
+testfname = "root://xrootd-cms.infn.it//store/data/Run2022C/ParkingDoubleMuonLowMass1/MINIAOD/PromptReco-v1/000/357/271/00000/012c38a8-143b-46a9-8846-3523c8d19862.root"
 if not data:
     ##signal sample
     #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_0_MINIAOD_2022.root"
