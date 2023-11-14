@@ -6,7 +6,7 @@ isMC = True
 isSig = False
 
 #EtaToMuMuGamma sample
-isMuMu = True
+isMuMu = False
 
 #doing test with central MC production?
 central = False
@@ -28,12 +28,11 @@ if not isMC:
     #config.General.requestName = 'test1_disptau'
 else:
     if isSig:
-        #config.General.requestName = 'test0MC_EtaTo2Mu2E'
-        config.General.requestName = 'test37MC_EtaTo2Mu2E2'
+        config.General.requestName = 'test38MC_EtaTo2Mu2E'
     elif isMuMu:
-        config.General.requestName = 'test37MC_EtaToMuMu'
+        config.General.requestName = 'test38MC_EtaToMuMu'
     else:
-        config.General.requestName = 'test37MC_EtaToMuMuGamma3'
+        config.General.requestName = 'test38MC_EtaToMuMuGamma4'
 if central:
     config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'
@@ -73,34 +72,44 @@ else:
         #    'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_2/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(300)
         #]
     elif isMuMu:
-        config.Data.userInputFiles = [
-            'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2022_MINIAOD/EtaToMuMu_2022Test_MINIAOD_%d.root'%i for i in range(50)
-        ]
+        inputFiles = []
+        for i in range(50):
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2022_MINIAOD/EtaToMuMu_2022Test_MINIAOD_%d.root'%i) 
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2022_MINIAOD_2/EtaToMuMu_2022Test_MINIAOD_%d.root'%i) 
+        config.Data.userInputFiles = inputFiles
+            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2022_MINIAOD/EtaToMuMu_2022Test_MINIAOD_%d.root'%i for i in range(50)
+        #]
     elif not central:
         inputFiles = []
-        for i in range(700):
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i)
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i)
-        for i in range(5020):
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i)  
+        #for i in range(700):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i)
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i)
+        #for i in range(5020):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i)  
 
-        #list of file numbers for the 4th set of EtaToMuMuGamma MC files
-        nums4 = []
-        for i in range(126):
-            if i == 111: continue
-            nums4.append(i)
-        for i in range(909, 2000):
-            if i in [1804, 1805, 1807, 1808, 1809, 1812, 1817, 1818, 1821, 1824, 1826, 1838, 1839]: continue
-            nums4.append(i)
-        for i in nums4:
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_4/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##list of file numbers for the 4th set of EtaToMuMuGamma MC files
+        #nums4 = []
+        #for i in range(126):
+        #    if i == 111: continue
+        #    nums4.append(i)
+        #for i in range(909, 2000):
+        #    if i in [1804, 1805, 1807, 1808, 1809, 1812, 1817, 1818, 1821, 1824, 1826, 1838, 1839]: continue
+        #    nums4.append(i)
+        #for i in nums4:
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_4/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        nums5 = [i for i in range(196)]
+        for i in nums5:
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_5/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        #for i in range(196, 500):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp/EtaToMuMuGamma_2022Test_MINIAODTEST_%d.root'%i)
         #Dan
-        for i in range(305):
-            if i == 12 or i == 15: continue
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Dan/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        #for i in range(305):
+        #    if i == 12 or i == 15: continue
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Dan/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
         #Dan_2
-        for i in range(269)
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Dan_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        #for i in range(339):
+        #for i in range(339, 1000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Dan_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
         config.Data.userInputFiles = inputFiles # [ 
 #            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
 #            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 

@@ -858,6 +858,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
         //gen level eta meson
         TLorentzVector genEtaVec;
+        bool genEtaFound = false;
         //reco'd eta meson using PC tracks
         TLorentzVector recoEtaVec;
         //reco'd eta meson using GsfElectrons
@@ -868,6 +869,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         bool genmatchedE = true;
         for (size_t i = 0; i < genParticleHandle_->size(); i++) {
             reco::GenParticleRef genParticle(genParticleHandle_, i);
+            //skip particles that aren't supposed to be there
             // ?? what is this for??
             //if (!genParticle->isHardProcess()) continue;
             nt.genID_.push_back(genParticle->pdgId());
@@ -882,13 +884,15 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             //nt.genVxy_.push_back(genParticle->vxy()); //?????
             nt.genVz_.push_back(genParticle->vz());
             nt.genMass_.push_back(genParticle->mass());
+            //make sure to keep this AFTER adding all the gen info
+            if(genParticle->pdgId() == 990) continue;
 
             TLorentzVector genLepVec;
             genLepVec.SetPtEtaPhiM(genParticle->pt(), genParticle->eta(), genParticle->phi(), genParticle->mass());
-            //skip particles that aren't supposed to be there
-            if(genParticle->pdgId() == 990 || genParticle->pdgId() == 221) continue;
-            if(i == 0) genEtaVec = genLepVec;
-            else genEtaVec = genEtaVec + genLepVec;
+            if(!genEtaFound) {
+                if(i == 0) genEtaVec = genLepVec;
+                else genEtaVec = genEtaVec + genLepVec;
+            }
             //4vector for the reco'd particle
             TLorentzVector recoLepVec;
             if(fabs(genParticle->pdgId()) == 11) {
@@ -975,6 +979,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 alldRMu->Fill(mindR);
 
             } //end is gen muon
+            else if(genParticle->pdgId() == 221) {
+                genEtaVec.SetPtEtaPhiM(genParticle->pt(), genParticle->eta(), genParticle->phi(), genParticle->mass());
+                genEtaFound = true;
+            }
             
         }
         //now get the pt of the full eta meson; see if all 4 particles genmatched successfully AND reco invar mass in good range!
