@@ -16,7 +16,7 @@ require_elID = True
 require_muID = False
 
 #what test number to label the output files with
-testnum = 387
+testnum = 389
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -1046,32 +1046,41 @@ def process_file(fname, singleVert, useOnia):
                 #print("event %d rejected for etaToMuMu!"%i) 
                 continue
             if isMC:
-                #see if reco criteria is fulfilled: just the two (or four) opposite-charged leptons were reconstructed
+                ##see if reco criteria is fulfilled: just the two (or four) opposite-charged leptons were reconstructed
                 recod = False
-                muC = [ord(e.Muon_charge[c]) for c in range(ord(e.nGoodMuon))]
-                if 1 in muC and 255 in muC:
+                #muC = [ord(e.Muon_charge[c]) for c in range(ord(e.nGoodMuon))]
+                #if 1 in muC and 255 in muC:
+                #    if vtype == "mumu":
+                #        recod = True
+                #    elif vtype == "mmelel": 
+                #        elC = [ord(e.Electron_charge[c]) for c in range(ord(e.nGoodElectron))]  
+                #        if 1 in elC and 255 in elC:
+                #            recod = True
+                #        del elC
+                #    elif vtype == "mmlplp":
+                #        elC = [ord(e.LowPtElectron_charge[c]) for c in range(ord(e.nGoodLowPtElectron))] 
+                #        if 1 in elC and 255 in elC:
+                #            recod = True
+                #        del elC
+                #if vtype == "elel" and ord(e.nGoodElectron) > 1:
+                #    elC = [ord(e.Electron_charge[c]) for c in range(ord(e.nGoodElectron))] 
+                #    if 1 in elC and 255 in elC:
+                #        recod = True
+                #    del elC
+                #elif vtype == "lplp" and ord(e.nGoodLowPtElectron) > 1:
+                #    elC = [ord(e.LowPtElectron_charge[c]) for c in range(ord(e.nGoodLowPtElectron))] 
+                #    if 1 in elC and 255 in elC:
+                #        recod = True
+                #    del elC
+                if ord(e.nGoodMuon) > 1:
                     if vtype == "mumu":
                         recod = True
-                    elif vtype == "mmelel": 
-                        elC = [ord(e.Electron_charge[c]) for c in range(ord(e.nGoodElectron))]  
-                        if 1 in elC and 255 in elC:
-                            recod = True
-                        del elC
-                    elif vtype == "mmlplp":
-                        elC = [ord(e.LowPtElectron_charge[c]) for c in range(ord(e.nGoodLowPtElectron))] 
-                        if 1 in elC and 255 in elC:
-                            recod = True
-                        del elC
-                if vtype == "elel" and ord(e.nGoodElectron) > 1:
-                    elC = [ord(e.Electron_charge[c]) for c in range(ord(e.nGoodElectron))] 
-                    if 1 in elC and 255 in elC:
+                    elif vtype == "mmelel" and ord(e.nGoodElectron) > 1:
                         recod = True
-                    del elC
-                elif vtype == "lplp" and ord(e.nGoodLowPtElectron) > 1:
-                    elC = [ord(e.LowPtElectron_charge[c]) for c in range(ord(e.nGoodLowPtElectron))] 
-                    if 1 in elC and 255 in elC:
+                    elif vtype == "mmlplp" and ord(e.nGoodLowPtElectron) > 1:
                         recod = True
-                    del elC
+                    elif vtype == "mmg" and ord(e.nGoodPhoton) > 0:
+                        recod = True
                 if recod:
                     #reco def is just enough particles now; doesn't need to be in right mass range
                     hpTGenReco[vtype].Fill(gen_eta.Pt())
@@ -1079,7 +1088,7 @@ def process_file(fname, singleVert, useOnia):
                     rec_weight[vtype] += evt_weight
                 else:
                     continue
-                del muC
+                #del muC
                 #isGood = process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g, genEtaPt, passedTrig)
                 isGood = process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g, gen_eta, passedTrig)
             else:

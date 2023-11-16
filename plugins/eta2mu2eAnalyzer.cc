@@ -99,7 +99,7 @@ private:
     TTree *recoT, *genT;
     //for MC only
     TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *allGenPtEl,
-        *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE; //,
+        *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE, *trigGenPtEta; //,
         //*hdRP, *hdRN;
     //max dR between gen and reco particles for a successful gen-match to be declared
     const float drCut = 0.01;
@@ -237,6 +237,7 @@ void eta2mu2eAnalyzer::beginJob()
         allGenPtEta = new TH1F("allGenPtEta", "allGenPtEta", 10000, 0., 100.);
         matchedGenPtEta = new TH1F("matchedGenPtEta", "matchedGenPtEta", 10000, 0., 100.);
         matchedGenPtEtaE = new TH1F("matchedGenPtEtaE", "matchedGenPtEtaE", 10000, 0., 100.);
+        trigGenPtEta = new TH1F("trigGenPtEta", "trigGenPtEta", 10000, 0., 100.);
 
         srand(time(NULL));
 
@@ -718,9 +719,16 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     // Assign each trigger result to a different bit
     nt.fired0_ = 0;
     nt.fired1_ = 0;
+    bool passedTrig = false;
     for (size_t i = 0; i < triggerPathsWithVersionNum_.size(); i++) {
         if (trigExist_.at(i)) {
             std::string trigPath = triggerPathsWithVersionNum_[i];
+            if(trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath))) {
+                passedTrig = true;
+                //if(triggerPathsWithoutVersionNum_[i]=="HLT_Dimuon0_LowMass_L1_TM530"){
+                //    std::cout << "HLT_Dimuon0_LowMass_L1_TM530 fired!" << std::endl;
+                //}
+            }
             //first 64 triggers belong to the first trigger word, next few to the second one.
             if(i < 64) {
                 //bool firstfired = nt.fired0_&(1<<11);
@@ -740,7 +748,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 nt.fired1_ |= (0 <<(i-64));
             }
         }
-    }
+    } //end loop over triggerPaths
+
     
     //std::cout << "Number of onia ConvertedPhoton Candidates: " << (int)conHandle_->size() << std::endl;
     //std::cout << "Printing onia photons:" << std::endl;
@@ -987,6 +996,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         }
         //now get the pt of the full eta meson; see if all 4 particles genmatched successfully AND reco invar mass in good range!
         allGenPtEta->Fill(genEtaVec.Pt());
+        if(passedTrig){
+            trigGenPtEta->Fill(genEtaVec.Pt()); 
+        }
         if(genmatched && recoEtaVec.M() > etaMassMin && recoEtaVec.M() < etaMassMax) {
             matchedGenPtEta->Fill(genEtaVec.Pt());
         }
@@ -1088,6 +1100,7 @@ void eta2mu2eAnalyzer::endJob() {
         matchedGenPtMu->Write();
         alldRMu->Write();
         allGenPtEta->Write();
+        trigGenPtEta->Write();
         matchedGenPtEta->Write();
         matchedGenPtEtaE->Write();
     }
