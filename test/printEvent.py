@@ -50,7 +50,7 @@ def printEvent(entry, isMC=False, gentry=None) :
                 ))
 
     if len(entry.Vertex_elel_dR) > 0:
-        print("Vertices mu+mu-\n #      vx       vy       vz     sigmaVxy    chi2    ndof    dR     el+     el-")
+        print("Vertices e+e-\n #      vx       vy       vz     sigmaVxy    chi2    ndof    dR     el+     el-")
         for j in range(len(entry.Vertex_elel_dR)):
             print("{0:d}  {1:.3f}    {2:.3f}     {3:.3f}     {4:.3f}      {5:.3f}   {9:.1f}    {6:.3f}      {7:d}      {8:d}".format(
                 j,entry.Vertex_elel_vx[j], entry.Vertex_elel_vy[j], entry.Vertex_elel_vz[j], entry.Vertex_elel_sigmaVxy[j],

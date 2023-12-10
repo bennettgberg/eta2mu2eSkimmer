@@ -11,12 +11,12 @@ reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
 basic_cuts = True #False
 #require electron_ID to be greater than 0?
-require_elID = True
+require_elID = False
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 389
+testnum = 3822
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -100,7 +100,7 @@ singleVert = False #not syncTest
 ##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.70554 for chi2 prob>.1 for 2-lep vertices; 1.84727 for 4-lepton) 
 #rChi2Cut = -1 #10.0 #2.6 # -- used only on test36 and before!!
 #-1 for no cut
-vProbCut = 0.5
+vProbCut = 0.1
 #use low pt electrons too?
 useLowPt = False #not syncTest
 
@@ -197,12 +197,18 @@ for vtype in vtypes:
         hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", 1000, 0.0, 1.0) 
     else:
         hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
+    hM[vtype].Sumw2()
     hRchi2[vtype] = ROOT.TH1F("hRchi2"+vtype, "Reduced #chi^{2} with "+vtype+" vertices", 500, 0.0, 5.0)
+    hRchi2[vtype].Sumw2()
     hMNoWt[vtype] = ROOT.TH1F("hMNoWt"+vtype, "UNWEIGHTED Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
+    hMNoWt[vtype].Sumw2()
     hMFailedTrig[vtype] = ROOT.TH1F("hMFailedTrig"+vtype, "Invar. mass of events FAILING trigger with "+vtype+" vertices", nbins, xmin, xmax) 
+    hMFailedTrig[vtype].Sumw2()
     hpT[vtype] = ROOT.TH1F("hpT"+vtype, "pT with "+vtype+" vertices", 500, 0., 100.) 
+    hpT[vtype].Sumw2()
     #pseudorapidity distribution of the reconstructed eta mesons
     hEta[vtype] = ROOT.TH1F("hEta"+vtype, "pseudorapidity with "+vtype+" vertices", 2000, -10., 10.) 
+    hEta[vtype].Sumw2()
     #hdRP[vtype] = ROOT.TH1F("hdRP"+vtype, "dR b/t Onia and lowPtelectrons Pos", 1000, 0, 10.)
     #hdRN[vtype] = ROOT.TH1F("hdRN"+vtype, "dR b/t Onia and lowPtelectrons Neg", 1000, 0, 10.)
     #hMhiVxy[vtype] = ROOT.TH1F("hMhiVxy"+vtype, "Invar. mass with "+vtype+" vertices, Vxy>1.2", nbins, xmin, xmax) 
@@ -213,66 +219,105 @@ for vtype in vtypes:
     #hSigmaVxyLoVxy[vtype] = ROOT.TH1F("hSigmaVxyLoVxy"+vtype, "#sigmaVxy with "+vtype+" vertices, Vxy<1.2", 10000, 0.0, 10.0) 
     #hMvsPt[vtype] = ROOT.TH2F("hMvsPt"+vtype, "Invar. mass as a function of pT", 1000, 0.0, 100.0, 350, .45, .8) 
     hMvsPt[vtype] = ROOT.TH2F("hMvsPt"+vtype, "Invar. mass as a function of pT", 100, 0.0, 100.0, 800, .2, 1.0) 
+    hMvsPt[vtype].Sumw2()
     hVxy[vtype] = ROOT.TH1F("hVxy"+vtype, "Vxy for all "+vtype+" vertices", 1000, 0.0, 10.0) 
+    hVxy[vtype].Sumw2()
     #dielectron mass withOUT photon saved
     if isMC and not isSig:
         hMeeNoG[vtype] = ROOT.TH1F("hMeeNoG"+vtype, "Invar. mass with "+vtype+" vertices for evts with NO gen photon", 1000, 0, 1.0)
+        hMeeNoG[vtype].Sumw2()
         hMeeG[vtype] = ROOT.TH1F("hMeeG"+vtype, "Invar. mass with "+vtype+" for evts with a gen photon", 1000, 0, 1.0)
+        hMeeG[vtype].Sumw2()
     if useOnia:
         hVertMatched[vtype] = ROOT.TH2F("hVertMatched"+vtype, "vx vs. vy for matched "+vtype+" tracks", 12000, -60, 60, 12000, -60, 60)
+        hVertMatched[vtype].Sumw2()
         hVertNoMatch[vtype] = ROOT.TH2F("hVertNoMatch"+vtype, "vx vs. vy for unmatched "+vtype+" tracks", 12000, -60, 60, 12000, -60, 60)
+        hVertNoMatch[vtype].Sumw2()
         if isMC:
             hpTVertMatched[vtype] = ROOT.TH1F("hpTVertMatched"+vtype, "Gen pT of etas in which "+vtype+" elecs were matched to converted photons", 500, 0., 100.) 
+            hpTVertMatched[vtype].Sumw2()
 
 if mmelelExclusive:
     #histogram of invariant masses that have valid mmelel vertices but either invalid mu-mu or invalid el-el vertex
     hMdeleted = ROOT.TH1F("hMdeleted", "DELETED invar. mass with mmelel vertices", nbins, xmin, xmax) 
+    hMdeleted.Sumw2()
     hRchi2deleted = ROOT.TH1F("hRchi2deleted", "DELETED reduced chi2 with mmelel vertices", 500, 0.0, 5.0) 
+    hRchi2deleted.Sumw2()
     
 if isMC:
     #histogram of pT for all gen eta mesons
     hpTGenAll = ROOT.TH1F("hpTGenAll", "pT of all gen Eta Mesons", 500, 0., 100.)
+    hpTGenAll.Sumw2()
     #should all be exactly .548 GeV (just a cross-check)
     hMGenAll = ROOT.TH1F("hMGenAll", "mass of all gen Eta Mesons", nbins, xmin, xmax)
+    hMGenAll.Sumw2()
     hEtaGenAll = ROOT.TH1F("hEtaGenAll", "pseudorapidity of all gen Eta Mesons", 2000, -10., 10.) 
+    hEtaGenAll.Sumw2()
     #gen eta mesons passing at least one trigger
     hpTGenTrig = ROOT.TH1F("hpTGenTrig", "pT of gen Eta Mesons that pass the trigger", 500, 0., 100.)
+    hpTGenTrig.Sumw2()
     hEtaGenTrig = ROOT.TH1F("hEtaGenTrig", "pseudorapidity gen Eta Mesons that pass the trigger", 2000, -10., 10.) 
+    hEtaGenTrig.Sumw2()
     hpTGenReco = {}
     hpTGenAcc = {}
+    #matched in dR instead of mass range
+    hpTGenAccdR = {}
     hEtaGenReco = {}
     hEtaGenAcc = {}
     hvxy_gm = {}
     hEventWeight = {}
-    #hEvtWtVsPt = {}
+    hEvtWtVsPt = {}
     #2d hist to compare 2 different xsection measurements
     hxs0 = []
     hxs1 = []
+    #upper and lower values of hM considering evt weight uncertainties
+    hMUp = {}
+    hMDn = {}
     for vtype in vtypes:
+        if vtype in ["mumu", "elel", "pcpc", "lplp"]:
+            hMUp[vtype] = ROOT.TH1F("hMUp"+vtype, "Upper Invar. mass with "+vtype+" vertices", 1000, 0.0, 1.0) 
+            hMDn[vtype] = ROOT.TH1F("hMDn"+vtype, "Lower Invar. mass with "+vtype+" vertices", 1000, 0.0, 1.0) 
+        else:
+            hMUp[vtype] = ROOT.TH1F("hMUp"+vtype, "Upper Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
+            hMDn[vtype] = ROOT.TH1F("hMDn"+vtype, "Lower Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
         #histogram of surviving event weights
         hEventWeight[vtype] = ROOT.TH1F("hEventWeight"+vtype, "Event weights surviving all cuts", 1000, 0.0, 100.0)
-        #hEvtWtVsPt[vtype] = ROOT.TH2F("hEvtWtVsPt"+vtype, "Event weights surviving all cuts as a function of pT", 100, 0.0, 100.0, 100, 0.0, 100.0) 
+        hEventWeight[vtype].Sumw2()
+        hEvtWtVsPt[vtype] = ROOT.TH2F("hEvtWtVsPt"+vtype, "Event weights surviving all cuts as a function of pT", 100, 0.0, 100.0, 100, 0.0, 100.0) 
+        hEvtWtVsPt[vtype].Sumw2()
         #gen eta mesons reco'd using packed candidates
         hpTGenReco[vtype] = ROOT.TH1F("hpTGenReco"+vtype, "pT of gen Eta Mesons that are reconstructed with "+vtype+" vertices", 500, 0., 100.)
+        hpTGenReco[vtype].Sumw2()
         hEtaGenReco[vtype] = ROOT.TH1F("hEtaGenReco"+vtype, "pseudorapidity of gen Eta Mesons that are reco'd w/"+vtype+" vertices", 2000, -10., 10.) 
+        hEtaGenReco[vtype].Sumw2()
         #gen eta mesons passing at least one trigger AND reco'd with packed cand's
         hpTGenAcc[vtype] = ROOT.TH1F("hpTGenAcc"+vtype, "pT of gen Eta Mesons that are accepted (trig+reco) with "+vtype+" vertices", 500, 0., 100.)
+        hpTGenAcc[vtype].Sumw2()
+        hpTGenAccdR[vtype] = ROOT.TH1F("hpTGenAccdR"+vtype, "p_{T} of accepted gen #eta mesons (#DeltaR<"+str(dRcut)+") with "+vtype+" vertices", 500, 0., 100.)
+        hpTGenAccdR[vtype].Sumw2()
         hEtaGenAcc[vtype] = ROOT.TH1F("hEtaGenAcc"+vtype, "pseudorapidity of gen Eta Mesons that are accepted (trig+reco) w/"+vtype+" vertices", 2000, -10., 10.) 
+        hEtaGenAcc[vtype].Sumw2()
         #vxy values for ONLY genmatched (LowPt)electron vertices
         hvxy_gm[vtype] = ROOT.TH1F("hvxygm"+vtype, "Vxy for genmatched "+vtype+" vertices", 1000, 0.0, 10.0) 
+        hvxy_gm[vtype].Sumw2()
     hGenMudR = ROOT.TH1F("hGenMudR", "dR b/t gen muons", 1000, 0.0, 1.0) 
+    hGenMudR.Sumw2()
     #leading muon pT
     hGenMupT0 = ROOT.TH1F("hGenMupT0", "pT of lead gen muon", 10000, 0.0, 100.0)
+    hGenMupT0.Sumw2()
     #subleading muon pT
     hGenMupT1 = ROOT.TH1F("hGenMupT1", "pT of subleading gen muon", 10000, 0.0, 100.0)
+    hGenMupT1.Sumw2()
     #electron pT
     hGenElpT = ROOT.TH1F("hGenElpT", "p_{T} of gen electrons", 10000, 0.0, 100.0) 
+    hGenElpT.Sumw2()
 
     if isSig:
         #dR between reconstructed tracks and gen electrons
         hdR = {}
         for ptype in ptypes:
             hdR[ptype] = ROOT.TH1F("hdR"+ptype, "dR b/t reco "+ptype+" and gen electrons", 10000, 0., 1.) 
+            hdR[ptype].Sumw2()
 
     #open the xsec file to get the pT-dependent xsec's (so can get weighted overall efficiencies)
     #f_xsec = ROOT.TFile.Open("xsecs.root")
@@ -282,15 +327,33 @@ if isMC:
     
     #total weight of all MC events
     all_weight = 0.
+    all_weightUp = 0.
+    all_weightDn = 0.
     #total weight of MC events passing trigger
     trg_weight = 0.
+    trg_weightUp = 0.
+    trg_weightDn = 0.
     rec_weight = {}
+    rec_weightUp = {}
+    rec_weightDn = {}
     acc_weight = {}
+    acc_weightUp = {}
+    acc_weightDn = {}
+    accdR_weight = {}
+    accdR_weightUp = {}
+    accdR_weightDn = {}
     for vtype in vtypes:
         #total weight of MC events passing reco
         rec_weight[vtype] = 0.
+        rec_weightUp[vtype] = 0.
+        rec_weightDn[vtype] = 0.
         #total weight of events accepted (trg and reco)
         acc_weight[vtype] = 0.
+        acc_weightUp[vtype] = 0.
+        acc_weightDn[vtype] = 0.
+        accdR_weight[vtype] = 0.
+        accdR_weightUp[vtype] = 0.
+        accdR_weightDn[vtype] = 0.
 
 inc_vertM = False
 if inc_vertM:
@@ -312,9 +375,9 @@ if syncTest:
         syncFname = "syncTest_%d%s_%d_test%d_mumu.txt"%(num, let, arg, testnum)
     syncFile = open(syncFname, "w") 
     #dan_runs,dan_events = readEvents("danEvents.txt")
-if not isMC and not singleFile:
-    trigFname = "triggerFailed_test%d_%d%s_%d.txt"%(testnum, num, let, arg)
-    trigF = open(trigFname, "w") 
+#if not isMC and not singleFile:
+#    trigFname = "triggerFailed_test%d_%d%s_%d.txt"%(testnum, num, let, arg)
+#    trigF = open(trigFname, "w") 
 
 #count the number of error events
 #nerr = 0
@@ -336,7 +399,7 @@ printevery = 10000
 # useOnia: true to remove any tracks matched to Onia conversion candidates, false to not
 # g: gen event (if MC only, obviously)
 #def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, genEtaPt=0, passedTrig=True):
-def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, gen_eta=None, passedTrig=True):
+def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weightUp=0, evt_weightDn=0, g=None, gen_eta=None, passedTrig=True):
 
     #print("vtx %s Run %d ls %d evt %d"%(vtype, e.run, e.lumi_sec, e.evt)) 
 
@@ -558,6 +621,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
     bestm2el = 99999
     bestpt = -1
     acc_filled = False
+    accdR_filled = False
     for j in range(nvert):
         if singleVert and j != bestj : continue
         #try a cut on the chi2 value? or on vxy??
@@ -592,10 +656,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                     continue
                 nMissP = ord(e.Electron_nMissingHits[elP])
                 nMissN = ord(e.Electron_nMissingHits[elN])
-                #if nMissP > 3 or nMissN > 3:
+                if nMissP > 3 or nMissN > 3:
                 #if nMissP > 2 or nMissN > 2:
                 #if nMissP > 1 or nMissN > 1:
-                if nMissP > 0 or nMissN > 0:
+                #if nMissP > 0 or nMissN > 0:
                     continue
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
@@ -730,7 +794,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 #        vec_bkgEta = vec_muP + vec_muN + vec_phot
                 #        dr = min(dr, vec_bkgEta.DeltaR(gen_eta)) 
                 #TESTING TO SEE WHAT DIFFERENCE THIS MAKES (SHOULD BE NEGLIGIBLE)
-                # TODO: change it back tho
+                # TODO: change it back tho (?)
                 #if dr < dRcut:
                 #    gm = True
                 if m > .52 and m < .58:
@@ -746,6 +810,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity())
                         acc_weight[vtype] += evt_weight
                         acc_filled = True
+                if dr < dRcut and passedTrig and not accdR_filled:
+                    hpTGenAccdR[vtype].Fill(gen_eta.Pt()) 
+                    accdR_weight[vtype] += evt_weight
+                    accdR_filled = True
             #danEvent = False
 
             #if syncTest and vtype == "mumu" and m < .58 and m > .52:
@@ -765,12 +833,17 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 hpT[vtype].Fill(pt, evt_weight)
                 hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
                 if isMC:
-                    hEventWeight[vtype].Fill(evt_weight)
-                    #hEvtWtVsPt[vtype].Fill(gen_eta.Pt(), evt_weight)
+                    #fill event weight histograms only for ACCEPTED events (correct mass reco'd)
+                    if m > .52 and m < .58:
+                        hEventWeight[vtype].Fill(evt_weight)
+                        hEvtWtVsPt[vtype].Fill(gen_eta.Pt(), evt_weight)
                 ##test: see what happens if fill hist ONLY for high-vxy bois
                 #if vxy > 1.2: continue
                 ###### TEST #####
                 hM[vtype].Fill(m, evt_weight)
+                if isMC:
+                    hMUp[vtype].Fill(m, evt_weightUp)
+                    hMDn[vtype].Fill(m, evt_weightDn)
                 if not passedTrig:
                     hMFailedTrig[vtype].Fill(m, evt_weight) 
                 hMNoWt[vtype].Fill(m)
@@ -826,8 +899,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             hpT[vtype].Fill(pt, evt_weight)
             hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
             if isMC:
-                hEventWeight[vtype].Fill(evt_weight) 
-                #hEvtWtVsPt[vtype].Fill(gen_eta.Pt(), evt_weight)
+                #fill event weight histograms ONLY for accepted events! (correct mass range)
+                if bestm > .52 and bestm < .58:
+                    hEventWeight[vtype].Fill(evt_weight) 
+                    hEvtWtVsPt[vtype].Fill(gen_eta.Pt(), evt_weight)
             #if danEvent and bestm > .52 and bestm < .58:
             if syncTest and vtype == "mumu" and bestm > .52 and bestm < .58:
                 syncFile.write("%d %f\n"%(e.evt, bestm)) 
@@ -842,6 +917,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #hMvsPt[vtype].Fill(pt, m, evt_weight)
             hM[vtype].Fill(bestm, evt_weight)
             hMNoWt[vtype].Fill(bestm)
+            if isMC:
+                hMUp[vtype].Fill(bestm, evt_weightUp)
+                hMDn[vtype].Fill(bestm, evt_weightDn)
             if not passedTrig:
                 print("filling failedTrig!!!! mass %f, weight %f"%(bestm, evt_weight))
                 hMFailedTrig[vtype].Fill(bestm, evt_weight) 
@@ -864,6 +942,19 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #    hMloVxy[vtype].Fill(bestm, evt_weight)
 
     return good
+
+#return true if at least two oppositely charged lepnames are found in the event, False otherwise
+def found_oppo(e, lepname):
+    found_pos = False
+    found_neg = False
+    nlep = eval("ord(e.nGood%s)"%lepname) 
+    for l in range(nlep):
+        charge = eval("ord(e.%s_charge[l])"%lepname)
+        if charge == 1:
+            found_pos = True
+        else:
+            found_neg = True
+    return (found_pos and found_neg)
 
 def process_file(fname, singleVert, useOnia):
     global all_weight, trg_weight
@@ -935,8 +1026,8 @@ def process_file(fname, singleVert, useOnia):
                 #    printEvent.printEvent(e)
                 #except AttributeError:
                 #    printEvent_backup.printEvent(e)
-                if not singleFile:
-                    trigF.write("%d\n"%e.evt) 
+                #if not singleFile:
+                #    trigF.write("%d\n"%e.evt) 
             #else:
             #moving the continue down further so don't need to rerun twice just to get trigger eff!!
             #continue
@@ -1012,7 +1103,16 @@ def process_file(fname, singleVert, useOnia):
             xbin = h_xsec.FindBin( genEtaPt )
             xsec0 = h_xsec.GetBinContent( xbin ) * h_xsec.GetBinWidth( xbin )
             #testing this new xsec measurement???
-            xsec1 = 6.2615311e+15 / genEtaPt**5.8244956
+            #xsec1 = 6.2615311e+15 / genEtaPt**5.8244956
+            #fitted value of parameter 0
+            xsec_p0 = 6.6657161e+14
+            #fitted uncertainty on parameter 0
+            xsec_unc0 = 7.3097364e+13
+            xsec_p1 = 4.9552
+            xsec_unc1 = 0.037738932
+            xsec1 = xsec_p0 / genEtaPt**xsec_p1
+            xsecUp = (xsec_p0 + xsec_unc0) / genEtaPt**(xsec_p1 - xsec_unc1) 
+            xsecDn = (xsec_p0 - xsec_unc0) / genEtaPt**(xsec_p1 + xsec_unc1) 
             #print("xsec0: %f, xsec1: %f"%(xsec0, xsec1))
             hxs0.append(xsec0) 
             hxs1.append(xsec1)
@@ -1024,6 +1124,8 @@ def process_file(fname, singleVert, useOnia):
                 print("ptWeight = 0 !!!!! genEtaPt = %f, wbin = %d"%(genEtaPt, wbin)) 
             
             evt_weight = xsec * bratio * lumi / ptWeight #nEntries
+            evt_weightUp = xsecUp/xsec * evt_weight
+            evt_weightDn = xsecDn/xsec * evt_weight
             if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and evt_weight > 50 and genEtaPt > 20:
                 print("***high event weight: %f***"%(evt_weight))
                 print("event: %d, genEtaPt: %f, xsec: %f, ptWeight: %f"%(i, genEtaPt, xsec, ptWeight)) 
@@ -1037,16 +1139,13 @@ def process_file(fname, singleVert, useOnia):
                 hEtaGenTrig.Fill(genEtaEta)
                 trg_weight += evt_weight
             
-        if trg_only and not passedTrig:
-            continue
-
         goodmumu = False
         for vtype in vtypes:
             if vtype in ["mmlplp", "mmelel"] and reject_etamumu and goodmumu:
                 #print("event %d rejected for etaToMuMu!"%i) 
                 continue
             if isMC:
-                ##see if reco criteria is fulfilled: just the two (or four) opposite-charged leptons were reconstructed
+                #see if reco criteria is fulfilled: just the two (or four) opposite-charged leptons were reconstructed
                 recod = False
                 #muC = [ord(e.Muon_charge[c]) for c in range(ord(e.nGoodMuon))]
                 #if 1 in muC and 255 in muC:
@@ -1074,12 +1173,35 @@ def process_file(fname, singleVert, useOnia):
                 #    del elC
                 if ord(e.nGoodMuon) > 1:
                     if vtype == "mumu":
-                        recod = True
+                        #for some reason bkg takes way too much memory when I check the charges....whack
+                        if isSig or isMuMu:
+                            recod = found_oppo(e, "Muon")
+                        else:
+                            recod = True #found_oppo(e, "Muon")
                     elif vtype == "mmelel" and ord(e.nGoodElectron) > 1:
-                        recod = True
+                        if isSig or isMuMu:
+                            recod = found_oppo(e, "Muon") and found_oppo(e, "Electron")
+                        else:
+                            recod = True #found_oppo(e, "Muon") and found_oppo(e, "Electron")
                     elif vtype == "mmlplp" and ord(e.nGoodLowPtElectron) > 1:
-                        recod = True
+                        if isSig or isMuMu:
+                            recod = found_oppo(e, "Muon") and found_oppo(e, "LowPtElectron")
+                        else:
+                            recod = True #found_oppo(e, "Muon") and found_oppo(e, "LowPtElectron")
                     elif vtype == "mmg" and ord(e.nGoodPhoton) > 0:
+                        if isSig or isMuMu:
+                            recod = found_oppo(e, "Muon") 
+                        else:
+                            recod = True #found_oppo(e, "Muon") 
+                if vtype == "elel" and ord(e.nGoodElectron) > 1:
+                    if isSig or isMuMu:
+                        recod = found_oppo(e, "Electron")
+                    else:
+                        recod = True
+                elif vtype == "lplp" and ord(e.nGoodLowPtElectron) > 1:
+                    if isSig or isMuMu:
+                        recod = found_oppo(e, "LowPtElectron")
+                    else:
                         recod = True
                 if recod:
                     #reco def is just enough particles now; doesn't need to be in right mass range
@@ -1088,10 +1210,19 @@ def process_file(fname, singleVert, useOnia):
                     rec_weight[vtype] += evt_weight
                 else:
                     continue
+
+                #must continue AFTER filling the reco eff, to make sure it has no regard to trigger eff!!!
+                if trg_only and not passedTrig:
+                    continue
+
                 #del muC
                 #isGood = process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g, genEtaPt, passedTrig)
-                isGood = process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g, gen_eta, passedTrig)
+                isGood = process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weightUp, evt_weightDn, g, gen_eta, passedTrig)
             else:
+                #must continue AFTER filling the reco eff, to make sure it has no regard to trigger eff!!!
+                if trg_only and not passedTrig:
+                    continue
+
                 #print("processing vertices: evt %d"%i) 
                 isGood = process_vertices(e, vtype, singleVert, useOnia, 0, 1.0, passedTrig=passedTrig)
             if vtype == "mumu":
@@ -1148,10 +1279,13 @@ def finish_processing(foutname):
         hMGenAll.Write()
         hEtaGenAll.Write()
         for vtype in vtypes:
+            hMUp[vtype].Write()
+            hMDn[vtype].Write()
             hEventWeight[vtype].Write()
-            #hEvtWtVsPt[vtype].Write()
+            hEvtWtVsPt[vtype].Write()
             hpTGenReco[vtype].Write()
             hpTGenAcc[vtype].Write()
+            hpTGenAccdR[vtype].Write()
             hEtaGenReco[vtype].Write()
             hEtaGenAcc[vtype].Write()
             hvxy_gm[vtype].Write()
@@ -1178,6 +1312,7 @@ def finish_processing(foutname):
         print("**Overall weighted acceptances (trig + reco)**") 
         for vtype in vtypes:
             print("Acc (%s): %f%%"%(vtype, acc_weight[vtype]/all_weight*100)) 
+            print("AccdR (%s): %f%%"%(vtype, accdR_weight[vtype]/all_weight*100)) 
 
 if syncTest and singleFile:
     foutname = "bparking_syncTest_test%d.root"%(testnum)
@@ -1240,7 +1375,7 @@ os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022
 if syncTest:
     syncFile.close()
     os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%syncFname )
-if not isMC and not singleFile:
-    trigF.close()
-    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%trigFname )
+#if not isMC and not singleFile:
+#    trigF.close()
+#    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%trigFname )
     
