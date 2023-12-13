@@ -11,12 +11,12 @@ reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
 basic_cuts = True #False
 #require electron_ID to be greater than 0?
-require_elID = False
+require_elID = True
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3822
+testnum = 3819
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -100,7 +100,7 @@ singleVert = False #not syncTest
 ##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.70554 for chi2 prob>.1 for 2-lep vertices; 1.84727 for 4-lepton) 
 #rChi2Cut = -1 #10.0 #2.6 # -- used only on test36 and before!!
 #-1 for no cut
-vProbCut = 0.1
+vProbCut = 0.5
 #use low pt electrons too?
 useLowPt = False #not syncTest
 
@@ -656,10 +656,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                     continue
                 nMissP = ord(e.Electron_nMissingHits[elP])
                 nMissN = ord(e.Electron_nMissingHits[elN])
-                if nMissP > 3 or nMissN > 3:
+                #if nMissP > 3 or nMissN > 3:
                 #if nMissP > 2 or nMissN > 2:
                 #if nMissP > 1 or nMissN > 1:
-                #if nMissP > 0 or nMissN > 0:
+                if nMissP > 0 or nMissN > 0:
                     continue
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
