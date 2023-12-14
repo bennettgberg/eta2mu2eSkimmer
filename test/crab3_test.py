@@ -32,7 +32,7 @@ else:
     elif isMuMu:
         config.General.requestName = 'test38MC_EtaToMuMu_1'
     else:
-        config.General.requestName = 'test38MC_EtaToMuMuGammaExp6'
+        config.General.requestName = 'test38MC_EtaToMuMuGammaExp7'
 if central:
     config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'
@@ -137,9 +137,12 @@ else:
         ##Exp5
         #for i in range(1000):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp5/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
-        #Exp6
-        for i in range(800):
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp6/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp6
+        #for i in range(800):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp6/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        #Exp7
+        for i in range(3500):
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp7/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
         config.Data.userInputFiles = inputFiles # [ 
 #            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
 #            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
