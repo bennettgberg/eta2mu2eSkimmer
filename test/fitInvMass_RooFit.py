@@ -110,10 +110,13 @@ myfitter.set_resBkg_params( mg=library.Param(.545, .544, .549), sg=library.Param
 #CrystalBall function for signal model
 #myfitter.set_sig_params( mcb=library.Param(.549, .5, .6), acb=library.Param(-4.5, -6, -0.5), ncb=library.Param(21, 15, 25), scb=library.Param(.0195, .01, .02) )
 #Voigtian function
-myfitter.set_sig_params( mv=library.Param(.548, .543, .553), wv=library.Param(.005, .0001, .05), sv=library.Param(.005, .0001, .05) )
+#myfitter.set_sig_params( mv=library.Param(.548, .543, .553), wv=library.Param(.005, .0001, .05), sv=library.Param(.005, .0001, .05) )
 ##set constant those params found from the fit to signal MC
 #myfitter.set_sig_params( mv=library.ConstParam(.5475), wv=library.ConstParam(.0141) ) #, sv=library.ConstParam(.00306)))
+#including weight uncertainties in the error bars
 #myfitter.set_sig_params( mv=library.Param(.5475, .5474, .5476), wv=library.Param(.0141, .0140, .0142), sv=library.Param(.00306, .00305, .00307))
+#not including weight unctys in the error bars
+myfitter.set_sig_params( mv=library.Param(.5482, .5481, .5483), wv=library.Param(.0172, .01, .023), sv=library.Param(.0005, .0001, .005))
 #DoubleGauss function
 #myfitter.set_sig_params( mg=library.Param(0.547612, 0.5475, 0.5477), sg1=library.Param(0.0234698, 0.0234, 0.0235), sg2=library.Param(0.00645498, 0.00645, 0.00646), sig1frac=library.Param(0.3826, 0.382, 0.383) )
 #myfitter.set_sig_params( mg=library.Param(0.547612, 0.5475, 0.5477), sg1=library.Param(0.0234698, 0.0234, 0.0235), sg2=library.Param(0.00645498, 0.0001, 0.05), sig1frac=library.Param(0.3826, 0.382, 0.383) )

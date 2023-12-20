@@ -3,7 +3,7 @@ import ROOT, sys
 weighted = True #False
 
 #include uncertainties on the event weights too (instead of just statistical)?
-incWtUnct = True
+incWtUnct = False
 
 #distname = "hMlplp"
 if weighted:
@@ -17,7 +17,7 @@ else:
 #sigfile = "bparking_sigMCtest30.root"
 #sigfile = "bparking_sigMCtest31.root"
 #sigfile = "bparking_sigMCtest374.root"
-sigfile = "bparking_sigMCtest3819.root"
+sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3819.root"
 f = ROOT.TFile.Open(sigfile)
 h = f.Get(distname)
 rebin = 5

@@ -100,7 +100,7 @@ singleVert = False #not syncTest
 ##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.70554 for chi2 prob>.1 for 2-lep vertices; 1.84727 for 4-lepton) 
 #rChi2Cut = -1 #10.0 #2.6 # -- used only on test36 and before!!
 #-1 for no cut
-vProbCut = 0.5
+vProbCut = 0.1
 #use low pt electrons too?
 useLowPt = False #not syncTest
 
@@ -656,10 +656,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                     continue
                 nMissP = ord(e.Electron_nMissingHits[elP])
                 nMissN = ord(e.Electron_nMissingHits[elN])
-                #if nMissP > 3 or nMissN > 3:
+                if nMissP > 3 or nMissN > 3:
                 #if nMissP > 2 or nMissN > 2:
                 #if nMissP > 1 or nMissN > 1:
-                if nMissP > 0 or nMissN > 0:
+                #if nMissP > 0 or nMissN > 0:
                     continue
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
@@ -1145,6 +1145,7 @@ def process_file(fname, singleVert, useOnia):
                 #print("event %d rejected for etaToMuMu!"%i) 
                 continue
             if isMC:
+                #TODO: figure out how to get the charges accounted for in bkg
                 #see if reco criteria is fulfilled: just the two (or four) opposite-charged leptons were reconstructed
                 recod = False
                 #muC = [ord(e.Muon_charge[c]) for c in range(ord(e.nGoodMuon))]
