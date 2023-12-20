@@ -9,14 +9,14 @@ reject_photon = False
 #set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
 reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
-basic_cuts = True #False
+basic_cuts = False
 #require electron_ID to be greater than 0?
-require_elID = False
+require_elID = True 
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3822
+testnum = 3823
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -100,7 +100,7 @@ singleVert = False #not syncTest
 ##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.70554 for chi2 prob>.1 for 2-lep vertices; 1.84727 for 4-lepton) 
 #rChi2Cut = -1 #10.0 #2.6 # -- used only on test36 and before!!
 #-1 for no cut
-vProbCut = 0.1
+vProbCut = 0.5
 #use low pt electrons too?
 useLowPt = False #not syncTest
 
@@ -136,7 +136,7 @@ def readEvents(eventsFile):
 #list of vertex types 
 #2pat::Electron; 2pat::Muon-2pat::Electron; 2pat::Muon-Photon; 2pat::Muon
 #vtypes = ["elel", "mmelel", "mmg", "mumu"]
-vtypes = ["mmelel", "mumu"] #, "elel"]
+vtypes = ["mmelel"] #, "mumu"] #, "elel"]
 if useLowPt:
     #2-low-pT pat::Electron; mu-mu-2-low-pT pat::Electron
     vtypes.append("lplp")
@@ -656,10 +656,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                     continue
                 nMissP = ord(e.Electron_nMissingHits[elP])
                 nMissN = ord(e.Electron_nMissingHits[elN])
-                if nMissP > 3 or nMissN > 3:
+                #if nMissP > 3 or nMissN > 3:
                 #if nMissP > 2 or nMissN > 2:
                 #if nMissP > 1 or nMissN > 1:
-                #if nMissP > 0 or nMissN > 0:
+                if nMissP > 0 or nMissN > 0:
                     continue
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
@@ -1171,38 +1171,40 @@ def process_file(fname, singleVert, useOnia):
                 #    if 1 in elC and 255 in elC:
                 #        recod = True
                 #    del elC
+                #require opposite charge pairs even for background sample (where memory consumption can get extreme)?
+                req_bkgOppo = True
                 if ord(e.nGoodMuon) > 1:
                     if vtype == "mumu":
                         #for some reason bkg takes way too much memory when I check the charges....whack
                         if isSig or isMuMu:
                             recod = found_oppo(e, "Muon")
                         else:
-                            recod = True #found_oppo(e, "Muon")
+                            recod = True if not req_bkgOppo else found_oppo(e, "Muon")
                     elif vtype == "mmelel" and ord(e.nGoodElectron) > 1:
                         if isSig or isMuMu:
                             recod = found_oppo(e, "Muon") and found_oppo(e, "Electron")
                         else:
-                            recod = True #found_oppo(e, "Muon") and found_oppo(e, "Electron")
+                            recod = True if not req_bkgOppo else found_oppo(e, "Muon")
                     elif vtype == "mmlplp" and ord(e.nGoodLowPtElectron) > 1:
                         if isSig or isMuMu:
                             recod = found_oppo(e, "Muon") and found_oppo(e, "LowPtElectron")
                         else:
-                            recod = True #found_oppo(e, "Muon") and found_oppo(e, "LowPtElectron")
+                            recod = True if not req_bkgOppo else found_oppo(e, "Muon")
                     elif vtype == "mmg" and ord(e.nGoodPhoton) > 0:
                         if isSig or isMuMu:
                             recod = found_oppo(e, "Muon") 
                         else:
-                            recod = True #found_oppo(e, "Muon") 
+                            recod = True if not req_bkgOppo else found_oppo(e, "Muon")
                 if vtype == "elel" and ord(e.nGoodElectron) > 1:
                     if isSig or isMuMu:
                         recod = found_oppo(e, "Electron")
                     else:
-                        recod = True
+                        recod = True if not req_bkgOppo else found_oppo(e, "Muon")
                 elif vtype == "lplp" and ord(e.nGoodLowPtElectron) > 1:
                     if isSig or isMuMu:
                         recod = found_oppo(e, "LowPtElectron")
                     else:
-                        recod = True
+                        recod = True if not req_bkgOppo else found_oppo(e, "Muon")
                 if recod:
                     #reco def is just enough particles now; doesn't need to be in right mass range
                     hpTGenReco[vtype].Fill(gen_eta.Pt())
@@ -1352,7 +1354,7 @@ for lnum,line in enumerate(fl):
     #if lnum > 3: break
     #fname = line.strip('/eos/uscms')
     #get rid of the /eos/uscms
-    path = line.strip()#[10:]
+    path = line.strip()[10:]
     #fullpath = "root://cmsxrootd.fnal.gov/" + path
     if singleFile:
         fullpath = path
