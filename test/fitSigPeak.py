@@ -50,8 +50,8 @@ h.Draw()
 c = ROOT.TCanvas("cnew","cnew")
 c.cd()
 
-fitmin = .52
-fitmax = .58
+fitmin = .50 #.52
+fitmax = .60 #.58
 #rrv = ROOT.RooRealVar("m_{2#mu2e}", "", .48, .7) #xmin, xmax) 
 #rrv = ROOT.RooRealVar("m_{2#mu2e}", "", .48, .62) #xmin, xmax) 
 rrv = ROOT.RooRealVar("m_{2#mu2e}", "", fitmin, fitmax) #xmin, xmax) 
@@ -67,10 +67,10 @@ import utils.fit_function_library as library
 #nparam = 5
 #sigModel.set_params( mcb=library.Param(.548, .543, .553), acb=library.Param(-1.5, -100, -0.01), ncb=library.Param(30, .1, 1000), scb=library.Param(.0195, .005, .05) )
 #sigModel.set_params( mcb=library.Param(.548, .543, .553), acb=library.Param(-4.5, -6, -0.1), ncb=library.Param(40, .1, 400), scb=library.Param(.0195, .01, .05) )
-#Voigtian?
-sigModel = library.get_fit_function('Voigtian', rrv)
-nparam = 4
-sigModel.set_params( mv=library.Param(.548, .543, .553), wv=library.Param(.005, .0005, .05), sv=library.Param(.005, .0005, .05) )
+##Voigtian?
+#sigModel = library.get_fit_function('Voigtian', rrv)
+#nparam = 4
+#sigModel.set_params( mv=library.Param(.548, .543, .553), wv=library.Param(.005, .0005, .05), sv=library.Param(.005, .0005, .05) )
 ##DoubleGaussian??
 #sigModel = library.get_fit_function('DoubleGauss', rrv)
 #nparam = 5
@@ -83,10 +83,10 @@ sigModel.set_params( mv=library.Param(.548, .543, .553), wv=library.Param(.005, 
 #sigModel = library.get_fit_function('CB_Gauss', rrv)
 #nparam = 7
 #sigModel.set_params( mcb=library.Param(.548, .543, .553), acb=library.Param(-4.5, -6, -0.1), ncb=library.Param(30, 15, 40), scb=library.Param(.0195, .005, .05), sg=library.Param(0.01, 0.001, 0.1), CB_frac=library.Param(0.8, 0.0, 1.0) )
-##DoubleCB?
-#sigModel = library.get_fit_function('DoubleCB', rrv)
-#nparam = 7
-#sigModel.set_params( mcb=library.Param(.548, .543, .553), acb1=library.Param(-.508, -6, -0.1), acb2=library.Param(-.470, -6, -0.1), ncb=library.Param(30, .1, 40), scb1=library.Param(.01, .005, .05), scb2=library.Param(.02, .005, .05) )
+#DoubleCB?
+sigModel = library.get_fit_function('DoubleCB', rrv)
+nparam = 7
+sigModel.set_params( mcb=library.Param(.548, .543, .553), acb1=library.Param(-.508, -6, -0.1), acb2=library.Param(-.470, -6, -0.1), ncb=library.Param(30, .1, 40), scb1=library.Param(.01, .005, .05), scb2=library.Param(.02, .005, .05) )
 ##DoubleCB + Gauss
 #sigModel = library.get_fit_function('DoubleCB_Gauss', rrv)
 #nparam = 8

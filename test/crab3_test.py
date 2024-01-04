@@ -3,7 +3,7 @@ config = config()
 
 isMC = True
 #signal or MC background?
-isSig = False
+isSig = True
 
 #EtaToMuMuGamma sample
 isMuMu = False
@@ -28,11 +28,11 @@ if not isMC:
     #config.General.requestName = 'test1_disptau'
 else:
     if isSig:
-        config.General.requestName = 'test38MC_EtaTo2Mu2E_3'
+        config.General.requestName = 'test38MC_EtaTo2Mu2E_4'
     elif isMuMu:
         config.General.requestName = 'test38MC_EtaToMuMu_1'
     else:
-        config.General.requestName = 'test38MC_EtaToMuMuGammaExp10'
+        config.General.requestName = 'test38MC_EtaToMuMuGammaExp22'
 if central:
     config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'
@@ -67,8 +67,10 @@ else:
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i) 
         #for i in range(300):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_2/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i)
+        #for i in range(325):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_3/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i)
         for i in range(325):
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_3/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i)
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_4/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i)
         config.Data.userInputFiles = inputFiles #[
         #    #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(65)
         #    'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_2/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(300)
@@ -101,11 +103,11 @@ else:
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_4/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
         #nums5 = [i for i in range(196)]
         #for i in nums5:
-        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_5/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_5/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
         #for i in range(300):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_6/EtaToMuMuGamma_2022Test_MINIAODTEST_%d.root'%i)
         #for i in range(1000):
-        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_7/EtaToMuMuGamma_2022Test_MINIAODTEST_%d.root'%i)
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_7/EtaToMuMuGamma_2022Test_MINIAODTEST_%d.root'%i)
         #for i in range(1000):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i)
             
@@ -128,6 +130,9 @@ else:
         ##Dan_5 (Exp2)
         #for i in range(1000):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Dan_5/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Dan_6 (Exp3)
+        #for i in range(1000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Dan_6/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
         ##Exp3
         #for i in range(97):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp3/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
@@ -143,18 +148,72 @@ else:
         ##Exp7
         #for i in range(3500):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp7/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
-        ##Exp7
+        ##Uniform 25-30 GeV
         #for i in range(1000):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Uni25To30/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
         ##Exp8
         #for i in range(3200):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp8/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
-        ##Exp8
+        ##Exp9
         #for i in range(8000):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp9/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
-        #Exp9
-        for i in range(4000):
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp10/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp10
+        #for i in range(4000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp10/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Uniform 15-20 GeV
+        #for i in range(1000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Uni15To20/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp11
+        #for i in range(3381):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp11/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp12
+        #for i in range(1000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp12/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp13
+        #for i in range(4000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp13/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp14
+        #for i in range(2000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp14/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp15
+        #for i in range(4000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp15/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##testExp (originally on lxplus)
+        #for i in range(400):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_testExp/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp16
+        #for i in range(4000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp16/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp17
+        #for i in range(5000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp17/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp18_0
+        #for i in range(8000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp18/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp18_1
+        #for i in range(8000, 16000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp18/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp19_0
+        #for i in range(8000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp19/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp19_1
+        #for i in range(8000, 16000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp19/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp20_0
+        #for i in range(8000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp20/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp20_1
+        #for i in range(8000, 16000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp20/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp21_0
+        #for i in range(8000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp21/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        ##Exp21_1
+        #for i in range(8000, 16000):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp21/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
+        #Exp22
+        for i in range(3082):
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp22/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i) 
         config.Data.userInputFiles = inputFiles # [ 
 #            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 
 #            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_2/EtaToMuMuGamma_2022Test_MINIAOD_%d.root'%i for i in range(700) 

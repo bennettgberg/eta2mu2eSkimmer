@@ -9,14 +9,14 @@ reject_photon = False
 #set this true to reject any event that has a valid eta->mumu (.53 to .57 GeV invar. mass)
 reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
-basic_cuts = False
+basic_cuts = True
 #require electron_ID to be greater than 0?
-require_elID = True
+require_elID = False
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3823
+testnum = 3822
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
