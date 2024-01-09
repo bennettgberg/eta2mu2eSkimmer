@@ -11,12 +11,12 @@ reject_etamumu = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
 basic_cuts = True
 #require electron_ID to be greater than 0?
-require_elID = False
+require_elID = True
 #require muon ID to be greater than 0?
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3822
+testnum = 3829
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -665,9 +665,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
                 elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
                 #require elID on BOTH electrons
-                if elIDP == 0 or elIDN == 0:
-                ##require elID on only ONE electron
-                #if elIDP == 0 and elIDN == 0:
+                #if elIDP == 0 or elIDN == 0:
+                #require elID on only ONE electron
+                if elIDP == 0 and elIDN == 0:
                     continue
             pt = eval("e.%sElectron_pt[elN]"%(lptstr)) 
             eta = eval("e.%sElectron_eta[elN]"%(lptstr)) 
@@ -956,7 +956,8 @@ def found_oppo(e, lepname):
             found_neg = True
     return (found_pos and found_neg)
 
-def process_file(fname, singleVert, useOnia):
+#now open each file individually again, and process the events
+def process_file(fname, singleVert, useOnia, hWeights):
     global all_weight, trg_weight
     print("Opening file %s"%fname) 
     f = ROOT.TFile.Open(fname)
@@ -964,22 +965,6 @@ def process_file(fname, singleVert, useOnia):
     nTot = t.GetEntries()
     if isMC:
         gt = f.Get("ntuples/genT") 
-        #need gen pT histogram to get the event weights correct for MC
-        hW = f.Get("ntuples/allGenPtEta")
-        print("hWeight entries: %d"%(hW.GetEntries())) 
-        #hW.Rebin(100)
-        #now need to merge the bins exactly like the xsec histogram!!
-        newbins = [i*1.0 for i in range(6, 31)]
-        for i in range(32, 41, 2):
-            newbins.append(1.0*i)
-        for i in range(45, 56, 5):
-            newbins.append(1.0*i)
-        newbins.append(70.0)
-        newbins.append(100.0)
-        newnptbins = len(newbins)-1
-        hWeights = ROOT.TH1F("hWeights", "hWeights", newnptbins, array.array('d', newbins)) 
-        for pb in range(hW.GetNbinsX()+1):
-            hWeights.Fill( hW.GetBinCenter(pb), hW.GetBinContent(pb) ) 
         #but needs to be one single file for this to work correctly!!!???
         nEntries = t.GetEntries()
         lumi = 38.48 #fb^-1 (this is the lumi for all CMS in 2022)
@@ -1126,10 +1111,10 @@ def process_file(fname, singleVert, useOnia):
             evt_weight = xsec * bratio * lumi / ptWeight #nEntries
             evt_weightUp = xsecUp/xsec * evt_weight
             evt_weightDn = xsecDn/xsec * evt_weight
-            if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and evt_weight > 50 and genEtaPt > 20:
+            if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and evt_weight > 10 and genEtaPt > 20:
                 print("***high event weight: %f***"%(evt_weight))
                 print("event: %d, genEtaPt: %f, xsec: %f, ptWeight: %f"%(i, genEtaPt, xsec, ptWeight)) 
-            if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and genEtaPt < 12 and evt_weight < 5:
+            if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and genEtaPt < 12 and evt_weight < 1:
                 print("******low event weight: %f***"%(evt_weight))
                 print("event: %d, genEtaPt: %f, xsec: %f, ptWeight: %f"%(i, genEtaPt, xsec, ptWeight)) 
                 print("dsigma/dpT: %f, binwidth: %f"%(h_xsec.GetBinContent( xbin ), h_xsec.GetBinWidth( xbin ))) 
@@ -1145,7 +1130,6 @@ def process_file(fname, singleVert, useOnia):
                 #print("event %d rejected for etaToMuMu!"%i) 
                 continue
             if isMC:
-                #TODO: figure out how to get the charges accounted for in bkg
                 #see if reco criteria is fulfilled: just the two (or four) opposite-charged leptons were reconstructed
                 recod = False
                 #muC = [ord(e.Muon_charge[c]) for c in range(ord(e.nGoodMuon))]
@@ -1349,13 +1333,28 @@ else:
     if not os.path.exists(flistname):
         flistname = "filelists/" + flistname
 
+#initialize hWeights histogram
+if isMC:
+    newbins = [i*1.0 for i in range(6, 31)]
+    for i in range(32, 41, 2):
+        newbins.append(1.0*i)
+    for i in range(45, 56, 5):
+        newbins.append(1.0*i)
+    newbins.append(70.0)
+    newbins.append(100.0)
+    newnptbins = len(newbins)-1
+    hWeights = ROOT.TH1F("hWeights", "hWeights", newnptbins, array.array('d', newbins)) 
+else:
+    hWeights = None
+
+all_fnames = []
 fl = open(flistname, "r")
 for lnum,line in enumerate(fl):
     ##debugging
     #if lnum > 3: break
     #fname = line.strip('/eos/uscms')
     #get rid of the /eos/uscms
-    path = line.strip()[10:]
+    path = line.strip() #[10:]
     #fullpath = "root://cmsxrootd.fnal.gov/" + path
     if singleFile:
         fullpath = path
@@ -1372,8 +1371,23 @@ for lnum,line in enumerate(fl):
     else:
         fname = fullpath
     #fname = fullpath
-    process_file(fname, singleVert, useOnia)
-    finish_processing(foutname)
+    if isMC:
+        f = ROOT.TFile.Open(fname)
+        hW = f.Get("ntuples/allGenPtEta")
+        print("hWeight entries: %d"%(hW.GetEntries())) 
+        #hW.Rebin(100)
+        #now need to merge the bins exactly like the xsec histogram!!
+        for pb in range(hW.GetNbinsX()+1):
+            hWeights.Fill( hW.GetBinCenter(pb), hW.GetBinContent(pb) ) 
+        f.Close()
+
+    all_fnames.append(fname)
+
+nfiles = len(all_fnames)
+for fnum,fname in enumerate(all_fnames):
+    print("Starting file %d / %d"%(fnum, nfiles)) 
+    process_file(fname, singleVert, useOnia, hWeights)
+finish_processing(foutname)
 os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
 if syncTest:
     syncFile.close()

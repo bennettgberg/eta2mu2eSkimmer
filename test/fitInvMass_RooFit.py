@@ -10,6 +10,9 @@ import utils.fitter as fitter
 #import utils.fitter_2mu2e as fitter
 from ctypes import c_double
 
+#how many electrons to require elID: 0, 1, or 2 (both)?
+req_elID = 2 #1
+
 #infile = "hipTpair/data_DoubleMuon_Run2_skimmed.root"
 #infile = "multiquad/data_DoubleMuon_Run2_skimmed.root"
 #infile = "multimmg/data_DoubleMuon_Run2_skimmed.root"
@@ -30,7 +33,10 @@ from ctypes import c_double
 #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest36_ALL.root"
 #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest369_ALL.root" #elID req'd
 #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest374_ALL.root" #elID req'd
-infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3819_ALL.root" #elID req'd
+if req_elID == 2:
+    infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3819_ALL.root" #elID req'd
+elif req_elID == 1:
+    infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3829_ALL.root" #elID req'd on ONE ele
 #distname = "Mmmee"
 #distname = "Mmmg"
 #distname = "hMe"
@@ -93,7 +99,14 @@ rrv.setRange("full", .45, xmax)
 #myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb0', sig_model='Voigtian')
 ##Bkg model is Gaussian (resonant bkg--already fitted!) + constant !
 #myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='ConstGauss', sig_model='Voigtian')
-myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb0', resBkg_model='SingleGauss', sig_model='Voigtian')
+if req_elID == 2:
+    #myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb0', resBkg_model='SingleGauss', sig_model='Voigtian')
+    #myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb0', resBkg_model='BreitWigner', sig_model='Voigtian')
+    #myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb0', resBkg_model='BreitWigner', sig_model='TripleGauss')
+    myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb0', resBkg_model='BreitWigner', sig_model='BreitWigner')
+elif req_elID == 1:
+    #myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb1', resBkg_model='Voigtian', sig_model='Voigtian')
+    myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb1', resBkg_model='BreitWigner', sig_model='Voigtian')
 ##Double-Gaussian with const combinatorial bkg!!
 #myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='Cheb0', sig_model='DoubleGauss')
 #myfitter = fitter.fitter_4mu(mass=rrv, bkg_model='Cheb2', sig_model='Gauss2')
@@ -105,8 +118,19 @@ import utils.fit_function_library as library
 #myfitter.set_bkg_params( alpha=library.Param(1, 0.5, 5), x0=library.ConstParam(.2122) ) #for Threshold
 #myfitter.set_bkg_params( a1=library.Param(0.5, -1, 1), a2=library.Param(0.2, -1, 1) ) #for Cheb2
 #myfitter.set_bkg_params( a1=library.Param(0.5, -1, 1) ) #for Cheb1
-myfitter.set_bkg_params( ) #a1=library.Param(0.5, .1, 1) ) 
-myfitter.set_resBkg_params( mg=library.Param(.545, .544, .549), sg=library.Param(2.64e-2, 2.63e-2, 2.65e-2) )
+if req_elID == 2:
+    myfitter.set_bkg_params( ) #a1=library.Param(0.5, .1, 1) ) 
+elif req_elID == 1:
+    myfitter.set_bkg_params( a1=library.Param(0.5, .1, 1) ) 
+#myfitter.set_resBkg_params( mg=library.Param(.545, .544, .549), sg=library.Param(2.64e-2, 2.63e-2, 2.65e-2) )
+if req_elID == 2:
+    #myfitter.set_resBkg_params( mg=library.ConstParam(.555, .554, .556), sg=library.Param(1.82e-2, 1.80e-2, 1.84e-2) )
+    myfitter.set_resBkg_params( mb=library.ConstParam(.552), wb=library.ConstParam(1.87e-2) )
+    myfitter.set_resBkg_norm(21.3)
+elif req_elID == 1:
+    #myfitter.set_resBkg_params( mv=library.Param(.557, .556, .558), sv=library.Param(1.01e-3, 1.00e-3, 1.02e-3), wv=library.Param(2.97e-2, 2.95e-2, 2.99e-2) )
+    myfitter.set_resBkg_params( mv=library.ConstParam(.557), sv=library.ConstParam(1.01e-3), wv=library.ConstParam(2.99e-2) )
+    myfitter.set_resBkg_norm(199.4)
 #CrystalBall function for signal model
 #myfitter.set_sig_params( mcb=library.Param(.549, .5, .6), acb=library.Param(-4.5, -6, -0.5), ncb=library.Param(21, 15, 25), scb=library.Param(.0195, .01, .02) )
 #Voigtian function
@@ -116,7 +140,18 @@ myfitter.set_resBkg_params( mg=library.Param(.545, .544, .549), sg=library.Param
 #including weight uncertainties in the error bars
 #myfitter.set_sig_params( mv=library.Param(.5475, .5474, .5476), wv=library.Param(.0141, .0140, .0142), sv=library.Param(.00306, .00305, .00307))
 #not including weight unctys in the error bars
-myfitter.set_sig_params( mv=library.Param(.5482, .5481, .5483), wv=library.Param(.0172, .01, .023), sv=library.Param(.0005, .0001, .005))
+#myfitter.set_sig_params( mv=library.Param(.5482, .5481, .5483), wv=library.Param(.0172, .01, .023), sv=library.Param(.0005, .0001, .005))
+if req_elID == 2:
+    #myfitter.set_sig_params( mv=library.Param(.5472, .5470, .548), wv=library.Param(.0172, .01, .023), sv=library.Param(.00151, .001, .01))
+    #Voigtian
+    #myfitter.set_sig_params( mv=library.ConstParam(.5472), wv=library.ConstParam(.0172), sv=library.ConstParam(.00151) )
+    #BW
+    myfitter.set_sig_params( mb=library.Param(.5473, .5465, .5481), wb=library.Param(.01609, .01415, .01803) )
+    ##TripleGauss function
+    #myfitter.set_sig_params( mg=library.ConstParam(0.5475), sg1=library.ConstParam(0.3875), sg2=library.ConstParam(0.01227), sg3=library.ConstParam(6.1425e-3), sig1frac=library.ConstParam(0.2638), sig2frac=library.ConstParam(0.1917) )
+elif req_elID == 1:
+    #myfitter.set_sig_params( mv=library.Param(.5479, .5478, .5480), wv=library.Param(.0151, .01, .025), sv=library.Param(.00050, .00049, .00051))
+    myfitter.set_sig_params( mv=library.ConstParam(.5479), wv=library.ConstParam(.0151), sv=library.Param(.00050, .00005, .05) )
 #DoubleGauss function
 #myfitter.set_sig_params( mg=library.Param(0.547612, 0.5475, 0.5477), sg1=library.Param(0.0234698, 0.0234, 0.0235), sg2=library.Param(0.00645498, 0.00645, 0.00646), sig1frac=library.Param(0.3826, 0.382, 0.383) )
 #myfitter.set_sig_params( mg=library.Param(0.547612, 0.5475, 0.5477), sg1=library.Param(0.0234698, 0.0234, 0.0235), sg2=library.Param(0.00645498, 0.0001, 0.05), sig1frac=library.Param(0.3826, 0.382, 0.383) )
@@ -142,7 +177,10 @@ frame.GetYaxis().SetTitle("Events / (%.3f GeV)"%(binsize))
 data.plotOn(frame, ROOT.RooFit.Name("Data"), ROOT.RooFit.DrawOption("PEZ"))
 
 myfitter.model.plotOn(frame, ROOT.RooFit.Name("Bkg"), ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineWidth(5), ROOT.RooFit.LineStyle(2), ROOT.RooFit.LineColor(ROOT.kGreen-1))
-myfitter.model.plotOn(frame, ROOT.RooFit.Name("ResBkg"), ROOT.RooFit.Components('gauss'), ROOT.RooFit.LineWidth(5), ROOT.RooFit.LineStyle(2), ROOT.RooFit.LineColor(ROOT.kCyan))
+if req_elID == 2:
+    myfitter.model.plotOn(frame, ROOT.RooFit.Name("ResBkg"), ROOT.RooFit.Components('resbkg'), ROOT.RooFit.LineWidth(5), ROOT.RooFit.LineStyle(2), ROOT.RooFit.LineColor(ROOT.kCyan))
+elif req_elID == 1:
+    myfitter.model.plotOn(frame, ROOT.RooFit.Name("ResBkg"), ROOT.RooFit.Components('resbkg'), ROOT.RooFit.LineWidth(5), ROOT.RooFit.LineStyle(2), ROOT.RooFit.LineColor(ROOT.kCyan))
 
 #myfitter.model.plotOn(frame, ROOT.RooFit.Name("Sig"), ROOT.RooFit.Components('sig'), ROOT.RooFit.LineWidth(5), ROOT.RooFit.LineStyle(4), ROOT.RooFit.LineColor(ROOT.kRed+1))
 #myfitter.model.plotOn(frame, ROOT.RooFit.Name("Sig"), ROOT.RooFit.Components('CB'), ROOT.RooFit.LineWidth(5), ROOT.RooFit.LineStyle(4), ROOT.RooFit.LineColor(ROOT.kRed+1))
@@ -306,13 +344,20 @@ if compare_MC:
     #fMC = ROOT.TFile.Open("bparking_sigMCtest36.root")
     #fMC = ROOT.TFile.Open("bparking_sigMCtest369.root")
     #fMC = ROOT.TFile.Open("bparking_sigMCtest374.root")
-    fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3819.root")
+    #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3819.root")
+    if req_elID == 2:
+        #nMiss==0, vProb>.5
+        #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3826.root")
+        #nMiss<=3, vProb>.1
+        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3827.root")
+    elif req_elID == 1:
+        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3829.root")
     #tMC = fMC.Get("hMe")
     tMC = fMC.Get(distname)
 
     #MC_scales = [2.0, 1.0, 0.5]
     #MC_scales = [1.0]
-    MC_scales = [0.5]
+    MC_scales = [0.3]
     hMC = [None for mcs in MC_scales]
     #draw the blinded MC scaled by a few different values
     for i,scale in enumerate(MC_scales):
@@ -365,7 +410,13 @@ if compare_MC:
     #fBkg = ROOT.TFile.Open("bparking_bkgMCtest374.root")
     #fBkg = ROOT.TFile.Open("bparking_bkgMCtest382.root")
     #fBkg = ROOT.TFile.Open("bparking_bkgMCtest3819.root")
-    fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3819.root")
+    #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3819.root")
+    if req_elID == 2:
+        #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3826.root")
+        #vProb>.1, nMiss<=3
+        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3827.root")
+    elif req_elID == 1:
+        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3829.root")
     #tBkg = fBkg.Get("Events") 
     #hBkg = ROOT.TH1F("hBkg", "#mu#mu#gamma", nbins, xmin, xmax)
     #hBkg = fBkg.Get("hMe")

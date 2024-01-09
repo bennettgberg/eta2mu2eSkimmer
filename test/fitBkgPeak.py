@@ -3,14 +3,21 @@ import ROOT, sys
 #include uncertainties on the event weights too (instead of just statistical)?
 incWtUnct = False # True
 
+#how many electrons to require elID: 0, 1, or 2 (both)?
+req_elID = 2 #1
+
 #distname = "hMlplp"
 distname = "hMmmelel"
 if incWtUnct:
     distnameUp = "hMUpmmelel"
     distnameDn = "hMDnmmelel"
 
-#bkgfile = "bparking_bkgMCtest31.root"
-bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3819.root"
+if req_elID == 2:
+    #bkgfile = "bparking_bkgMCtest31.root"
+    #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3826.root"
+    bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3827.root"
+elif req_elID == 1:
+    bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3829.root"
 f = ROOT.TFile.Open(bkgfile)
 h = f.Get(distname)
 
@@ -55,15 +62,21 @@ rrv.setRange("full", xmin, xmax)
 sys.path.append("tm_analysis/analysis/python/")
 import utils.fit_function_library as library
 
-bkgModel = library.get_fit_function('SingleGauss', rrv)
-nparam = 3
-bkgModel.set_params( mg=library.Param(.548, .545, .555), sg=library.Param(.01, .0001, .1) )
+##for very small res bkg, simple SingleGauss works good enough!
+#bkgModel = library.get_fit_function('SingleGauss', rrv)
+#nparam = 3
+#bkgModel.set_params( mg=library.Param(.548, .545, .565), sg=library.Param(.01, .0001, .1) )
 #CrystalBall function?
 #bkgModel = library.get_fit_function('CB', rrv)
 #bkgModel.set_params( mcb=library.Param(.555, .545, .575), acb=library.Param(-4.5, -6, -0.1), ncb=library.Param(30, 15, 40), scb=library.Param(.0195, .01, .05) )
-#Voigtian?
+#Breit-Wigner?
+bkgModel = library.get_fit_function('BreitWigner', rrv)
+nparam = 3
+bkgModel.set_params( mb=library.Param(.555, .545, .575), wb=library.Param(.005, .001, .05) )
+##Voigtian?
 #bkgModel = library.get_fit_function('Voigtian', rrv)
-#bkgModel.set_params( mv=library.Param(.555, .545, .575), wv=library.Param(.005, .001, .05), sv=library.Param(.005, .001, .05) )
+#nparam = 4
+#bkgModel.set_params( mv=library.Param(.555, .545, .575), wv=library.Param(.005, .001, .05), sv=library.Param(.005, .000001, .05) )
 #DoubleGaussian??
 #bkgModel = library.get_fit_function('DoubleGauss', rrv)
 #bkgModel.set_params( mg=library.Param(.555, .545, .575), sg1=library.Param(.01, .001, .1), sg2=library.Param(.005, .001, .05), sig1frac=library.Param(0.8, 0.1, 0.9) )
@@ -74,6 +87,9 @@ bkgModel.set_params( mg=library.Param(.548, .545, .555), sg=library.Param(.01, .
 #bkgModel = library.get_fit_function('CB_Gauss', rrv)
 #bkgModel.set_params( mcb=library.Param(.555, .545, .575), acb=library.Param(-4.5, -6, -0.1), ncb=library.Param(30, 15, 40), scb=library.Param(.0195, .005, .05), sg=library.Param(0.01, 0.001, 0.1), CB_frac=library.Param(0.8, 0.0, 1.0) )
 
+##cheating and setting small bin weight to 0 to see if makes chi2 reasonable?-- yes it does....
+#h.SetBinContent(59, 0)
+#h.SetBinError(59, 0)
 
 bkgMC = ROOT.RooDataHist("bkgMC", "bkgMC", rrv, ROOT.RooFit.Import(h)) 
 nbkg = ROOT.RooRealVar("nbkg", "nbkg", 50, 1, 10000)

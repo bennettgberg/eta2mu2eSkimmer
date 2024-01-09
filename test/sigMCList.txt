@@ -1,0 +1,4 @@
+/store/user/bgreenbe/BParking2022/sigMC_test38_0.root  
+/store/user/bgreenbe/BParking2022/sigMC_test38_1.root  
+/store/user/bgreenbe/BParking2022/sigMC_test38_3.root  
+/store/user/bgreenbe/BParking2022/sigMC_test38_4.root
