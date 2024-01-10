@@ -10,7 +10,7 @@ import sys
 def main():
     
     #submit jobs within this script (T) or just do the setup (F)
-    submit_now = True
+    submit_now = False #True
 
     #true if running the jobs on lxplus instead of cmslpc
     lxplus = False
@@ -18,10 +18,10 @@ def main():
     #always delete current directory if it already exists?
     always_del = False
 
-    year = 2022
+    year = 2023 #2022
     
     #number of root files to run in a single job
-    nroot = 10 #5
+    nroot = 1 #0 #5
 
     #do systematics or nah (will take way longer)
     doSyst = False

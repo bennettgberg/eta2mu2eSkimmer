@@ -17,6 +17,8 @@ central = False
 setnum = 0
 #C to G
 runlet = 'C'
+#2022 or 2023
+year = 2023
 
 #v1 or v2?
 version = 1
@@ -52,7 +54,7 @@ config.JobType.pyCfgParams=["data=%d"%(0 if isMC else 1)]
 config.JobType.numCores = 1 
 
 if not isMC:
-    config.Data.inputDataset = '/ParkingDoubleMuonLowMass%d/Run2022%s-PromptReco-v%d/MINIAOD'%(setnum, runlet, version)
+    config.Data.inputDataset = '/ParkingDoubleMuonLowMass%d/Run%d%s-PromptReco-v%d/MINIAOD'%(setnum, year, runlet, version)
     #config.Data.userInputFiles = [ 'root://cmsxrootd.fnal.gov//store/user/bgreenbe/MiniTest/Run3_2022_BParking_MINItest.root' ]
 #config.Data.inputDataset = '/EphemeralZeroBias0/Run2022C-v1/RAW'
 #config.Data.inputDataset = '/DoubleElectron_Pt-1To300-gun/Run3Summer21DR-FlatPU0to70FEVT_120X_mcRun3_2021_realistic_v6-v2/GEN-SIM-DIGI-RAW'

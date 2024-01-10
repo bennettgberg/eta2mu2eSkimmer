@@ -22,16 +22,21 @@ def getArgs() :
     parser.add_argument("-j","--doSystematics",default="false",type=str,help="doSystematics (true) or nah (false)")
     return parser.parse_args()
 
-def beginBatchScriptTcsh(baseFileName) :
+def beginBatchScriptTcsh(baseFileName, yr="2022") :
     outLines = ['#!/bin/tcsh\n']
     outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.csh\n")
     outLines.append("setenv SCRAM_ARCH slc7_amd64_gcc10\n")
     cmssw_release = "CMSSW_12_4_13"
+    if yr == "2023":
+        cmssw_release = "CMSSW_13_0_9"
     outLines.append("scramv1 project CMSSW %s\n"%(cmssw_release))
     outLines.append("cd %s/src\n"%(cmssw_release))
     outLines.append("eval `scramv1 runtime -csh`\n")
     #outLines.append("git clone https://github.com/cms-tau-pog/TauIDSFs TauPOG/TauIDSFs\n")
-    outLines.append("git clone https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
+    if yr == "2023":
+        outLines.append("git clone -b branchFor2023 https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
+    else:
+        outLines.append("git clone https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}/%s/src/eta2mu2e/eta2mu2eSkimmer/plugins\n"%(cmssw_release))
     outLines.append("cp ${_CONDOR_SCRATCH_DIR}/* .\n")
     outLines.append("scram b -j 4\n")
@@ -41,15 +46,20 @@ def beginBatchScriptTcsh(baseFileName) :
 #    outLines.append("cd ${_CONDOR_SCRATCH_DIR}\n")
     return outLines
 
-def beginBatchScript(baseFileName) :
+def beginBatchScript(baseFileName, yr="2022") :
     outLines = ['#!/bin/bash\n']
     outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.sh\n")
     outLines.append("export SCRAM_ARCH=slc7_amd64_gcc10\n")
     cmssw_release = "CMSSW_12_4_13"
+    if yr == "2023":
+        cmssw_release = "CMSSW_13_0_9"
     outLines.append("eval `scramv1 project %s`\n"%cmssw_release)
     outLines.append("cd %s/src\n"%cmssw_release)
     outLines.append("eval `scramv1 runtime -sh`\n")
-    outLines.append("git clone https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
+    if yr == "2023":
+        outLines.append("git clone -b branchFor2023 https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
+    else:
+        outLines.append("git clone https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}/%s/src/eta2mu2e/eta2mu2eSkimmer/plugins\n"%(cmssw_release))
     outLines.append("scram b -j 4\n")
     outLines.append("eval `scramv1 runtime -sh`\n")
@@ -121,9 +131,9 @@ for nFile in range(0, len(dataset),mjobs) :
     scriptName = "{0:s}_{1:03d}.{2:s}sh".format(args.nickName,nFile+1, "c" if not args.language == "bash" else "")
     print("scriptName={0:s}".format(scriptName))
     if args.language == "bash":
-        outLines = beginBatchScript(scriptName)
+        outLines = beginBatchScript(scriptName, era)
     else:
-        outLines = beginBatchScriptTcsh(scriptName)
+        outLines = beginBatchScriptTcsh(scriptName, era)
 
     #outLines.append("tar -zxvf SFs.tar.gz\n")
     #outLines.append("cp MCsamples_*csv MCsamples.csv\n")
@@ -173,8 +183,8 @@ for nFile in range(0, len(dataset),mjobs) :
     #outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
     outLines.append("hadd -f -k all_{0:s}_{1:03d}.root {0:s}*root *weights\n".format(args.nickName,nFile+1))
     #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/eta_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
-    #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
-    outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+    outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+    #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
     outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d *.root\n")
 #        fileloop=dataset[nFile:nFile+maxx][j]

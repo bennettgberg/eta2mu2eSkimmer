@@ -66,6 +66,7 @@
 #include "TTree.h"
 #include "TMath.h"
 #include <TLorentzVector.h>
+#include <TH2.h>
 
 #include "NtupleContainer.hh"
 #include "utils.hh"
@@ -100,6 +101,8 @@ private:
     //for MC only
     TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *allGenPtEl,
         *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE, *trigGenPtEta; //,
+    //for data and MC (but most important for data)
+    TH2F *allMvsPt;
         //*hdRP, *hdRN;
     //max dR between gen and reco particles for a successful gen-match to be declared
     const float drCut = 0.01;
@@ -222,6 +225,7 @@ void eta2mu2eAnalyzer::beginJob()
 {
     recoT = fs->make<TTree>("recoT", "recoT");
     nt.SetRecoTree(recoT);
+    allMvsPt = new TH2F("allMvsPt", "allMvsPt", 100, 0., 100., 600, 0.2, 0.8);
     if (!isData) {
         genT = fs->make<TTree>("genT", "genT");
         nt.SetGenTree(genT);
@@ -1007,7 +1011,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             //std::cout << "Event " << (int)nt.eventNum_ << " : eta meson fully genmatched!" << endl;
         }
 
-        genT->Fill();
+        if( nt.mmelelVtxChi2_.size() > 0 ) {
+            genT->Fill();
+        }
     }
 
     //std::cout << "computing vertices 0" << std::endl;
@@ -1079,8 +1085,25 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
 
+    //only fill with the BEST mumu vertex, not all of them.
+    float bestPt = -1.0;
+    float bestM = -1.0;
+    float bestProb = -1.0;
+    for(size_t vv = 0; vv < nt.mumuVtxPt_.size(); vv++) {
+        float vtxProb = TMath::Prob(nt.mumuVtxChi2_[vv], nt.mumuVtxNdof_[vv]);
+        if(vtxProb > bestProb) {
+            bestPt = nt.mumuVtxPt_[vv];
+            bestM = nt.mumuVtxM_[vv];
+            bestProb = vtxProb;
+        }
+    }
+    if(bestM > 0.2 && bestM < 0.8) {
+        allMvsPt->Fill(bestPt, bestM);
+    }
     //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
-    recoT->Fill();
+    if( nt.mmelelVtxChi2_.size() > 0 ) {
+        recoT->Fill();
+    }
 
     return;
 }
@@ -1089,6 +1112,7 @@ void eta2mu2eAnalyzer::endRun(edm::Run const& iRun, edm::EventSetup const& iSetu
 
 void eta2mu2eAnalyzer::endJob() {
     fs->cd();
+    allMvsPt->Write();
     if(!isData) {
         allGenPt->Write();
         matchedGenPt->Write();

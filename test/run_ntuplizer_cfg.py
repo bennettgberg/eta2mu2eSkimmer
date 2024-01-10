@@ -18,14 +18,17 @@ options.register('test',
         )
 options.parseArguments()
 
-year = 2022
+year = 2023
 #data = False
 data = options.data
 
 #test file name
 #BParking data
 #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/MiniTest/Run3_2022_BParking_MINItest.root"
-testfname = "root://xrootd-cms.infn.it//store/data/Run2022C/ParkingDoubleMuonLowMass1/MINIAOD/PromptReco-v1/000/357/271/00000/012c38a8-143b-46a9-8846-3523c8d19862.root"
+#testfname = "root://xrootd-cms.infn.it//store/data/Run2022C/ParkingDoubleMuonLowMass1/MINIAOD/PromptReco-v1/000/357/271/00000/012c38a8-143b-46a9-8846-3523c8d19862.root"
+#test file for 2023 data
+#testfname = "/store/data/Run2023B/ParkingDoubleMuonLowMass0/MINIAOD/22Sep2023-v1/2550000/340fcea0-625e-4838-88ac-128cef2dd95c.root"
+testfname = "/store/data/Run2023B/ParkingDoubleMuonLowMass0/MINIAOD/PromptReco-v1/000/366/429/00000/d692b057-3b8c-4907-bcfd-2127307a86d9.root"
 if not data:
     #signal sample
     #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_0_MINIAOD_2022.root"
