@@ -1089,8 +1089,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     float bestPt = -1.0;
     float bestM = -1.0;
     float bestProb = -1.0;
-    for(size_t vv = 0; vv < nt.mumuVtxPt_.size(); vv++) {
+    for(size_t vv = 0; vv < nt.mumuVtxChi2_.size(); vv++) {
+        //std::cout << "vv = " << (int)vv << std::endl;
         float vtxProb = TMath::Prob(nt.mumuVtxChi2_[vv], nt.mumuVtxNdof_[vv]);
+        //std::cout << "vv=" << (int)vv << ", vtxProb=" << vtxProb << ", Pt=" << nt.mumuVtxPt_[vv] << ", M=" << nt.mumuVtxM_[vv] << std::endl;
         if(vtxProb > bestProb) {
             bestPt = nt.mumuVtxPt_[vv];
             bestM = nt.mumuVtxM_[vv];
@@ -1099,7 +1101,11 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     }
     if(bestM > 0.2 && bestM < 0.8) {
         allMvsPt->Fill(bestPt, bestM);
+        //std::cout << "bestM value of " << bestM << " filled into the allMvsPt hist!" << std::endl;
     }
+    //else {
+        //std::cout << "allMvsPt not filled; bestM=" << bestM << std::endl;
+    //}
     //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
     if( nt.mmelelVtxChi2_.size() > 0 ) {
         recoT->Fill();

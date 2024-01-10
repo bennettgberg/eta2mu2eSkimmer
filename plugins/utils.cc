@@ -243,6 +243,15 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
                 //std::cout << "vtx muP: " << (int)muP << "; muN: " << (int)muN << std::endl;
                 nt.mumuVtxMuonP_.push_back(muP);
                 nt.mumuVtxMuonN_.push_back(muN);
+                //find M and Pt of the vertex
+                //std::cout << "about to start calculating mumu Pt and M!" << std::endl;
+                TLorentzVector p1, p2;
+                p1.SetPtEtaPhiM(coll_1[i].pt(),coll_1[i].eta(),coll_1[i].phi(), mu_mass);
+                p2.SetPtEtaPhiM(coll_2[j].pt(),coll_2[j].eta(),coll_2[j].phi(), mu_mass);
+                TLorentzVector mumu = p1 + p2;
+                nt.mumuVtxPt_.push_back(mumu.Pt());
+                nt.mumuVtxM_.push_back(mumu.M());
+                //std::cout << "found mumu Pt and M: Pt=" << mumu.Pt() << ", M=" << mumu.M() << std::endl;
             }
             
         } // j loop
