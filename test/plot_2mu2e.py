@@ -16,7 +16,7 @@ require_elID = True
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3829
+testnum = 3834
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -188,6 +188,8 @@ hMNoEl = ROOT.TH1F("hMNoEl", "Invar. mass of muons ONLY in mmelel signal window"
 hMNoMu = ROOT.TH1F("hMNoMu", "Invar. mass of electrons ONLY in mmelel signal window", 200, 0.0, 1.0) 
 #hMNoElLSide = ROOT.TH1F("hMNoElLSide", "Invar. mass of muons ONLY to LEFT of mmelel signal window (lower sideband)", 200, 0.0, 1.0) 
 #hMNoMuLSide = ROOT.TH1F("hMNoMuLSide", "Invar. mass of electrons ONLY to LEFT of mmelel signal window (lower sideband)", 200, 0.0, 1.0) 
+hMNoElSide = ROOT.TH1F("hMNoElSide", "Invar. mass of muons ONLY OUTSIDE of mmelel signal window (lower or upper sideband)", 200, 0.0, 1.0) 
+hMNoMuSide = ROOT.TH1F("hMNoMuSide", "Invar. mass of electrons ONLY OUTSIDE of mmelel signal window (lower or upper sideband)", 200, 0.0, 1.0) 
 #hMNoElRSide = ROOT.TH1F("hMNoElRSide", "Invar. mass of muons ONLY to RIGHT of mmelel signal window (upper sideband)", 200, 0.0, 1.0) 
 #hMNoMuRSide = ROOT.TH1F("hMNoMuRSide", "Invar. mass of electrons ONLY to RIGHT of mmelel signal window (upper sideband)", 200, 0.0, 1.0) 
 #invariant mass distribution of just electrons in the mu-mu-e-e, but assuming pion mass instead of electron mass
@@ -664,10 +666,25 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
                 elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
-                #require elID on BOTH electrons
+                ##loose ID
+                #looseID_p = elIDP & 0b00110000 
+                #looseID_n = elIDN & 0b00110000 
+                WP90ID_p = elIDP & 0b00001100 
+                WP90ID_n = elIDN & 0b00001100 
+                #if WP90ID_p == 0 or WP90ID_n == 0:
+                if WP90ID_p == 0 and WP90ID_n == 0:
+                ##WP80
+                #WP80ID_p = elIDP & 0b00000011
+                #WP80ID_n = elIDN & 0b00000011
+                #print("elIDP=%d, looseID_p=%d"%(elIDP, looseID_p)) 
+                #print("elIDN=%d, looseID_n=%d"%(elIDN, looseID_n)) 
+                ##require looseID on BOTH electrons
+                #if looseID_p == 0 or looseID_n == 0:
+                #if WP80ID_p == 0 or WP80ID_n == 0:
+                ##require elID on BOTH electrons
                 #if elIDP == 0 or elIDN == 0:
-                #require elID on only ONE electron
-                if elIDP == 0 and elIDN == 0:
+                ##require elID on only ONE electron
+                #if elIDP == 0 and elIDN == 0:
                     continue
             pt = eval("e.%sElectron_pt[elN]"%(lptstr)) 
             eta = eval("e.%sElectron_eta[elN]"%(lptstr)) 
@@ -862,6 +879,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 #if vtype == "mmelel" and m > .65 and m < .75:
                 #    hMNoElRSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
                 #    hMNoMuRSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
+                if vtype == "mmelel" and ((m > .65 and m < .8) or (m > .45 and m < .52)):
+                    hMNoElSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
+                    hMNoMuSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
+                    
                 #if syncTest and vtype == "mmelel" and m < 1.0:
                 #if danEvent and m > .52 and m < .58:
                 if syncTest and vtype == "mumu" and m > .52 and m < .58:
@@ -935,6 +956,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
             #if vtype == "mmelel" and m > .58 and m < .8 :
             #    hMNoElRSide.Fill(bestm2mu, evt_weight)
             #    hMNoMuRSide.Fill(bestm2el, evt_weight)
+            if vtype == "mmelel" and ((m > .58 and m < .8) or (m > .45 and m < .52)) :
+                hMNoElSide.Fill(bestm2mu, evt_weight)
+                hMNoMuSide.Fill(bestm2el, evt_weight)
             #if vxy > 1.2:
             #    #hMhiVxy[vtype].Fill(m, evt_weight)
             #    hMhiVxy[vtype].Fill(bestm, evt_weight)
@@ -965,7 +989,6 @@ def process_file(fname, singleVert, useOnia, hWeights):
     nTot = t.GetEntries()
     if isMC:
         gt = f.Get("ntuples/genT") 
-        #but needs to be one single file for this to work correctly!!!???
         nEntries = t.GetEntries()
         lumi = 38.48 #fb^-1 (this is the lumi for all CMS in 2022)
         if isSig:
@@ -1257,6 +1280,8 @@ def finish_processing(foutname):
     #hMNoMuLSide.Write()
     #hMNoElRSide.Write()
     #hMNoMuRSide.Write()
+    hMNoElSide.Write()
+    hMNoMuSide.Write()
     #hMNoMuPiM.Write()
     if inc_vertM:
         hMV.Write()
