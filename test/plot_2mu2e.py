@@ -16,7 +16,7 @@ require_elID = True
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3835
+testnum = 3836
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -671,8 +671,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 #looseID_n = elIDN & 0b00110000 
                 WP90ID_p = elIDP & 0b00000100 
                 WP90ID_n = elIDN & 0b00000100 
-                if WP90ID_p == 0 or WP90ID_n == 0:
-                #if WP90ID_p == 0 and WP90ID_n == 0:
+                #if WP90ID_p == 0 or WP90ID_n == 0:
+                if WP90ID_p == 0 and WP90ID_n == 0:
                 ##WP80
                 #WP80ID_p = elIDP & 0b00000011
                 #WP80ID_n = elIDN & 0b00000011
