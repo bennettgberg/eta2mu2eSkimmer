@@ -16,7 +16,7 @@ require_elID = True
 require_muID = False
 
 #what test number to label the output files with
-testnum = 3834
+testnum = 3835
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -270,8 +270,8 @@ if isMC:
     hEventWeight = {}
     hEvtWtVsPt = {}
     #2d hist to compare 2 different xsection measurements
-    hxs0 = []
-    hxs1 = []
+    #hxs0 = []
+    #hxs1 = []
     #upper and lower values of hM considering evt weight uncertainties
     hMUp = {}
     hMDn = {}
@@ -669,10 +669,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 ##loose ID
                 #looseID_p = elIDP & 0b00110000 
                 #looseID_n = elIDN & 0b00110000 
-                WP90ID_p = elIDP & 0b00001100 
-                WP90ID_n = elIDN & 0b00001100 
-                #if WP90ID_p == 0 or WP90ID_n == 0:
-                if WP90ID_p == 0 and WP90ID_n == 0:
+                WP90ID_p = elIDP & 0b00000100 
+                WP90ID_n = elIDN & 0b00000100 
+                if WP90ID_p == 0 or WP90ID_n == 0:
+                #if WP90ID_p == 0 and WP90ID_n == 0:
                 ##WP80
                 #WP80ID_p = elIDP & 0b00000011
                 #WP80ID_n = elIDN & 0b00000011
@@ -1122,8 +1122,8 @@ def process_file(fname, singleVert, useOnia, hWeights):
             xsecUp = (xsec_p0 + xsec_unc0) / genEtaPt**(xsec_p1 - xsec_unc1) 
             xsecDn = (xsec_p0 - xsec_unc0) / genEtaPt**(xsec_p1 + xsec_unc1) 
             #print("xsec0: %f, xsec1: %f"%(xsec0, xsec1))
-            hxs0.append(xsec0) 
-            hxs1.append(xsec1)
+            #hxs0.append(xsec0) 
+            #hxs1.append(xsec1)
             xsec = xsec1
             #xsec = xsec0
             wbin = hWeights.FindBin(genEtaPt)
@@ -1310,8 +1310,8 @@ def finish_processing(foutname):
         if isSig:
             for ptype in ptypes:
                 hdR[ptype].Write()
-        xsComp = ROOT.TGraph(len(hxs0), array.array('d', hxs0), array.array('d', hxs1))
-        xsComp.Write()
+        #xsComp = ROOT.TGraph(len(hxs0), array.array('d', hxs0), array.array('d', hxs1))
+        #xsComp.Write()
     fout.Close()
     print("time: %d seconds"%(time.time()-start)) 
     #hM.Draw()
