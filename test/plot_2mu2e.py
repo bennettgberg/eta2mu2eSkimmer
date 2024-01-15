@@ -161,6 +161,10 @@ hMNoWt = {}
 hMFailedTrig = {}
 #pT histogram
 hpT = {}
+#pT of electrons in the vertex
+hpTEl = {}
+#pT of muons in the vertex
+hpTMu = {}
 #pseudorapidity histogram
 hEta = {}
 ##dR histogram for positive muons (MC only)
@@ -208,6 +212,8 @@ for vtype in vtypes:
     hMFailedTrig[vtype].Sumw2()
     hpT[vtype] = ROOT.TH1F("hpT"+vtype, "pT with "+vtype+" vertices", 500, 0., 100.) 
     hpT[vtype].Sumw2()
+    hpTEl[vtype] = ROOT.TH1F("hpTEl"+vtype, "pT of electrons in "+vtype+" vertices", 500, 0., 100.) 
+    hpTMu[vtype] = ROOT.TH1F("hpTMu"+vtype, "pT of muons in "+vtype+" vertices", 500, 0., 100.) 
     #pseudorapidity distribution of the reconstructed eta mesons
     hEta[vtype] = ROOT.TH1F("hEta"+vtype, "pseudorapidity with "+vtype+" vertices", 2000, -10., 10.) 
     hEta[vtype].Sumw2()
@@ -624,6 +630,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
     bestpt = -1
     acc_filled = False
     accdR_filled = False
+    elptP = -99
+    elptN = -99
     for j in range(nvert):
         if singleVert and j != bestj : continue
         #try a cut on the chi2 value? or on vxy??
@@ -848,6 +856,15 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
 
             if not fillAtEnd:
                 hpT[vtype].Fill(pt, evt_weight)
+                if vstr != "mumu":
+                    elptP = vec_elP.Pt()
+                    elptN = vec_elN.Pt()
+                    hpTEl[vtype].Fill(elptP)
+                    hpTEl[vtype].Fill(elptN)
+                muptP = vec_muP.Pt()
+                muptN = vec_muN.Pt()
+                hpTMu[vtype].Fill(muptP)
+                hpTMu[vtype].Fill(muptN)
                 hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
                 if isMC:
                     #fill event weight histograms only for ACCEPTED events (correct mass reco'd)
@@ -867,7 +884,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 hMvsPt[vtype].Fill(pt, m, evt_weight) 
                 hVxy[vtype].Fill(vxy)
                 hRchi2[vtype].Fill(vtx_vrechi2[j])
-                if vtype == "mmelel" and m > .52 and m < .58:
+                if vtype == "mmelel" and m > .51 and m < .60:
                     hMNoEl.Fill( (vec_muP+vec_muN).M(), evt_weight)
                     hMNoMu.Fill( (vec_elP+vec_elN).M(), evt_weight)
                     #hMNoMuPiM.Fill( (vec_piP+vec_piN).M(), evt_weight)
@@ -879,13 +896,13 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 #if vtype == "mmelel" and m > .65 and m < .75:
                 #    hMNoElRSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
                 #    hMNoMuRSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
-                if vtype == "mmelel" and ((m > .65 and m < .8) or (m > .45 and m < .52)):
+                if vtype == "mmelel" and ((m > .60 and m < .65) or (m > .47 and m < .51)):
                     hMNoElSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
                     hMNoMuSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
                     
                 #if syncTest and vtype == "mmelel" and m < 1.0:
                 #if danEvent and m > .52 and m < .58:
-                if syncTest and vtype == "mumu" and m > .52 and m < .58:
+                if syncTest and vtype == "mumu" and m > .51 and m < .60:
                 #if syncTest and vtype == "mumu" and e.evt in dan_events:
                     syncFile.write("%d %f\n"%(e.evt, m)) 
                     #global nPrint
@@ -897,7 +914,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                         print("mass: %f"%m) 
                         nPrint -= 1
             #good eta if in the right mass range
-            if m > .52 and m < .58:
+            if m > .51 and m < .60:
                 good = True
             if not singleVert:
                 Vxy = vxy
@@ -916,16 +933,27 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                     bestjj = jj
                     bestpt = pt
                     Vxy = vxy
+                    if vstr != "mumu":
+                        elptP = vec_elP.Pt()
+                        elptN = vec_elN.Pt()
+                    muptP = vec_muP.Pt()
+                    muptN = vec_muN.Pt()
         if fillAtEnd and bestjj > -1:
             hpT[vtype].Fill(pt, evt_weight)
+            if vstr != "mumu":
+                hpTEl[vtype].Fill(elptP)
+                hpTEl[vtype].Fill(elptN)
+            hpTMu[vtype].Fill(muptP)
+            hpTMu[vtype].Fill(muptN)
+            
             hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
             if isMC:
                 #fill event weight histograms ONLY for accepted events! (correct mass range)
-                if bestm > .52 and bestm < .58:
+                if bestm > .51 and bestm < .60:
                     hEventWeight[vtype].Fill(evt_weight) 
                     hEvtWtVsPt[vtype].Fill(gen_eta.Pt(), evt_weight)
             #if danEvent and bestm > .52 and bestm < .58:
-            if syncTest and vtype == "mumu" and bestm > .52 and bestm < .58:
+            if syncTest and vtype == "mumu" and bestm > .51 and bestm < .60:
                 syncFile.write("%d %f\n"%(e.evt, bestm)) 
                 #try:
                 #    printEvent.printEvent(e)
@@ -947,7 +975,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
             hMvsPt[vtype].Fill(bestpt, bestm, evt_weight)
             hVxy[vtype].Fill(Vxy)
             hRchi2[vtype].Fill(bestChi2)
-            if vtype == "mmelel" and m > .52 and m < .58:
+            if vtype == "mmelel" and m > .51 and m < .60:
                 hMNoEl.Fill(bestm2mu, evt_weight)
                 hMNoMu.Fill(bestm2el, evt_weight)
             #if vtype == "mmelel" and m < .52 and m > .45 :
@@ -956,7 +984,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
             #if vtype == "mmelel" and m > .58 and m < .8 :
             #    hMNoElRSide.Fill(bestm2mu, evt_weight)
             #    hMNoMuRSide.Fill(bestm2el, evt_weight)
-            if vtype == "mmelel" and ((m > .58 and m < .8) or (m > .45 and m < .52)) :
+            if vtype == "mmelel" and ((m > .60 and m < .65) or (m > .47 and m < .51)) :
                 hMNoElSide.Fill(bestm2mu, evt_weight)
                 hMNoMuSide.Fill(bestm2el, evt_weight)
             #if vxy > 1.2:
@@ -1251,6 +1279,8 @@ def finish_processing(foutname):
         hMNoWt[vtype].Write()
         hMFailedTrig[vtype].Write()
         hpT[vtype].Write()
+        hpTEl[vtype].Write()
+        hpTMu[vtype].Write()
         hEta[vtype].Write()
         #hMhiVxy[vtype].Write()
         #hMloVxy[vtype].Write()
