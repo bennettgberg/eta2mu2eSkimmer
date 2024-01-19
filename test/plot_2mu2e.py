@@ -14,9 +14,11 @@ basic_cuts = True
 require_elID = True
 #require muon ID to be greater than 0?
 require_muID = False
+#cut on electron pT? -1 for no cut
+elpTcut = 2
 
 #what test number to label the output files with
-testnum = 3836
+testnum = 3837
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -31,6 +33,8 @@ syncTest = False
 #set to true if running sync over just one single file instead of a whole subset of data
 singleFile = False
 
+#year only used for data-- for MC the lumi is sum of 2022 only for now
+year = 2022
 #argument is telling which files to analyze (should be about 100 files each)
 if len(sys.argv) < 2:
     #print("Error: please provide an argument as an integer betwixt 0 and 35") 
@@ -61,6 +65,11 @@ elif sys.argv[1] == "mumu":
     print("Running in EtaToMuMu MC mode")
     arg = -1
     isMuMu = True
+elif sys.argv[1] in ["2023data", "2023Data", "2023"]:
+    isSig = False
+    isMC = False
+    arg = -1
+    year = 2023
 elif len(sys.argv) < 4:
     print("Error: for data you must specify the run letter and set number.\nUsage: python plot_2mu2e.py [let] [setnum] [subnum]")
     print("let: C to G ; setnum: 0 to 7 ; subnum: 0 to 31") 
@@ -149,7 +158,8 @@ if isMuMu:
 mmelelExclusive = False # True
 
 #list of particle types
-ptypes = ["PCTrack", "patElectron", "lowpTElectron"]
+#ptypes = ["PCTrack", "patElectron", "lowpTElectron"]
+ptypes = ["patElectron"]
 
 #invar mass, pT dists (dictionary for ease of adding new vertex types)
 hM = {}
@@ -415,10 +425,16 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
     good = False
     bestj = -1
     if "elel" in vtype:
+        if ord(e.nGoodElectron) < 2:
+            return False
         lptstr = ""
     elif "lplp" in vtype:
+        if ord(e.nGoodLowPtElectron) < 2:
+            return False
         lptstr = "LowPt"
     elif vtype in ["mumu", "mmg"]:
+        if ord(e.nGoodMuon) < 2:
+            return False
         lptstr = ""
     else:
         sys.exit("Error: unrecognized vertex type %s"%(vtype)) 
@@ -671,6 +687,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 #if nMissP > 1 or nMissN > 1:
                 #if nMissP > 0 or nMissN > 0:
                     continue
+            if elpTcut > -1 and (e.Electron_pt[elP] < elpTcut or e.Electron_pt[elN] < elpTcut):
+                continue
             if require_elID:
                 elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
                 elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
@@ -679,11 +697,11 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 #looseID_n = elIDN & 0b00110000 
                 WP90ID_p = elIDP & 0b00000100 
                 WP90ID_n = elIDN & 0b00000100 
-                #if WP90ID_p == 0 or WP90ID_n == 0:
-                if WP90ID_p == 0 and WP90ID_n == 0:
+                if WP90ID_p == 0 or WP90ID_n == 0:
+                #if WP90ID_p == 0 and WP90ID_n == 0:
                 ##WP80
-                #WP80ID_p = elIDP & 0b00000011
-                #WP80ID_n = elIDN & 0b00000011
+                #WP80ID_p = elIDP & 0b00000001
+                #WP80ID_n = elIDN & 0b00000001
                 #print("elIDP=%d, looseID_p=%d"%(elIDP, looseID_p)) 
                 #print("elIDN=%d, looseID_n=%d"%(elIDN, looseID_n)) 
                 ##require looseID on BOTH electrons
@@ -1019,6 +1037,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
         gt = f.Get("ntuples/genT") 
         nEntries = t.GetEntries()
         lumi = 38.48 #fb^-1 (this is the lumi for all CMS in 2022)
+        #lumi = 38.48 + 28.89 #fb^-1; for 2022+2023
         if isSig:
             sys.path.insert(1, "tm_analysis/analysis/python/utils")
             import blinding
@@ -1268,12 +1287,19 @@ def process_file(fname, singleVert, useOnia, hWeights):
 
     #rm the file now that you're done with it.
     #if not (isMC and not isSig):
-    if not isMC and not syncTest:
+    if not isMC and not syncTest and year != 2023:
         os.system("rm %s"%fname)
 
 #finish the processing and write to an output file
 def finish_processing(foutname):
-    fout = ROOT.TFile.Open(foutname, "recreate") 
+    succ = True
+    try:
+        fout = ROOT.TFile.Open(foutname, "recreate") 
+    except OSError:
+        print("Error! Could not open %s in the current directory so trying in /afs/cern.ch/work/b/bgreenbe/public"%foutname) 
+        fout = ROOT.TFile.Open("/afs/cern.ch/work/b/bgreenbe/public/%s"%foutname, "recreate") 
+        succ = False
+        
     for vtype in vtypes:
         hM[vtype].Write()
         hMNoWt[vtype].Write()
@@ -1356,8 +1382,13 @@ def finish_processing(foutname):
             print("Acc (%s): %f%%"%(vtype, acc_weight[vtype]/all_weight*100)) 
             print("AccdR (%s): %f%%"%(vtype, accdR_weight[vtype]/all_weight*100)) 
 
+    #return True if saved file in the current dir, False otherwise
+    return succ
+
 if syncTest and singleFile:
     foutname = "bparking_syncTest_test%d.root"%(testnum)
+elif year == 2023:
+    foutname = "bparking_2023datatest%d.root"%testnum
 elif not isMC:
     foutname = "bparking_test%d_%s%d_%d.root"%(testnum, let, num, arg)
 else:
@@ -1381,6 +1412,8 @@ if isMC:
         flistname = "bkgMCList.txt"
 elif syncTest and singleFile:
     flistname = "syncList.txt"
+elif year == 2023:
+    flistname = "data2023List.txt"
 else:
     flistname = "flist_%s%d_%d.txt"%(let, num, arg)
     #flistname = "flist_whack.txt"
@@ -1418,7 +1451,7 @@ for lnum,line in enumerate(fl):
     print("Copying file %s"%(fullpath)) 
     #print("WARNING: NOT DOING xrdcp!!!")
     #if not (isMC and not isSig):
-    if not isMC and not syncTest:
+    if not isMC and not syncTest and year != 2023:
         os.system("xrdcp %s ."%fullpath)
         fname = path.split('/')[-1]
     elif syncTest:
@@ -1442,8 +1475,12 @@ nfiles = len(all_fnames)
 for fnum,fname in enumerate(all_fnames):
     print("Starting file %d / %d"%(fnum, nfiles)) 
     process_file(fname, singleVert, useOnia, hWeights)
-finish_processing(foutname)
-os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
+succ = finish_processing(foutname)
+if succ:
+    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
+else:
+    os.system( "xrdcp -f /afs/cern.ch/work/b/bgreenbe/public/%s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
+print("Done copying :)") 
 if syncTest:
     syncFile.close()
     os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%syncFname )
