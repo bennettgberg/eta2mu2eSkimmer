@@ -10,7 +10,7 @@ import sys
 def main():
     
     #submit jobs within this script (T) or just do the setup (F)
-    submit_now = False #True
+    submit_now = True
 
     #true if running the jobs on lxplus instead of cmslpc
     lxplus = False
@@ -73,8 +73,8 @@ def main():
                         always_del = True
                 if always_del:
                     os.system("rm %s/*.root"%(eos_path))
-            #os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
-            os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
+            os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
+            #os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
         lang = "tcsh"
         credname = "x509up_u52949"
         if lxplus:

@@ -31,10 +31,7 @@ data = options.data
 testfname = "/store/data/Run2023B/ParkingDoubleMuonLowMass0/MINIAOD/PromptReco-v1/000/366/429/00000/d692b057-3b8c-4907-bcfd-2127307a86d9.root"
 if not data:
     #signal sample
-    #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_0_MINIAOD_2022.root"
-    #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_3/EtaTo2Mu2E_2022Test_7_MINIAOD_2022.root"
-    #testfname = "root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp3/EtaToMuMuGamma_2022Test_MINIAOD_7.root"
-    testfname = "root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp3/EtaToMuMuGamma_2022Test_MINIAOD_9.root"
+    testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/EtaTo2Mu2E_2023Test_MINIAOD_test.root"
     ##resonant bkg sample
     #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD/EtaToMuMuGamma_2022Test_MINIAOD_1.root"
     #testfname = "root://cmseos.fnal.gov//store/user/bgreenbe/EtaToMuMuGamma/Run3_2022_MINIAOD_Exp/EtaToMuMuGamma_2022Test_MINIAODTEST_303.root"

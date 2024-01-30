@@ -239,6 +239,7 @@ for file in scriptList :
     #outLines.append('x509userproxy = $ENV(X509_USER_PROXY)\n')
     outLines.append('request_cpus = 1\n')
     outLines.append('request_memory = 5000\n')
-    outLines.append('+JobFlavour  = "tomorrow"\n')
+    #outLines.append('+JobFlavour  = "tomorrow"\n')
+    outLines.append('+JobFlavour  = "longlunch"\n')
     outLines.append('Queue 1\n')
     open('{0:s}.jdl'.format(base),'w').writelines(outLines)

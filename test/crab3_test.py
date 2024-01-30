@@ -30,7 +30,7 @@ if not isMC:
     #config.General.requestName = 'test1_disptau'
 else:
     if isSig:
-        config.General.requestName = 'test38MC_EtaTo2Mu2E_4'
+        config.General.requestName = 'test38MC_EtaTo2Mu2E_1'
     elif isMuMu:
         config.General.requestName = 'test38MC_EtaToMuMu_1'
     else:
@@ -65,14 +65,12 @@ if not isMC:
 else:
     if isSig:
         inputFiles = []
-        #for i in range(65):
-        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i) 
-        #for i in range(300):
-        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_2/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i)
         #for i in range(325):
-        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_3/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i)
-        for i in range(325):
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_4/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i)
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2023_MINIAOD/EtaTo2Mu2E_2023Test_%d_MINIAOD_2023.root'%i)
+        for i in range(650):
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2023_MINIAOD_2/EtaTo2Mu2E_2023Test_%d_MINIAOD_2023.root'%i)
+        for i in range(650):
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2023_MINIAOD_3/EtaTo2Mu2E_2023Test_%d_MINIAOD_2023.root'%i)
         config.Data.userInputFiles = inputFiles #[
         #    #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(65)
         #    'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD_2/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(300)
@@ -243,7 +241,7 @@ config.Data.outputDatasetTag = config.General.requestName
 config.Data.ignoreLocality = True
 
 if isMC:
-    config.Data.outLFNDirBase = '/store/user/bgreenbe/BParking2022'
+    config.Data.outLFNDirBase = '/store/user/bgreenbe/BParking%d'%year
 else:
     config.Data.outLFNDirBase = '/store/group/lpcdisptau/eta2mu2e'
 config.Site.whitelist = ['T2_US*','T2_CH*']

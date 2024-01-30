@@ -1011,9 +1011,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             //std::cout << "Event " << (int)nt.eventNum_ << " : eta meson fully genmatched!" << endl;
         }
 
-        if( nt.mmelelVtxChi2_.size() > 0 ) {
-            genT->Fill();
-        }
+        ////moving this down with the recoT filling so can fill only for passing events
+        //if( nt.mmelelVtxChi2_.size() > 0 ) {
+        //    genT->Fill();
+        //}
     }
 
     //std::cout << "computing vertices 0" << std::endl;
@@ -1109,6 +1110,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
     if( nt.mmelelVtxChi2_.size() > 0 ) {
         recoT->Fill();
+        if(!isData) {
+            genT->Fill();
+        }
     }
 
     return;
