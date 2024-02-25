@@ -4,14 +4,15 @@ import sys
 sys.path.append("tm_analysis/analysis/python/")
 #import fitter
 import utils.fitter as fitter
+from decimal import Decimal
 
 #if only testing, use smaller input file and do NOT overwrite output files
 test = False #True
 #set to true if want to remake all the plots for the individual pT bins
-remake = True #False
+remake = False
 
 #include the Run2 Scouting result on the same plot for comparison? or nah
-inc_run2 = True #False
+inc_run2 = True
 
 #include the corrections, or JUST show the uncorrected xsec ?
 inc_corr = True
@@ -26,7 +27,10 @@ else:
     #338: tight muID !!
     #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest338_ALL.root", "read")
     #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest376_ALL.root", "read")
+    #multivert (I think)
     f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3818_ALL.root", "read")
+    ##singleVert only
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3844_ALL.root", "read")
 
 h2d = f.Get("hMvsPtmumu")
 
@@ -80,29 +84,48 @@ hXsec.Print()
 hXsecCor = ROOT.TH1F("hXsecCor", "hXsecCor", newnptbins, array('d', newbins))
 hXsecCor.Sumw2()
 
+hRawYields = ROOT.TH1F("hRawYields", "hRawYields", newnptbins, array('d', newbins)) 
+
 #get efficiency histograms for correction purposes
 #f2mu = ROOT.TFile.Open("bparking_mumuMCtest338.root")
 #f2mu = ROOT.TFile.Open("bparking_mumuMCtest377.root")
 #f2mu = ROOT.TFile.Open("bparking_mumuMCtest385.root")
-f2mu = ROOT.TFile.Open("bparking_mumuMCtest388.root")
-ptGen = f2mu.Get("hpTGenAll")
-ptGen.SetName("hpTGenAllmumu")
-ptGen.Rebin(5)
-#ptAcc = f2mu.Get("hpTGenAccmumu")
-ptAcc = f2mu.Get("hpTGenAccdRmumu")
-#bins should be 1 GeV wide!!!
-ptAcc.Rebin(5)
+#multivert
+f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest385.root")
+##?? idk
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest388.root")
+##SingleVert only
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3842.root")
+ptGen1 = f2mu.Get("hpTGenAll")
+ptGen1.SetName("hpTGenAllmumu")
+#ptGen.Rebin(5)
+ptGen = ROOT.TH1F("ptGen", "ptGen", newnptbins, array('d', newbins)) 
+ptAcc = f2mu.Get("hpTGenAccmumu")
+ptAcc1 = ptAcc
+#ptAcc1 = f2mu.Get("hpTGenAccdRmumu")
+ptAcc = ROOT.TH1F("ptAcc", "ptAcc", newnptbins, array('d', newbins)) 
 ptAcc.Sumw2()
+for i in range(ptAcc1.GetNbinsX()):
+    ptAcc.Fill(ptAcc1.GetBinCenter(i), ptAcc1.GetBinContent(i)) 
+    ptGen.Fill(ptGen1.GetBinCenter(i), ptGen1.GetBinContent(i)) 
+#bins should be 1 GeV wide!!!
+#ptAcc.Rebin(5)
 ptAcc.Divide(ptGen)
 
 #get efficiency histograms for correction purposes
-f2mu2e = ROOT.TFile.Open("bparking_sigMCtest335.root")
-ptGen2mu2e = f2mu2e.Get("hpTGenAll")
-ptGen2mu2e.Rebin(5)
-ptAcc2mu2e = f2mu2e.Get("hpTGenAccmmelel")
+#f2mu2e = ROOT.TFile.Open("bparking_sigMCtest335.root")
+f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3837.root")
+ptGen2mu2e1 = f2mu2e.Get("hpTGenAll")
+#ptGen2mu2e.Rebin(5)
+ptAcc2mu2e1 = f2mu2e.Get("hpTGenAccmmelel")
 #ptAcc2mu2e = f2mu2e.Get("hpTGenAccmmlplp")
 #bins should be 1 GeV wide!!!
-ptAcc2mu2e.Rebin(5)
+#ptAcc2mu2e.Rebin(5)
+ptGen2mu2e = ROOT.TH1F("ptGen2mu2e", "ptGen2mu2e", newnptbins, array('d', newbins)) 
+ptAcc2mu2e = ROOT.TH1F("ptAcc2mu2e", "ptAcc2mu2e", newnptbins, array('d', newbins)) 
+for i in range(ptAcc2mu2e1.GetNbinsX()):
+    ptGen2mu2e.Fill(ptGen2mu2e1.GetBinCenter(i), ptGen2mu2e1.GetBinContent(i)) 
+    ptAcc2mu2e.Fill(ptAcc2mu2e1.GetBinCenter(i), ptAcc2mu2e1.GetBinContent(i)) 
 ptAcc2mu2e.Sumw2()
 ptAcc2mu2e.Divide(ptGen2mu2e)
 
@@ -147,7 +170,7 @@ for j in range(nptbins+1): #-1):
     hipt = nextbin
     nextbin = newbins[nb+1]
     print("*********lowbin: %d, nextbin: %d, lowpt: %f, hipt: %f******************"%(lowbin, nextbin, lowpt, hipt)) 
-    if remake and lowpt > 69: #28: #40: #3: #i > 30 and i < 32: 
+    if remake and lowpt > 44: #69: #28: #40: #3: #i > 30 and i < 32: 
         ctest = ROOT.TCanvas()
         ctest.cd()
     #projection = h2d.ProjectionY("hx"+str(i),i+1, i+1)
@@ -155,13 +178,13 @@ for j in range(nptbins+1): #-1):
     projection = h2d.ProjectionY("hx"+str(nb), lowbin, hibin)
     #factor by which to rebin
     if lowpt > 69:
-        print("rebin factor is 80 :DDDDD")
+        print("rebin factor is 4 :DDDDD")
         rebin = 4 #80
     #elif lowpt < 7 or lowpt > 37: #i > 31:
     elif lowpt < 7 or lowpt > 33: #i > 31:
-        rebin = 2 #40
+        rebin = 4 #2 #40
     else:
-        rebin = 1 #20
+        rebin = 2 #1 #20
     if test:
         rebin = 25 #*= 2
     projection.Rebin(rebin)
@@ -190,6 +213,8 @@ for j in range(nptbins+1): #-1):
         nparams = 8
     elif sigModel == 'Voigtian':
         nparams = 7
+    elif sigModel == 'BreitWigner':
+        nparams = 6
     myfitter = fitter.fitter_2mu(mass=rrv, bkg_model='Cheb3', sig_model=sigModel) 
     if sigModel == 'SingleGauss':
         if lowpt > 41:
@@ -203,6 +228,9 @@ for j in range(nptbins+1): #-1):
     elif sigModel == 'CB':
         pass
     elif sigModel == 'Voigtian':
+        if lowpt > 44 and lowpt < 50:
+            myfitter.set_sig_params( mv=library.Param(.548, .545, .551), sv=library.Param(.005, .0001, .01), wv=library.Param(.005, .0001, .01) )
+    elif sigModel == 'BreitWigner':
         pass
     myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(.92, -1., 1.), a3=library.Param(.001, -1., 1.) )
     fit_result = myfitter.model.fitTo(data, ROOT.RooFit.Save()) 
@@ -254,9 +282,12 @@ for j in range(nptbins+1): #-1):
     #unct = ( (errors[3] / params[3])**2 + (errors[5] / params[5] )**2 )**0.5 * nEta
     #print("nEta = %f +/- %f ; ptbinwidth = %f"%(nEta, unct, ptbinwidth)) 
     #if test and i == 11 :
-    ndata = projection.Integral(projection.FindBin(0.52), projection.FindBin(0.58))
+    peakmin = 0.52
+    peakmax = 0.58
+    ndata = projection.Integral(projection.FindBin(peakmin), projection.FindBin(peakmax))
     #ndata = h.Integral(h.FindBin(0.90), h.FindBin(1.0))
     argset = ROOT.RooArgSet(rrv)
+    rrv.setRange("peak", peakmin, peakmax)
     sig_int = myfitter.sig.func.createIntegral(argset, ROOT.RooFit.NormSet(argset), ROOT.RooFit.Range("peak"))
     bkg_int = myfitter.bkg.func.createIntegral(argset, ROOT.RooFit.NormSet(argset), ROOT.RooFit.Range("peak"))
     tot_int = myfitter.model.createIntegral(argset, ROOT.RooFit.NormSet(argset), ROOT.RooFit.Range("peak"))
@@ -268,8 +299,10 @@ for j in range(nptbins+1): #-1):
     nEta = nsig
     unct = sig_int.getVal() * myfitter.nsig.getError()
     print("nEta = %f +/- %f ; ptbinwidth = %f"%(nEta, unct, ptbinwidth)) 
+    hRawYields.SetBinContent(nb, nEta)
+    hRawYields.SetBinError(nb, unct)
 
-    if remake and lowpt > 69: #28: # 3: #30 and i < 32:
+    if remake and lowpt > 44: #69: #28: # 3: #30 and i < 32:
         frame = rrv.frame(ROOT.RooFit.Name(f"pullframe"), ROOT.RooFit.Title(" "))
         frame.SetTitle("Two-Muon Invariant Mass spectrum, %.1f < p_{T} < %.1f GeV"%(lowpt, hipt))
         frame.GetXaxis().SetTitle("m_{2#mu} [GeV]")
@@ -325,12 +358,12 @@ for j in range(nptbins+1): #-1):
         pav.Draw("same")
         leg = ROOT.TLegend(0.55, 0.65, 0.95, 0.9)
         #leg.SetHeader("N: m_{2#mu2e} #in [0.51, 0.63] GeV")
-        leg.SetHeader(".51 < m_{2#mu2e} < 0.63 GeV")
+        leg.SetHeader(".52 < m_{2#mu2e} < 0.58 GeV")
         #leg.SetHeader("N: m_{2#mu2e} #in [0.9, 1.0] GeV")
         leg.SetLineWidth(0)
         #leg.AddEntry("Sig", f"Signal ({sigModel:s}): N = {nsig:.1f}", "l")
         leg.AddEntry("Bkg", f"Background: N = {nbkg:.1f}", "l")
-        leg.AddEntry("Tot", f"Sum: N = {ntot:.1f}", "l")
+        leg.AddEntry("Tot", f"Sig+Bkg: N = {ntot:.1f}", "l")
         leg.AddEntry("Data", f"Data, N = {ndata:n}", "lep")
         leg.Draw("same")
         ctest.Modified()
@@ -368,10 +401,11 @@ for j in range(nptbins+1): #-1):
     hXsec.Print()
 
     #now do the corrected one
-    acc = ptAcc.GetBinContent(j)
-    accErr = ptAcc.GetBinError(j)
+    acc = ptAcc.GetBinContent(nb) #j)
+    accErr = ptAcc.GetBinError(nb) #j)
 
-    print("Acceptance histogram j=%d, lowpt: %f, binwidth: %f"%(j, ptAcc.GetBinLowEdge(j), ptAcc.GetBinWidth(j))) 
+    #print("Acceptance histogram j=%d, lowpt: %f, binwidth: %f"%(j, ptAcc.GetBinLowEdge(j), ptAcc.GetBinWidth(j))) 
+    print("Acceptance histogram nb=%d, lowpt: %f, binwidth: %f"%(nb, ptAcc.GetBinLowEdge(nb), ptAcc.GetBinWidth(nb))) 
     
     if acc > 0.:
         Ncor = nEta / acc
@@ -382,8 +416,9 @@ for j in range(nptbins+1): #-1):
     xcor = Ncor*scale
 
     #need to divide by mumu acceptance and multiply by 2mu2e acceptance
-    acc2mu2e = ptAcc2mu2e.GetBinContent(j)
-    print("pt bin %d; acc: %f +/- %f; acc2mu2e: %f"%(j, acc, accErr, acc2mu2e)) 
+    acc2mu2e = ptAcc2mu2e.GetBinContent(nb) #j)
+    #print("pt bin %d; acc: %f +/- %f; acc2mu2e: %f"%(j, acc, accErr, acc2mu2e)) 
+    print("pt bin %d; acc: %f +/- %f; acc2mu2e: %f"%(nb, acc, accErr, acc2mu2e)) 
     if acc > 0:
         totEta += (nEta / acc)*acc2mu2e
         #errEta += ((unct / acc)*acc2mu2e)**2
@@ -435,12 +470,14 @@ if inc_corr:
     #fX = ROOT.TF1("fX", "[0] * exp( - [1] * x ) + [2]", 6, 100)
     fX.SetParameter(0, 5.0*10**10)
     fX.SetParameter(1, 0.17)
-    x_res = hXsecCor.Fit(fX, "RS", "", 10, 100)
+    #x_res = hXsecCor.Fit(fX, "RS", "", 10, 100)
+    x_res = hXsecCor.Fit(fX, "RS", "", 10, 70)
     xparams = x_res.Parameters()
     xerrors = x_res.GetErrors()
     print("****fit result: params %s, errors %s****"%(str(xparams), str(xerrors))) 
     pav = ROOT.TPaveText(25, 500000000, 95, 80000000000)
-    pav.AddText("Best fit: y = %.4f / x^{%.4f}"%(xparams[0], xparams[1])) 
+    #pav.AddText("Best fit: y = %.4f / x^{%.4f}"%(xparams[0], xparams[1])) 
+    pav.AddText("Best fit: y = %.5E / x^{%.4f}"%(Decimal(xparams[0]), xparams[1])) 
     pav.Draw("same") 
 
     print("hXsec:") 
@@ -478,9 +515,12 @@ input("h")
 
 if ( not test ) and inc_corr :
     outfile = ROOT.TFile.Open("xsec2022.root", "recreate")
+    hRawYields.Write()
+    ptAcc.Write()
+    ptAcc2mu2e.Write()
     hXsec.Write()
     hXsecCor.Write()
     fX.Write()
     outfile.Close()
 
-print("**TOTAL predicted eta->2mu2e decays seen for 2022 BParking: %f**"%(totEta/3)) #, errEta)) 
+#print("**TOTAL predicted eta->2mu2e decays seen for 2022 BParking: %f**"%(totEta/3)) #, errEta)) 

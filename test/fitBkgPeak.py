@@ -4,7 +4,10 @@ import ROOT, sys
 incWtUnct = False # True
 
 #how many electrons to require elID: 0, 1, or 2 (both)?
-req_elID = 2 #1
+req_elID = 2
+
+#cut out .04 < M_ee < .09, or nah?
+cut_mee = False
 
 #distname = "hMlplp"
 distname = "hMmmelel"
@@ -15,13 +18,34 @@ if incWtUnct:
 if req_elID == 2:
     #bkgfile = "bparking_bkgMCtest31.root"
     #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3826.root"
-    bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3827.root"
+    #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3827.root"
+    #WP90 only!
+    #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3831.root"
+    #elpt > 2 and 2022+2023
+    #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3837.root"
+    ##one cand only and new xsec weight
+    ##bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3844.root"
+    #cut out .04 < M_ee < .09
+    bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3851.root"
 elif req_elID == 1:
-    bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3829.root"
+    #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3829.root"
+    #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3834.root"
+    bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3838.root"
+elif req_elID == 3:
+    bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3839.root"
+elif req_elID == 0:
+    if cut_mee:
+        #with .04 < M_ee < .09 cut out!
+        bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3849.root"
+    else:
+        #normal
+        #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3850.root"
+        #updated event weights
+        bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3854.root"
 f = ROOT.TFile.Open(bkgfile)
 h = f.Get(distname)
 
-rebin = 5
+rebin = 5 #6 #4
 
 h.Rebin(rebin)
 
@@ -46,6 +70,10 @@ if incWtUnct:
         #totErr = wtErr
         totErr = ((wtErr)**2 + (statErr)**2)**0.5
         h.SetBinError(j, totErr)
+
+#temporary fix for 2022 lumi only
+if req_elID == 2 or req_elID == 1:
+    h.Scale(38.48/(38.48+28.89)) 
 
 h.Draw()
 
@@ -100,7 +128,7 @@ frame = rrv.frame()
 frame.SetTitle("")
 frame.GetXaxis().SetTitle("m_{2#mu2e} [GeV]") 
 binsize = (xmax - xmin) / nbins
-frame.GetYaxis().SetTitle("Events / (%f GeV)"%(binsize))
+frame.GetYaxis().SetTitle("Events / (%.3f GeV)"%(binsize))
 #data.plotOn(frame, Name="Data", DrawOption="PEZ")
 bkgMC.plotOn(frame, ROOT.RooFit.Name("bkgMC"), ROOT.RooFit.DrawOption("PEZ"))
 model.plotOn(frame, ROOT.RooFit.Name("Bkg"), ROOT.RooFit.LineWidth(5), ROOT.RooFit.LineColor(ROOT.kBlue))
