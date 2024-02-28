@@ -13,14 +13,22 @@ reject_mmg = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
 basic_cuts = True
 #require electron_ID?
-require_elID = False #True
+require_elID = False
 #require muon ID to be greater than 0?
 require_muID = False
 #cut on electron pT? -1 for no cut
 elpTcut = 2
+#cut on electron |pseudoRapidity|
+elEtacut = 2.5
+#cut on muon pT
+mupTcut = 3
+#cut on muon |pseudoRapidity|
+muEtacut = 2.4
+#cut out .04 < M_ee < .09, or nah?
+cut_mee = False
 
 #what test number to label the output files with
-testnum = 3854
+testnum = 3858
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -190,16 +198,21 @@ hNevt = ROOT.TH1D("hNevt", "Total number of events processed", 1, 0, 2)
 hnPV = ROOT.TH1D("hnPV", "Number of primary vertices", 200, 0, 200) 
 #invar mass, pT dists (dictionary for ease of adding new vertex types)
 hM = {}
+#invar mass with INVERTED electron charge requirement (ie same-sign electrons req'd instead of oppo-sign) 
+hMSSe = ROOT.TH1F("hMSSe", "#mu#muee invar. mass with same-sign electrons", nbins, xmin, xmax) 
+hMOSe = ROOT.TH1F("hMOSe", "#mu#muee invar. mass with oppo-sign electrons, filled same way as hMSSe", nbins, xmin, xmax)
 #reduced chi2 of the vertices filling the histogram
 hRchi2 = {}
 #mass histogram with all weights 1
 hMNoWt = {}
 #mass hist of events that failed the trigger (for some reason some data events are doing this??) 
 hMFailedTrig = {}
-#histogram of events combining event N's dimuon with event N-1's dielectron, to test for combinatorial bkg
-hMComb = {}
-#control of hMComb, filled exactly the same way except with all this event.
-hMReal = {}
+#PV histogram for good events (passing all selections!)-- just for closure test
+hnPVgood = {}
+##histogram of events combining event N's dimuon with event N-1's dielectron, to test for combinatorial bkg
+#hMComb = {}
+##control of hMComb, filled exactly the same way except with all this event.
+#hMReal = {}
 #pT histogram
 hpT = {}
 #pT of electrons in the vertex
@@ -253,9 +266,10 @@ for vtype in vtypes:
     hMNoWt[vtype].Sumw2()
     hMFailedTrig[vtype] = ROOT.TH1F("hMFailedTrig"+vtype, "Invar. mass of events FAILING trigger with "+vtype+" vertices", nbins, xmin, xmax) 
     hMFailedTrig[vtype].Sumw2()
-    if vtype != "mumu" and vtype != "mmg":
-        hMComb[vtype] = ROOT.TH1F("hMComb"+vtype, "Invar. mass of event N's dimuon, event N-1's dielectron, with "+vtype+" vertices", 1000, 0.0, 10.0) 
-        hMReal[vtype] = ROOT.TH1F("hMReal"+vtype, "Control plot for hMComb: event N's dimuon+dielectron, with "+vtype+" vertices", 1000, 0.0, 10.0) 
+    hnPVgood[vtype] = ROOT.TH1D("hnPVgood"+vtype, "Number of primary vertices in good "+vtype+" vertices", 200, 0, 200) 
+    #if vtype != "mumu" and vtype != "mmg":
+    #    hMComb[vtype] = ROOT.TH1F("hMComb"+vtype, "Invar. mass of event N's dimuon, event N-1's dielectron, with "+vtype+" vertices", 1000, 0.0, 10.0) 
+    #    hMReal[vtype] = ROOT.TH1F("hMReal"+vtype, "Control plot for hMComb: event N's dimuon+dielectron, with "+vtype+" vertices", 1000, 0.0, 10.0) 
     hpT[vtype] = ROOT.TH1F("hpT"+vtype, "pT with "+vtype+" vertices", 500, 0., 100.) 
     hpT[vtype].Sumw2()
     hpTEl[vtype] = ROOT.TH1F("hpTEl"+vtype, "pT of electrons in "+vtype+" vertices", 500, 0., 100.) 
@@ -379,6 +393,11 @@ if isMC:
     f_xsec = ROOT.TFile.Open("xsec2022.root")
     #h_xsec = f_xsec.Get("corr_xsec")
     h_xsec = f_xsec.Get("hXsecCor")
+    PUFile = ROOT.TFile.Open("pileup_corrections_2022.root")
+    if isSig:
+        PUCor = PUFile.Get("hSigCorr2022")
+    else:
+        PUCor = PUFile.Get("hBkgCorr2022")
     
     #total weight of all MC events
     all_weight = 0.
@@ -391,6 +410,8 @@ if isMC:
     rec_weight = {}
     rec_weightUp = {}
     rec_weightDn = {}
+    #how many different selections to calculate the acceptance weights for
+    nselections = 8
     acc_weight = {}
     acc_weightUp = {}
     acc_weightDn = {}
@@ -403,7 +424,7 @@ if isMC:
         rec_weightUp[vtype] = 0.
         rec_weightDn[vtype] = 0.
         #total weight of events accepted (trg and reco)
-        acc_weight[vtype] = 0.
+        acc_weight[vtype] = [0. for s in range(nselections)]
         acc_weightUp[vtype] = 0.
         acc_weightDn[vtype] = 0.
         accdR_weight[vtype] = 0.
@@ -448,9 +469,9 @@ printevery = 10000
         #path = "/eos/uscms/store/user/bgreenbe/BParking2022/ParkingDoubleMuonLowMass{0:d}/test2_{0:d}{1:s}/*/{2:s}/test_{3:s}*.root".format(num, let, subdir, dig)
         #path = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ParkingDoubleMuonLowMass{0:d}/test2_{0:d}{1:s}/*/{2:s}/{3:s}".format(num, let, subdir, inname)
 
-#to be used for hMComb
-old_diel = None
-diel = None
+##to be used for hMComb
+#old_diel = None
+#diel = None
 
 #process all the vertices of this type.
 # vtype: string for vertex type: elel, lplp, mmelel, mmlplp -- for elel and lplp also use mumu vertices
@@ -685,7 +706,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
     bestm2mu = 99999
     bestm2el = 99999
     bestpt = -1
-    acc_filled = False
+    acc_filled = [False for s in range(8)] 
     accdR_filled = False
     elptP = -99
     elptN = -99
@@ -735,37 +756,40 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                     continue
             if elpTcut > -1 and (e.Electron_pt[elP] < elpTcut or e.Electron_pt[elN] < elpTcut):
                 continue
-            if require_elID:
-                elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
-                elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
-                ##loose ID
-                #looseID_p = elIDP & 0b00110000 
-                #looseID_n = elIDN & 0b00110000 
-                WP90ID_p = elIDP & 0b00000100 
-                WP90ID_n = elIDN & 0b00000100 
-                if WP90ID_p == 0 or WP90ID_n == 0:
-                #if WP90ID_p == 0 and WP90ID_n == 0:
-                ##WP80
-                #WP80ID_p = elIDP & 0b00000001
-                #WP80ID_n = elIDN & 0b00000001
-                #print("elIDP=%d, looseID_p=%d"%(elIDP, looseID_p)) 
-                #print("elIDN=%d, looseID_n=%d"%(elIDN, looseID_n)) 
-                ##require looseID on BOTH electrons
-                #if looseID_p == 0 or looseID_n == 0:
-                #if WP80ID_p == 0 or WP80ID_n == 0:
-                ##require elID on BOTH electrons
-                #if elIDP == 0 or elIDN == 0:
-                ##require elID on only ONE electron
-                #if elIDP == 0 and elIDN == 0:
-                    continue
+            if elEtacut > -1 and (abs(e.Electron_eta[elP]) > elEtacut or abs(e.Electron_eta[elN]) > elEtacut):
+                continue
+            elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
+            elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
+            #loose ID
+            looseID_p = elIDP & 0b00110000 
+            looseID_n = elIDN & 0b00110000 
+            #WP90 (nominal selection)
+            WP90ID_p = elIDP & 0b00000100 
+            WP90ID_n = elIDN & 0b00000100 
+            #if WP90ID_p == 0 or WP90ID_n == 0:
+            #if WP90ID_p == 0 and WP90ID_n == 0:
+            #WP80
+            WP80ID_p = elIDP & 0b00000001
+            WP80ID_n = elIDN & 0b00000001
+            #print("elIDP=%d, looseID_p=%d"%(elIDP, looseID_p)) 
+            #print("elIDN=%d, looseID_n=%d"%(elIDN, looseID_n)) 
+            ##require looseID on BOTH electrons
+            #if looseID_p == 0 or looseID_n == 0:
+            #if WP80ID_p == 0 or WP80ID_n == 0:
+            ##require elID on BOTH electrons
+            #if elIDP == 0 or elIDN == 0:
+            ##require elID on only ONE electron
+            #if elIDP == 0 and elIDN == 0:
+            if require_elID and (WP90ID_p == 0 or WP90ID_n == 0):
+                continue
             try:
                 vxy = (vtx_vvx[j]**2 + vtx_vvy[j]**2)**0.5
             except:
                 vxy = vtx_vxy[j] 
             Vxy = vxy
-            #to be used for hMComb
-            global diel
-            diel = vec_elP + vec_elN
+            ##to be used for hMComb
+            #global diel
+            #diel = vec_elP + vec_elN
             if isMC:
                 if isSig:
                     gm = False
@@ -840,6 +864,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
             if failed_muID:
             #if require_muID and (e.Muon_id[mp] == 0 or e.Muon_id[mm] == 0):
                 continue
+            if mupTcut > -1 and (e.Muon_pt[mp] < mupTcut or e.Muon_pt[mm] < mupTcut):
+                continue
+            if muEtacut > -1 and (abs(e.Muon_eta[mp]) > muEtacut or abs(e.Muon_eta[mm]) > muEtacut):
+                continue
             #print("mm: " + str(mm) + "; nGoodMuon: " + str(ord(e.nGoodMuon)) + "; len(mm): " + str(len(vtx_vmuN))) 
             #make the 4-vector, fill the hists
             vec_muN = ROOT.TLorentzVector()
@@ -860,20 +888,34 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 vec_eta = vec_muP + vec_muN + vec_gams[bestg]
             elif vtype == "mumu":
                 vec_eta = vec_muP + vec_muN
+                #for mumu vertices only, also fill the hMSSe and hMOSe histograms (for comb. bkg test)
+                for aa in range(ord(e.nGoodElectron)):
+                    for bb in range(jj+1, ord(e.nGoodElectron)):
+                        #form the 4-lepton invariant mass
+                        vec_aa = ROOT.TLorentzVector()
+                        vec_bb = ROOT.TLorentzVector()
+                        vec_aa.SetPtEtaPhiM(e.Electron_pt[aa], e.Electron_eta[aa], e.Electron_phi[aa], el_mass)
+                        vec_bb.SetPtEtaPhiM(e.Electron_pt[bb], e.Electron_eta[bb], e.Electron_phi[bb], el_mass)
+                        vec_rand = vec_muP + vec_muN + vec_aa + vec_bb
+                        if e.Electron_charge[aa] == e.Electron_charge[bb]:
+                            hMSSe.Fill(vec_rand.M(), evt_weight)
+                        else:
+                            hMOSe.Fill(vec_rand.M(), evt_weight)
             else:
                 vec_eta = vec_muP + vec_muN + vec_elP + vec_elN
+                mee = (vec_elP + vec_elN).M()
                 ##Cut on Mee to get rid of most resonant bkg!
-                #mee = (vec_elP + vec_elN).M()
-                #if mee > 0.04 and mee < 0.09:
-                #    #print("continuing!!!! evt=%d, mee=%f"%(e.evt, mee))
-                #    continue
-                #form the test for combinatorial bkg by combining this event's dimuon pair with last event's dielectron
-                dimu = vec_muP + vec_muN
-                global old_diel
-                if old_diel != None:
-                    comb = dimu + old_diel
-                    hMComb[vtype].Fill(comb.M(), evt_weight)
-                    hMReal[vtype].Fill((dimu+diel).M(), evt_weight) 
+                if cut_mee:
+                    if mee > 0.04 and mee < 0.09:
+                    #    #print("continuing!!!! evt=%d, mee=%f"%(e.evt, mee))
+                        continue
+                ##form the test for combinatorial bkg by combining this event's dimuon pair with last event's dielectron
+                #dimu = vec_muP + vec_muN
+                #global old_diel
+                #if old_diel != None:
+                #    comb = dimu + old_diel
+                #    hMComb[vtype].Fill(comb.M(), evt_weight)
+                #    hMReal[vtype].Fill((dimu+diel).M(), evt_weight) 
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
@@ -902,12 +944,35 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                     #hpTGenReco[vtype].Fill(gen_eta.Pt())
                     #hEtaGenReco[vtype].Fill(gen_eta.PseudoRapidity())
                     #rec_weight[vtype] += evt_weight
-                    if passedTrig and not acc_filled:
+                    if passedTrig and not acc_filled[0]:
                         #hpTGenAcc[vtype].Fill(genEtaPt)
                         hpTGenAcc[vtype].Fill(gen_eta.Pt())
                         hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity())
-                        acc_weight[vtype] += evt_weight
-                        acc_filled = True
+                        acc_weight[vtype][0] += evt_weight
+                        acc_filled[0] = True
+                    #now see if it also passes the stricter cuts
+                    if passedTrig and vtype not in ["mmg", "mumu"]:
+                        if (not acc_filled[1]) and (WP90ID_p > 0 and WP90ID_n > 0):
+                            acc_weight[vtype][1] += evt_weight
+                            acc_filled[1] = True
+                            if (not acc_filled[5]) and (mee < 0.04 or mee > 0.09):
+                                acc_weight[vtype][5] += evt_weight
+                                acc_filled[5] = True
+                        if (not acc_filled[2]) and (WP90ID_p > 0 or WP90ID_n > 0):
+                            acc_weight[vtype][2] += evt_weight
+                            acc_filled[2] = True
+                            if (not acc_filled[6]) and (mee < 0.04 or mee > 0.09):
+                                acc_weight[vtype][6] += evt_weight
+                                acc_filled[6] = True
+                        if (not acc_filled[3]) and (WP80ID_p > 0 and WP80ID_n > 0):
+                            acc_weight[vtype][3] += evt_weight
+                            acc_filled[3] = True
+                            if (not acc_filled[7]) and (mee < 0.04 or mee > 0.09):
+                                acc_weight[vtype][7] += evt_weight
+                                acc_filled[7] = True
+                        if (not acc_filled[4]) and (mee < 0.04 or mee > 0.09):
+                            acc_weight[vtype][4] += evt_weight
+                            acc_filled[4] = True
                 if dr < dRcut and passedTrig and not accdR_filled:
                     hpTGenAccdR[vtype].Fill(gen_eta.Pt()) 
                     accdR_weight[vtype] += evt_weight
@@ -956,6 +1021,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 if not passedTrig:
                     hMFailedTrig[vtype].Fill(m, evt_weight) 
                 hMNoWt[vtype].Fill(m)
+                hnPVgood[vtype].Fill(e.nPV, evt_weight)
                 if not (year == 2023 and vtype == "mumu"):
                     hMvsPt[vtype].Fill(pt, m, evt_weight) 
                 hVxy[vtype].Fill(vxy)
@@ -1048,6 +1114,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
             #hMvsPt[vtype].Fill(pt, m, evt_weight)
             hM[vtype].Fill(bestm, evt_weight)
             hMNoWt[vtype].Fill(bestm)
+            hnPVgood[vtype].Fill(e.nPV, evt_weight)
             if isMC:
                 hMUp[vtype].Fill(bestm, evt_weightUp)
                 hMDn[vtype].Fill(bestm, evt_weightDn)
@@ -1075,8 +1142,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
             #    hMhiVxy[vtype].Fill(bestm, evt_weight)
             #else:
             #    hMloVxy[vtype].Fill(bestm, evt_weight)
-    if diel != None:
-        old_diel = diel
+    #if diel != None:
+    #    old_diel = diel
 
     return good
 
@@ -1263,6 +1330,12 @@ def process_file(fname, singleVert, useOnia, hWeights):
                 print("ptWeight = 0 !!!!! genEtaPt = %f, wbin = %d"%(genEtaPt, wbin)) 
             
             evt_weight = xsec * bratio * lumi / ptWeight #nEntries
+            #Add corrections!
+            #pileup correction
+            puCor = PUCor.GetBinContent(PUCor.FindBin(e.nPV))
+            evt_weight *= puCor
+
+            #uncertainties
             evt_weightUp = xsecUp/xsec * evt_weight
             evt_weightDn = xsecDn/xsec * evt_weight
             if ord(e.nGoodElectron) > 1 and ord(e.nGoodMuon) > 1 and evt_weight > 10 and genEtaPt > 20:
@@ -1390,19 +1463,24 @@ def finish_processing(foutname):
     try:
         fout = ROOT.TFile.Open(foutname, "recreate") 
     except OSError:
-        print("Error! Could not open %s in the current directory so trying in /afs/cern.ch/work/b/bgreenbe/public"%foutname) 
+        #print("Error! Could not open %s in the current directory so trying in /afs/cern.ch/work/b/bgreenbe/public"%foutname) 
+        print("Error! Could not open %s :("%foutname) 
         fout = ROOT.TFile.Open("/afs/cern.ch/work/b/bgreenbe/public/%s"%foutname, "recreate") 
         succ = False
+        return succ
         
     hNevt.Write()
     hnPV.Write()
+    hMSSe.Write()
+    hMOSe.Write()
     for vtype in vtypes:
         hM[vtype].Write()
         hMNoWt[vtype].Write()
         hMFailedTrig[vtype].Write()
-        if vtype != "mumu" and vtype != "mmg":
-            hMComb[vtype].Write()
-            hMReal[vtype].Write()
+        hnPVgood[vtype].Write()
+        #if vtype != "mumu" and vtype != "mmg":
+        #    hMComb[vtype].Write()
+        #    hMReal[vtype].Write()
         hpT[vtype].Write()
         hpTEl[vtype].Write()
         hpTMu[vtype].Write()
@@ -1446,6 +1524,7 @@ def finish_processing(foutname):
         hpTGenAll.Write()
         hMGenAll.Write()
         hEtaGenAll.Write()
+        sel = {}
         for vtype in vtypes:
             hMUp[vtype].Write()
             hMDn[vtype].Write()
@@ -1457,6 +1536,12 @@ def finish_processing(foutname):
             hEtaGenReco[vtype].Write()
             hEtaGenAcc[vtype].Write()
             hvxy_gm[vtype].Write()
+            #write out the acceptances as a TGraph
+            sel[vtype] = ROOT.TGraph( nselections, array.array('f', [s for s in range(nselections)]), 
+                array.array('f', [acc_weight[vtype][s]/all_weight for s in range(nselections)]) ) 
+            sel[vtype].SetName("selAcc"+vtype)
+            sel[vtype].Write()
+            print("wrote the tg for " + vtype)
         hpTGenTrig.Write()
         hEtaGenTrig.Write()
         hGenMudR.Write()
@@ -1479,7 +1564,8 @@ def finish_processing(foutname):
             print("Reco eff (%s): %f%%"%(vtype, rec_weight[vtype]/all_weight*100))
         print("**Overall weighted acceptances (trig + reco)**") 
         for vtype in vtypes:
-            print("Acc (%s): %f%%"%(vtype, acc_weight[vtype]/all_weight*100)) 
+            for s in range(nselections):
+                print("Acc (%s) selection %d: %f%%"%(vtype, s, acc_weight[vtype][s]/all_weight*100)) 
             print("AccdR (%s): %f%%"%(vtype, accdR_weight[vtype]/all_weight*100)) 
 
     #return True if saved file in the current dir, False otherwise
@@ -1509,6 +1595,8 @@ else:
             foutname = "bparking_bkgMCtest%d.root"%testnum
         else:
             foutname = "bparking_bkgMCtest%d_%d.root"%(testnum, arg)
+if year == 2022:
+    foutname = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/" + foutname
 
 if isMC:
     if isSig and year == 2022:
@@ -1618,10 +1706,10 @@ for fnum,fname in enumerate(all_fnames):
     print("Starting file %d / %d"%(fnum, nfiles)) 
     process_file(fname, singleVert, useOnia, hWeights)
 succ = finish_processing(foutname)
-if succ:
-    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
-else:
-    os.system( "xrdcp -f /afs/cern.ch/work/b/bgreenbe/public/%s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
+#if succ:
+#    os.system( "xrdcp -f %s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
+#else:
+#    os.system( "xrdcp -f /afs/cern.ch/work/b/bgreenbe/public/%s root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/"%foutname )
 print("Done copying :)") 
 if syncTest:
     syncFile.close()
