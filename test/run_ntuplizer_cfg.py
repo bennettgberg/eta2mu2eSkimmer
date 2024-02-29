@@ -28,6 +28,7 @@ options.parseArguments()
 year = 2022
 #data = False
 data = options.data
+elTrig = options.elTrig
 
 #test file name
 #BParking data

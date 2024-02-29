@@ -360,19 +360,47 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
             "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon" };                 //Triggers_fired1[1]
     } //end use muon triggers
     else { //use electron triggers
-        triggerNames = { "HLT_DoubleEle10_eta1p22_mMax6",             //Triggers_fired0[0]
-        "HLT_DoubleEle4_eta1p22_mMax6",                               //Triggers_fired0[ 1]
-        "HLT_DoubleEle4p5_eta1p22_mMax6",                             //Triggers_fired0[ 2]
-        "HLT_DoubleEle5_eta1p22_mMax6",                               //Triggers_fired0[ 3]
-        "HLT_DoubleEle5p5_eta1p22_mMax6",                             //Triggers_fired0[ 4]
-        "HLT_DoubleEle6_eta1p22_mMax6",                               //Triggers_fired0[ 5]
-        "HLT_DoubleEle6p5_eta1p22_mMax6",                             //Triggers_fired0[ 6]
-        "HLT_DoubleEle7_eta1p22_mMax6",                               //Triggers_fired0[ 7]
-        "HLT_DoubleEle7p5_eta1p22_mMax6",                             //Triggers_fired0[ 8]
-        "HLT_DoubleEle8_eta1p22_mMax6",                               //Triggers_fired0[ 9]
-        "HLT_DoubleEle8p5_eta1p22_mMax6",                             //Triggers_fired0[10]
-        "HLT_DoubleEle9_eta1p22_mMax6",                               //Triggers_fired0[11]
-        "HLT_DoubleEle9p5_eta1p22_mMax6" };                           //Triggers_fired0[12]
+        triggerNames = { "HLT_DoubleEle10_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle10_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle10_eta1p22_mMax6",
+    "HLT_DoubleEle4_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle4_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle4_eta1p22_mMax6",
+    "HLT_DoubleEle4p5_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle4p5_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle4p5_eta1p22_mMax6",
+    "HLT_DoubleEle5_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle5_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle5_eta1p22_mMax6",
+    "HLT_DoubleEle5p5_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle5p5_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle5p5_eta1p22_mMax6",
+    "HLT_DoubleEle6_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle6_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle6_eta1p22_mMax6",
+    "HLT_DoubleEle6p5_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle6p5_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle6p5_eta1p22_mMax6",
+    "HLT_DoubleEle7_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle7_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle7_eta1p22_mMax6",
+    "HLT_DoubleEle7p5_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle7p5_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle7p5_eta1p22_mMax6",
+    "HLT_DoubleEle8_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle8_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle8_eta1p22_mMax6",
+    "HLT_DoubleEle8p5_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle8p5_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle8p5_eta1p22_mMax6",
+    "HLT_DoubleEle9_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle9_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle9_eta1p22_mMax6",
+    "HLT_DoubleEle9p5_eta1p22_mMax6_dz0p8",
+    "HLT_DoubleEle9p5_eta1p22_mMax6_trkHits10",
+    "HLT_DoubleEle9p5_eta1p22_mMax6",
+    "HLT_SingleEle8_SingleEGL1",
+    "HLT_SingleEle8"   };                           
     }
 
     for(std::string tName : triggerNames) {
@@ -1047,7 +1075,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             //std::cout << "Event " << (int)nt.eventNum_ << " : eta meson fully genmatched!" << endl;
         }
 
-        genT->Fill();
+        //Filled later now!
+        //genT->Fill();
     }
 
     //std::cout << "computing vertices 0" << std::endl;
@@ -1118,9 +1147,21 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //cout << "all tracks" << std::endl;
     //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
+    //need to do this if not saving every event!
+    //for(size_t vv = 0; vv < nt.mumuVtxChi2_.size(); vv++) {
+    //    float vtxProb = TMath::Prob(nt.mumuVtxChi2_[vv], nt.mumuVtxNdof_[vv]);
+    //    if(vtxProb > 0.1) {
+    //        allMvsPt->Fill(nt.mumuVtxPt_[vv], nt.mumuVtxM_[vv]);
+    //    }
+    //}
 
-    //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
-    recoT->Fill();
+    if( !useElTrig || nt.mmelelVtxChi2_.size() > 0 ) {
+        //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
+        recoT->Fill();
+        if(!isData) {
+            genT->Fill();
+        }
+    }
 
     if(!isData) {
         if(nt.mumuVtxDr_.size() > 0) {

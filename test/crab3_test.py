@@ -11,6 +11,9 @@ isMuMu = False
 #doing test with central MC production?
 central = False
 
+#set True to use DoubleElectron triggers instead of DoubleMuon (esp to test trigger eff in data)
+useElTrig = True
+
 #BParking set number, and Run letter of 2022 for the inputDataset
 # 40 different datasets total
 #0 to 7
@@ -28,7 +31,7 @@ if not isMC:
     #config.General.requestName = 'test1_disptau'
 else:
     if isSig:
-        config.General.requestName = 'test43MC_EtaTo2Mu2E_0'
+        config.General.requestName = 'test44MC_EtaTo2Mu2E_0'
     elif isMuMu:
         config.General.requestName = 'test38MC_EtaToMuMu_1'
     else:
@@ -43,7 +46,7 @@ config.General.instance = 'prod'
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'run_ntuplizer_cfg.py'
 #parameters to pass into the cfg file
-config.JobType.pyCfgParams=["data=%d"%(0 if isMC else 1)]
+config.JobType.pyCfgParams=["data=%d"%(0 if isMC else 1), "elTrig=%d"%(1 if useElTrig else 0)]
 #config.JobType.maxMemoryMB = 5000
 ##allow to run for up to 2 full days (maximum allowed, I think)
 # Not allowed with automatic splitting.
