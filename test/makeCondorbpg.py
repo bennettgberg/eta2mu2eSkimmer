@@ -162,7 +162,8 @@ for nFile in range(0, len(dataset),mjobs) :
         outLines.append("ls\n")
         outLines.append("echo plugins directory:\n")
         outLines.append("ls ../plugins\n")
-        outLines.append("cmsRun run_ntuplizer_cfg.py data=1 inputFiles={0:s} outputFile={1:s}\n".format(fileloop, outFileName))
+        #TODO: change back elTrig to 0 to use DoubleMuon triggers!!
+        outLines.append("cmsRun run_ntuplizer_cfg.py data=1 elTrig=1 inputFiles={0:s} outputFile={1:s}\n".format(fileloop, outFileName))
         outLines.append("ls\n") 
         #copy the file to eos.
         #outLines.append("xrdcp {0:s} root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{1:s}/{2:s}/{0:s}\n".format(outFileName, era, args.nickName))
@@ -173,8 +174,8 @@ for nFile in range(0, len(dataset),mjobs) :
     #outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
     outLines.append("hadd -f -k all_{0:s}_{1:03d}.root {0:s}*root *weights\n".format(args.nickName,nFile+1))
     #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/eta_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
-    #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
-    outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+    outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+    #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
     outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d *.root\n")
 #        fileloop=dataset[nFile:nFile+maxx][j]
