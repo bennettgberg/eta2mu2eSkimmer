@@ -10,6 +10,13 @@ options.register('data',
         VarParsing.VarParsing.varType.bool,
         "Run on data (1) or MC (0)"
         )
+#use electron triggers instead of muon triggers (for calculating trigger eff in data)
+options.register('elTrig',
+        False,
+        VarParsing.VarParsing.multiplicity.singleton,
+        VarParsing.VarParsing.varType.bool,
+        "Run with electron triggers (1) or muon triggers (0)"
+        )
 options.register('test',
         0,
         VarParsing.VarParsing.multiplicity.singleton,
@@ -21,6 +28,7 @@ options.parseArguments()
 year = 2022
 #data = False
 data = options.data
+elTrig = options.elTrig
 
 #test file name
 #BParking data
@@ -118,6 +126,7 @@ switchOnVIDPhotonIdProducer(process, dataFormat)
 from eta2mu2e.eta2mu2eSkimmer.eta2mu2eAnalyzer_cfi import eta2mu2eAnalyzer
 process.ntuples = eta2mu2eAnalyzer.clone(
     isData = cms.bool(data),
+    useElTrig = cms.bool(elTrig),
     primary_vertices = cms.InputTag('offlineSlimmedPrimaryVertices'),
 )
 
