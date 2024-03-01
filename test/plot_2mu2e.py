@@ -424,7 +424,7 @@ if isMC:
         rec_weightUp[vtype] = 0.
         rec_weightDn[vtype] = 0.
         #total weight of events accepted (trg and reco)
-        acc_weight[vtype] = [0. for s in range(nselections)]
+        acc_weight[vtype] = [0. for s in range(nselections+1)]
         acc_weightUp[vtype] = 0.
         acc_weightDn[vtype] = 0.
         accdR_weight[vtype] = 0.
@@ -706,7 +706,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
     bestm2mu = 99999
     bestm2el = 99999
     bestpt = -1
-    acc_filled = [False for s in range(8)] 
+    if isMC:
+        acc_filled = [False for s in range(nselections+1)] 
     accdR_filled = False
     elptP = -99
     elptN = -99
@@ -890,7 +891,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                 vec_eta = vec_muP + vec_muN
                 #for mumu vertices only, also fill the hMSSe and hMOSe histograms (for comb. bkg test)
                 for aa in range(ord(e.nGoodElectron)):
-                    for bb in range(jj+1, ord(e.nGoodElectron)):
+                    for bb in range(aa+1, ord(e.nGoodElectron)):
                         #form the 4-lepton invariant mass
                         vec_aa = ROOT.TLorentzVector()
                         vec_bb = ROOT.TLorentzVector()
@@ -944,35 +945,35 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
                     #hpTGenReco[vtype].Fill(gen_eta.Pt())
                     #hEtaGenReco[vtype].Fill(gen_eta.PseudoRapidity())
                     #rec_weight[vtype] += evt_weight
-                    if passedTrig and not acc_filled[0]:
+                    if passedTrig and not acc_filled[1]:
                         #hpTGenAcc[vtype].Fill(genEtaPt)
                         hpTGenAcc[vtype].Fill(gen_eta.Pt())
                         hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity())
-                        acc_weight[vtype][0] += evt_weight
-                        acc_filled[0] = True
+                        acc_weight[vtype][1] += evt_weight
+                        acc_filled[1] = True
                     #now see if it also passes the stricter cuts
                     if passedTrig and vtype not in ["mmg", "mumu"]:
-                        if (not acc_filled[1]) and (WP90ID_p > 0 and WP90ID_n > 0):
-                            acc_weight[vtype][1] += evt_weight
-                            acc_filled[1] = True
-                            if (not acc_filled[5]) and (mee < 0.04 or mee > 0.09):
-                                acc_weight[vtype][5] += evt_weight
-                                acc_filled[5] = True
-                        if (not acc_filled[2]) and (WP90ID_p > 0 or WP90ID_n > 0):
+                        if (not acc_filled[2]) and (WP90ID_p > 0 and WP90ID_n > 0):
                             acc_weight[vtype][2] += evt_weight
                             acc_filled[2] = True
                             if (not acc_filled[6]) and (mee < 0.04 or mee > 0.09):
                                 acc_weight[vtype][6] += evt_weight
                                 acc_filled[6] = True
-                        if (not acc_filled[3]) and (WP80ID_p > 0 and WP80ID_n > 0):
+                        if (not acc_filled[3]) and (WP90ID_p > 0 or WP90ID_n > 0):
                             acc_weight[vtype][3] += evt_weight
                             acc_filled[3] = True
                             if (not acc_filled[7]) and (mee < 0.04 or mee > 0.09):
                                 acc_weight[vtype][7] += evt_weight
                                 acc_filled[7] = True
-                        if (not acc_filled[4]) and (mee < 0.04 or mee > 0.09):
+                        if (not acc_filled[4]) and (WP80ID_p > 0 and WP80ID_n > 0):
                             acc_weight[vtype][4] += evt_weight
                             acc_filled[4] = True
+                            if (not acc_filled[8]) and (mee < 0.04 or mee > 0.09):
+                                acc_weight[vtype][8] += evt_weight
+                                acc_filled[8] = True
+                        if (not acc_filled[5]) and (mee < 0.04 or mee > 0.09):
+                            acc_weight[vtype][5] += evt_weight
+                            acc_filled[5] = True
                 if dr < dRcut and passedTrig and not accdR_filled:
                     hpTGenAccdR[vtype].Fill(gen_eta.Pt()) 
                     accdR_weight[vtype] += evt_weight
@@ -1537,8 +1538,8 @@ def finish_processing(foutname):
             hEtaGenAcc[vtype].Write()
             hvxy_gm[vtype].Write()
             #write out the acceptances as a TGraph
-            sel[vtype] = ROOT.TGraph( nselections, array.array('f', [s for s in range(nselections)]), 
-                array.array('f', [acc_weight[vtype][s]/all_weight for s in range(nselections)]) ) 
+            acc_weight[vtype][0] = all_weight
+            sel[vtype] = ROOT.TGraph( nselections+1, array.array('f', [s for s in range(nselections+1)]), array.array('f', acc_weight[vtype]) ) 
             sel[vtype].SetName("selAcc"+vtype)
             sel[vtype].Write()
             print("wrote the tg for " + vtype)
