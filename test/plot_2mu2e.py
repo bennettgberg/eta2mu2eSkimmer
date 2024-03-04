@@ -28,7 +28,7 @@ muEtacut = 2.4
 cut_mee = False
 
 #what test number to label the output files with
-testnum = 3858
+testnum = 3859
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -237,6 +237,8 @@ hEta = {}
 hVxy = {}
 #2-d hist of invar. mass vs. pT
 hMvsPt = {}
+#2-d hist of ee invar mass vs mmee
+hMeeVsMmmee = ROOT.TH2F("hMeeVsMmmee", "", 200, 0.0, 1.0, 200, 0.0, 1.0) 
 if isMC and not isSig:
     hMeeNoG = {}
     hMeeG = {}
@@ -920,6 +922,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, evt_weight
             pt = vec_eta.Pt() 
             m = vec_eta.M()
 
+            if vtype == "mmelel":
+                hMeeVsMmmee.Fill(mee, m) 
+
             if danEvent:
                 print(vtype + " vtx " + str(jj) + " mass: %f"%m) 
 
@@ -1474,6 +1479,7 @@ def finish_processing(foutname):
     hnPV.Write()
     hMSSe.Write()
     hMOSe.Write()
+    hMeeVsMmmee.Write()
     for vtype in vtypes:
         hM[vtype].Write()
         hMNoWt[vtype].Write()
