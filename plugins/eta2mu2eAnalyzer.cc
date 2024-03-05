@@ -1155,7 +1155,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //    }
     //}
 
-    if( !useElTrig || nt.mmelelVtxChi2_.size() > 0 ) {
+    //for the DoubleElectron trigger, only need to save the events that have at least 2 good muons
+    if( !useElTrig || nt.recoNGoodMuon_ > 1 ) {
         //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
         recoT->Fill();
         if(!isData) {
