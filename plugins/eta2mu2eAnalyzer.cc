@@ -1165,10 +1165,22 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //if( !useElTrig || nt.recoNGoodMuon_ > 1 ) {
     //if( nt.recoNGoodMuon_ > 1 ) {
     if( (!useElTrig && nt.recoNGoodMuon_ > 1) || (useElTrig && muonsP.size() == 1 && muonsN.size() == 1) ) {
-        //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
-        recoT->Fill();
-        if(!isData) {
-            genT->Fill();
+        //for electron triggers, invar mass needs to be .45 to .65 GeV
+        float m2mu = .55;
+        if(useElTrig) {
+            TLorentzVector mu0;
+            TLorentzVector mu1;
+            mu0.SetPtEtaPhiM(nt.recoMuonPt_[0], nt.recoMuonEta_[0], nt.recoMuonPhi_[0], mu_mass); 
+            mu1.SetPtEtaPhiM(nt.recoMuonPt_[1], nt.recoMuonEta_[1], nt.recoMuonPhi_[1], mu_mass);             
+            m2mu = (mu0+mu1).M();
+        }
+        //this is always true for DoubleMuon trigger
+        if(m2mu > .45 && m2mu < .65) {
+            //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
+            recoT->Fill();
+            if(!isData) {
+                genT->Fill();
+            }
         }
     }
 
