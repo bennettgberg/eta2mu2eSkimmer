@@ -179,7 +179,7 @@ void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm
 //compute vertices for two muons vectors coll_1 and coll_2, and add them to the ntuple.
 // (overloaded below)
 // Return type: struct VertexTracks (defined above)
-VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt, reco::Vertex pv) {
+VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt, reco::Vertex pv, bool useElTrig) {
     VertexTracks myVertTracks;
     myVertTracks.tracksP = {};
     myVertTracks.tracksN = {};
@@ -247,6 +247,10 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
             
         } // j loop
     } // i loop
+    if(useElTrig) {
+        myVertTracks.muonsP = coll_1;
+        myVertTracks.muonsN = coll_2;
+    }
     return myVertTracks;
 } // computeVertices
 

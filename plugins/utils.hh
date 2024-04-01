@@ -61,7 +61,7 @@ NtupleContainer addMuon(pat::Muon, reco::Vertex);
 
 // compute vertices for two muon vectors coll_1 and coll_2, and add them to the ntuple.
 //void computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt);
-VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt, reco::Vertex pv);
+VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt, reco::Vertex pv, bool useElTrig);
 
 // compute vertices for two track vectors coll_1 and coll_2, and add them to the ntuple.
 void computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt);
