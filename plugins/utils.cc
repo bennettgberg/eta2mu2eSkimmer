@@ -221,13 +221,17 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
                 if(igood[i]<0){
                     nt.muonsP.push_back(nt.recoNGoodMuon_);
                     igood[i] = static_cast<int>(nt.recoNGoodMuon_);
-                    nt = addMuon(nt, coll_1[i], pv);
+                    if(!useElTrig) {
+                        nt = addMuon(nt, coll_1[i], pv);
+                    }
                     myVertTracks.muonsP.push_back(coll_1[i]);
                 }
                 if(jgood[j]<0){
                     nt.muonsN.push_back(nt.recoNGoodMuon_);
                     jgood[j] = static_cast<int>(nt.recoNGoodMuon_);
-                    nt = addMuon(nt, coll_2[j], pv);
+                    if(!useElTrig) {
+                        nt = addMuon(nt, coll_2[j], pv);
+                    }
                     myVertTracks.muonsN.push_back(coll_2[j]);
                 }
                 //uint8_t muP = nt.muonsP[i];
