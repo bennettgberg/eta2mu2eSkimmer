@@ -179,7 +179,7 @@ void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm
 //compute vertices for two muons vectors coll_1 and coll_2, and add them to the ntuple.
 // (overloaded below)
 // Return type: struct VertexTracks (defined above)
-VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt, reco::Vertex pv) {
+VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt, reco::Vertex pv, bool useElTrig) {
     VertexTracks myVertTracks;
     myVertTracks.tracksP = {};
     myVertTracks.tracksN = {};
@@ -221,13 +221,17 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
                 if(igood[i]<0){
                     nt.muonsP.push_back(nt.recoNGoodMuon_);
                     igood[i] = static_cast<int>(nt.recoNGoodMuon_);
-                    nt = addMuon(nt, coll_1[i], pv);
+                    if(!useElTrig) {
+                        nt = addMuon(nt, coll_1[i], pv);
+                    }
                     myVertTracks.muonsP.push_back(coll_1[i]);
                 }
                 if(jgood[j]<0){
                     nt.muonsN.push_back(nt.recoNGoodMuon_);
                     jgood[j] = static_cast<int>(nt.recoNGoodMuon_);
-                    nt = addMuon(nt, coll_2[j], pv);
+                    if(!useElTrig) {
+                        nt = addMuon(nt, coll_2[j], pv);
+                    }
                     myVertTracks.muonsN.push_back(coll_2[j]);
                 }
                 //uint8_t muP = nt.muonsP[i];
@@ -247,6 +251,10 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
             
         } // j loop
     } // i loop
+    if(useElTrig) {
+        myVertTracks.muonsP = coll_1;
+        myVertTracks.muonsN = coll_2;
+    }
     return myVertTracks;
 } // computeVertices
 

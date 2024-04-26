@@ -361,46 +361,46 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
     } //end use muon triggers
     else { //use electron triggers
         triggerNames = { "HLT_DoubleEle10_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle10_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle10_eta1p22_mMax6",
-    "HLT_DoubleEle4_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle4_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle4_eta1p22_mMax6",
-    "HLT_DoubleEle4p5_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle4p5_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle4p5_eta1p22_mMax6",
-    "HLT_DoubleEle5_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle5_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle5_eta1p22_mMax6",
-    "HLT_DoubleEle5p5_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle5p5_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle5p5_eta1p22_mMax6",
-    "HLT_DoubleEle6_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle6_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle6_eta1p22_mMax6",
-    "HLT_DoubleEle6p5_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle6p5_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle6p5_eta1p22_mMax6",
-    "HLT_DoubleEle7_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle7_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle7_eta1p22_mMax6",
-    "HLT_DoubleEle7p5_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle7p5_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle7p5_eta1p22_mMax6",
-    "HLT_DoubleEle8_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle8_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle8_eta1p22_mMax6",
-    "HLT_DoubleEle8p5_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle8p5_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle8p5_eta1p22_mMax6",
-    "HLT_DoubleEle9_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle9_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle9_eta1p22_mMax6",
-    "HLT_DoubleEle9p5_eta1p22_mMax6_dz0p8",
-    "HLT_DoubleEle9p5_eta1p22_mMax6_trkHits10",
-    "HLT_DoubleEle9p5_eta1p22_mMax6",
-    "HLT_SingleEle8_SingleEGL1",
-    "HLT_SingleEle8"   };                           
+            "HLT_DoubleEle10_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle10_eta1p22_mMax6",
+            "HLT_DoubleEle4_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle4_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle4_eta1p22_mMax6",
+            "HLT_DoubleEle4p5_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle4p5_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle4p5_eta1p22_mMax6",
+            "HLT_DoubleEle5_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle5_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle5_eta1p22_mMax6",
+            "HLT_DoubleEle5p5_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle5p5_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle5p5_eta1p22_mMax6",
+            "HLT_DoubleEle6_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle6_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle6_eta1p22_mMax6",
+            "HLT_DoubleEle6p5_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle6p5_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle6p5_eta1p22_mMax6",
+            "HLT_DoubleEle7_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle7_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle7_eta1p22_mMax6",
+            "HLT_DoubleEle7p5_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle7p5_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle7p5_eta1p22_mMax6",
+            "HLT_DoubleEle8_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle8_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle8_eta1p22_mMax6",
+            "HLT_DoubleEle8p5_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle8p5_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle8p5_eta1p22_mMax6",
+            "HLT_DoubleEle9_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle9_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle9_eta1p22_mMax6",
+            "HLT_DoubleEle9p5_eta1p22_mMax6_dz0p8",
+            "HLT_DoubleEle9p5_eta1p22_mMax6_trkHits10",
+            "HLT_DoubleEle9p5_eta1p22_mMax6",
+            "HLT_SingleEle8_SingleEGL1",
+            "HLT_SingleEle8"   };                           
     }
 
     for(std::string tName : triggerNames) {
@@ -472,6 +472,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     if (!getCollections(iEvent))
         return;
 
+    //for Double-Electron trigger, save ONLY events with exactly 2 OS muons of invar mass .45 - .65 GeV
+    if(useElTrig && recoMuonHandle_->size() != 2) {
+        return;
+    }
     // Clear branches before filling
     nt.ClearTreeBranches();
 
@@ -701,11 +705,13 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     nt.recoNGoodMuon_ = 0;
     for (size_t i = 0; i < recoMuonHandle_->size(); i++) {
         pat::MuonRef muonRef(recoMuonHandle_, i);
-        //muon info will be added later, once we're sure this is a useful muon
-        //nt.recoMuonPt_.push_back(muonRef->pt());
-        //nt.recoMuonEta_.push_back(muonRef->eta());
-        //nt.recoMuonPhi_.push_back(muonRef->phi());
-        //nt.recoMuonCharge_.push_back(muonRef->charge());
+        //For DoubleMuon triggers, muon info will be added later, once we're sure this is a useful muon
+        if(useElTrig) {
+            nt.recoMuonPt_.push_back(muonRef->pt());
+            nt.recoMuonEta_.push_back(muonRef->eta());
+            nt.recoMuonPhi_.push_back(muonRef->phi());
+            nt.recoMuonCharge_.push_back(muonRef->charge());
+        }
         if ( muonRef->charge() > 0 ) {
             muonsP.push_back(* muonRef );
         }
@@ -1131,7 +1137,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //computeKinematicVertices(elLowPtTracksP, elLowPtTracksN, "lplp", theB, kvf, nt);
 
     // MU-MU 
-    VertexTracks primVertTrx = computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt, pv);
+    VertexTracks primVertTrx = computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt, pv, useElTrig);
     //save ONLY the muons that form good muon-muon vertices (otherwise will be too many)
     muonsN = primVertTrx.muonsN;
     muonsP = primVertTrx.muonsP;
@@ -1155,11 +1161,29 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //    }
     //}
 
-    if( !useElTrig || nt.mmelelVtxChi2_.size() > 0 ) {
-        //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
-        recoT->Fill();
-        if(!isData) {
-            genT->Fill();
+    //for the DoubleElectron trigger, only need to save the events that have at least 2 good muons
+    //if( !useElTrig || nt.recoNGoodMuon_ > 1 ) {
+    //if( nt.recoNGoodMuon_ > 1 ) {
+    if( (!useElTrig && nt.recoNGoodMuon_ > 1) || (useElTrig && muonsP.size() == 1 && muonsN.size() == 1) ) {
+        //for electron triggers, invar mass needs to be .45 to .65 GeV
+        float m2mu = .55;
+        if(useElTrig) {
+            TLorentzVector mu0;
+            TLorentzVector mu1;
+            mu0.SetPtEtaPhiM(nt.recoMuonPt_[0], nt.recoMuonEta_[0], nt.recoMuonPhi_[0], mu_mass); 
+            mu1.SetPtEtaPhiM(nt.recoMuonPt_[1], nt.recoMuonEta_[1], nt.recoMuonPhi_[1], mu_mass);             
+            m2mu = (mu0+mu1).M();
+            if(mu0.Pt() > 20 && mu1.Pt() > 20 && m2mu > .45 && m2mu < .65) {
+                std::cout << "run " << nt.runNum_ << " event " << nt.eventNum_ << " muon pts: " << nt.recoMuonPt_[0] << ", " << nt.recoMuonPt_[1] << std::endl;
+            }
+        }
+        //this is always true for DoubleMuon trigger
+        if(m2mu > .45 && m2mu < .65) {
+            //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
+            recoT->Fill();
+            if(!isData) {
+                genT->Fill();
+            }
         }
     }
 
