@@ -12,19 +12,35 @@ if square:
     m2bins = 320 #80
 
 #regions: peak, LSide (lower sideband), RSide (upper sideband) in invariant mass spectrum
-region = "peak" #"Side"
+region = "peak" #"RSide" #"Side" #"peak" #"Side"
 if region == "peak": region = ""
 
 subtract_side = False
 
-##WP90 req'd on both electrons
-#f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3837_ALL.root")
-###singleVert only!
-##f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3840_ALL.root")
-##WP90 req'd on one electron only
-#f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3838_ALL.root")
-#No elID required
-f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3850_ALL.root")
+#how many electrons to req WP90 ID on?
+req_elID = 2
+
+isMC = False
+isSig = False
+
+if not isMC:
+    ##WP90 req'd on both electrons
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3837_ALL.root")
+    ###singleVert only!
+    ##f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3840_ALL.root")
+    ##WP90 req'd on one electron only
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3838_ALL.root")
+    #No elID required
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3850_ALL.root")
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3859_ALL.root")
+    if req_elID == 0:
+        f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3868_ALL.root")
+    elif req_elID == 2:
+        f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3860_ALL.root")
+elif isSig:
+    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3868.root")
+else:
+    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3868.root")
 
 hFull = f.Get("hMmmelel")
 
@@ -39,7 +55,8 @@ if subtract_side:
 for i in range(hFull.GetNbinsX()+1):
     center = hFull.GetBinCenter(i)
     #if (region == "" and center >= .52 and center <= .58) or (region == "LSide" and center < .52 and i != 0) or (region == "RSide" and center > .58):
-    if (region == "" and center >= .52 and center <= .58) or (region == "LSide" and center < .45 and i != 0) or (region == "RSide" and center > .65 and center < .75) or (region == "Side" and ((center > .47 and center < .51) or (center > .60 and center < .65))):
+    #if (region == "" and center >= .52 and center <= .58) or (region == "LSide" and center < .45 and i != 0) or (region == "RSide" and center > .65 and center < .75) or (region == "Side" and ((center > .47 and center < .51) or (center > .60 and center < .65))):
+    if (region == "" and center >= .51 and center <= .60) or (region == "LSide" and center > .45 and center < .49) or (region == "RSide" and center > .62 and center < .67) or (region == "Side" and ((center > .45 and center < .49) or (center > .62 and center < .67))):
         if square: hmmelel2.Fill(center*center, hFull.GetBinContent(i)) 
         else: hmmelel2.Fill(center, hFull.GetBinContent(i)) 
 
