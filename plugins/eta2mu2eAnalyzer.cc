@@ -711,6 +711,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             nt.recoMuonEta_.push_back(muonRef->eta());
             nt.recoMuonPhi_.push_back(muonRef->phi());
             nt.recoMuonCharge_.push_back(muonRef->charge());
+            nt.recoMuonIDResult_.push_back( muonRef->isLooseMuon() + 2*muonRef->isMediumMuon() + 4*muonRef->isTightMuon(pv) );
         }
         if ( muonRef->charge() > 0 ) {
             muonsP.push_back(* muonRef );
