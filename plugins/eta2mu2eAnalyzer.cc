@@ -707,16 +707,26 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         pat::MuonRef muonRef(recoMuonHandle_, i);
         //For DoubleMuon triggers, muon info will be added later, once we're sure this is a useful muon
         if(useElTrig) {
-            nt.recoMuonPt_.push_back(muonRef->pt());
-            nt.recoMuonEta_.push_back(muonRef->eta());
-            nt.recoMuonPhi_.push_back(muonRef->phi());
-            nt.recoMuonCharge_.push_back(muonRef->charge());
-            nt.recoMuonIDResult_.push_back( muonRef->isLooseMuon() + 2*muonRef->isMediumMuon() + 4*muonRef->isTightMuon(pv) );
-        }
-        if ( muonRef->charge() > 0 ) {
+            int8_t muID = muonRef->isLooseMuon() + 2*muonRef->isMediumMuon() + 4*muonRef->isTightMuon(pv);
+            if(muID > 0) {
+                nt.recoMuonPt_.push_back(muonRef->pt());
+                nt.recoMuonEta_.push_back(muonRef->eta());
+                nt.recoMuonPhi_.push_back(muonRef->phi());
+                nt.recoMuonCharge_.push_back(muonRef->charge());
+                nt.recoMuonIDResult_.push_back( muID );
+                if ( muonRef->charge() > 0 ) {
+                    muonsP.push_back(* muonRef );
+                }
+                else {
+                    muonsN.push_back(* muonRef );
+                }
+            }
+        } //end eltrigger
+        else if ( muonRef->charge() > 0 ) {
             muonsP.push_back(* muonRef );
         }
         else {
+            //not electron trigger, not positive muon -> negative muon
             muonsN.push_back(* muonRef );
         }
         ////nt.recoMuonIDResult_.push_back( (float) (muonRef->muonID("All")) );
