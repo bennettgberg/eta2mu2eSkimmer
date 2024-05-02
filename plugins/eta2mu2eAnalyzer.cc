@@ -720,6 +720,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 else {
                     muonsN.push_back(* muonRef );
                 }
+                nt.recoNGoodMuon_++;
             }
         } //end eltrigger
         else if ( muonRef->charge() > 0 ) {
@@ -1175,28 +1176,52 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //for the DoubleElectron trigger, only need to save the events that have at least 2 good muons
     //if( !useElTrig || nt.recoNGoodMuon_ > 1 ) {
     //if( nt.recoNGoodMuon_ > 1 ) {
-    if( (!useElTrig && nt.recoNGoodMuon_ > 1) || (useElTrig && muonsP.size() == 1 && muonsN.size() == 1) ) {
+    if( (!useElTrig && nt.recoNGoodMuon_ > 1) || (useElTrig && muonsP.size() >= 1 && muonsN.size() >= 1) ) {
         //for electron triggers, invar mass needs to be .45 to .65 GeV
         float m2mu = .55;
         if(useElTrig) {
             TLorentzVector mu0;
             TLorentzVector mu1;
-            mu0.SetPtEtaPhiM(nt.recoMuonPt_[0], nt.recoMuonEta_[0], nt.recoMuonPhi_[0], mu_mass); 
-            mu1.SetPtEtaPhiM(nt.recoMuonPt_[1], nt.recoMuonEta_[1], nt.recoMuonPhi_[1], mu_mass);             
+            //mu0.SetPtEtaPhiM(nt.recoMuonPt_[0], nt.recoMuonEta_[0], nt.recoMuonPhi_[0], mu_mass); 
+            //mu1.SetPtEtaPhiM(nt.recoMuonPt_[1], nt.recoMuonEta_[1], nt.recoMuonPhi_[1], mu_mass);             
+            //find the muons with maximum pT
+            int pmax = 0;
+            int nmax = 0;
+            float pptmax = 0;
+            float nptmax = 0;
+            //find the pos,neg muons with maximum pt
+            for(uint32_t idx = 0 ; idx < nt.recoNGoodMuon_ ; idx++) {
+                if(nt.recoMuonCharge_[idx] == 1) {
+                    if(nt.recoMuonPt_[idx] > pptmax) {
+                        pmax = idx;
+                        pptmax = nt.recoMuonPt_[idx];
+                    }
+                }
+                else {
+                    //negative muon
+                    if(nt.recoMuonPt_[idx] > nptmax) {
+                        nmax = idx;
+                        nptmax = nt.recoMuonPt_[idx];
+                    }
+                } //end negative muon
+            } //end for muon loop
+            mu0.SetPtEtaPhiM(nt.recoMuonPt_[pmax], nt.recoMuonEta_[pmax], nt.recoMuonPhi_[pmax], mu_mass); 
+            mu1.SetPtEtaPhiM(nt.recoMuonPt_[nmax], nt.recoMuonEta_[nmax], nt.recoMuonPhi_[nmax], mu_mass);             
             m2mu = (mu0+mu1).M();
             if(mu0.Pt() > 20 && mu1.Pt() > 20 && m2mu > .45 && m2mu < .65) {
                 std::cout << "run " << nt.runNum_ << " event " << nt.eventNum_ << " muon pts: " << nt.recoMuonPt_[0] << ", " << nt.recoMuonPt_[1] << std::endl;
             }
-        }
+        } //end useElTrig block
         //this is always true for DoubleMuon trigger
-        if(m2mu > .45 && m2mu < .65) {
+        //if(m2mu > .45 && m2mu < .65) {
+        if(m2mu < 2.0) {
             //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
             recoT->Fill();
             if(!isData) {
                 genT->Fill();
             }
-        }
-    }
+        } //end good m2mu block
+    } //end possibly writeable event block
 
     if(!isData) {
         if(nt.mumuVtxDr_.size() > 0) {
@@ -1222,8 +1247,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 accGenPtEta->Fill(genEtaVec.Pt());
             }
             //std::cout << "done with the filling now" << std::endl;
-        }
-    }
+        } //end good mmelel vert(ex/ices) block
+    } //end isMC block
 
     return;
 }
