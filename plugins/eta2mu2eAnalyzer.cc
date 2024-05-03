@@ -473,7 +473,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         return;
 
     //for Double-Electron trigger, save ONLY events with exactly 2 OS muons of invar mass .45 - .65 GeV
-    if(useElTrig && recoMuonHandle_->size() != 2) {
+    //if(useElTrig && recoMuonHandle_->size() != 2) {
+    if(useElTrig && recoMuonHandle_->size() < 2) {
         return;
     }
     // Clear branches before filling
@@ -703,11 +704,13 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     vector<pat::Muon> muonsP {};
     vector<pat::Muon> muonsN {};
     nt.recoNGoodMuon_ = 0;
+    std::cout << "recoMuonHandle size: " << (int)recoMuonHandle_->size() << std::endl;
     for (size_t i = 0; i < recoMuonHandle_->size(); i++) {
         pat::MuonRef muonRef(recoMuonHandle_, i);
         //For DoubleMuon triggers, muon info will be added later, once we're sure this is a useful muon
         if(useElTrig) {
             int8_t muID = muonRef->isLooseMuon() + 2*muonRef->isMediumMuon() + 4*muonRef->isTightMuon(pv);
+            //std::cout << "i=" << (int)i << ", muID=" << (int)muID << std::endl;
             if(muID > 0) {
                 nt.recoMuonPt_.push_back(muonRef->pt());
                 nt.recoMuonEta_.push_back(muonRef->eta());
@@ -734,6 +737,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         //NGoodMuon is set later
         ////nt.recoNGoodMuon_++;
     }
+    //if(nt.recoNGoodMuon_ > 2) {
+    //    std::cout << (int)nt.recoNGoodMuon_ << " good muons! --beginning" << std::endl;
+    //}
 
     // Pick pair of muons with smallest vertex chi square fit for all collection combos
     edm::ESHandle<TransientTrackBuilder> theB = iSetup.getHandle(esToken_);
@@ -1215,6 +1221,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         //this is always true for DoubleMuon trigger
         //if(m2mu > .45 && m2mu < .65) {
         if(m2mu < 2.0) {
+            //if(nt.recoNGoodMuon_ > 2) {
+            //    std::cout <<"********* " << (int)nt.recoNGoodMuon_ << " good muons-- boutta fill!" << std::endl;
+            //}
             //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
             recoT->Fill();
             if(!isData) {
