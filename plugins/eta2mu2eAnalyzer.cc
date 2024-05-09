@@ -1220,7 +1220,8 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         } //end useElTrig block
         //this is always true for DoubleMuon trigger
         //if(m2mu > .45 && m2mu < .65) {
-        if(m2mu < 2.0) {
+        //if(m2mu < 2.0) {
+        if(m2mu < 5.0) {
             //if(nt.recoNGoodMuon_ > 2) {
             //    std::cout <<"********* " << (int)nt.recoNGoodMuon_ << " good muons-- boutta fill!" << std::endl;
             //}
