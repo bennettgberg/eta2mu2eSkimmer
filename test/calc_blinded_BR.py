@@ -15,6 +15,7 @@ elif year == 2023:
     lumi = 28.89 #fb^-1 (all 2023)
 
 selection = "nominal"
+#selection = "nomuID"
 #selection = "loose"
 #selection = "tight"
 #selection = "vloose"
@@ -26,11 +27,12 @@ refBkg = "Cheb4"
 #refMod = "Voigtian"
 #refBkg = "Cheb3"
 
-new_wt = 3 #True
+new_wt = 1 #True
 
 if year == 2022:
     #Get 2mu2e acceptance!
-    if selection == "nominal" and not new_wt:
+    #if selection == "nominal" and not new_wt:
+    if selection == "nomuID" and not new_wt:
         #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3837.root")
         #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3860.root")
         f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3866.root")
@@ -40,23 +42,32 @@ if year == 2022:
         #DoubleGauss fit
         N2mu2e = 153.86
         Err2mu2e = 16.63
-    elif selection == "nominal" and new_wt == 1:
+    elif selection == "nomuID" and new_wt == 1:
     #new_wt: DG/Cheb4
         f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3876.root")
         #get this from the fit to data
         #DoubleGauss fit 155.262708 +/- 19.069812
         N2mu2e = 155.00 #26
         Err2mu2e = 18.57 #19.07
-    elif selection == "nominal" and new_wt == 2:
+    elif selection == "nomuID" and new_wt == 2:
         #155.088371 +/- 17.160677
         f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3879.root")
         N2mu2e = 155.09
         Err2mu2e = 17.16
-    elif selection == "nominal" and new_wt == 3:
+    elif selection == "nomuID" and new_wt == 3:
         #154.424684 +/- 24.088907 (stat.)
         f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3880.root")
         N2mu2e = 154.42
         Err2mu2e = 24.09
+    elif selection == "nominal":
+        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3884.root")
+        #N2mu2e = 135.17
+        #Err2mu2e = 14.05
+        #WITH triggercorrections: 136.664236 +/- 14.085243 (stat.)
+        #Nominal frfrfrfrfrfrfr
+        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3888.root")
+        N2mu2e = 136.66
+        Err2mu2e = 14.09 
     elif selection == "loose":
         f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3838.root")
         N2mu2e = 766.5
@@ -118,7 +129,10 @@ ptAcc2mu2e.Divide(ptGen2mu2e)
 #        xsfname = "xsec2022_%s%s.root"%(refMod if refMod != "Voigtian" else "", refBkg if refBkg != "Cheb3" else "")
 #else:
 #    xsfname = "xsec2022.root"
-xsfname = "xsec2022_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
+if selection == "nomuID":
+    xsfname = "xsec2022_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
+elif selection == "nominal":
+    xsfname = "xsec2022_muID_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
 xsecf = ROOT.TFile.Open(xsfname)
 xsec = xsecf.Get("hXsecCor") 
 

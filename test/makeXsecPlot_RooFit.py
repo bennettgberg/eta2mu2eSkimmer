@@ -9,16 +9,16 @@ from decimal import Decimal
 #if only testing, use smaller input file and do NOT overwrite output files
 test = False #True
 #set to true if want to remake all the plots for the individual pT bins
-remake = False #True
+remake = True
 
 #rewrite the xsec2022.root file or nah?
-rewrite = False #True
+rewrite = True
 
 #include the Run2 Scouting result on the same plot for comparison? or nah
-inc_run2 = False
+inc_run2 = True #False
 
 #include the corrections, or JUST show the uncorrected xsec ?
-inc_corr = False
+inc_corr = True
 
 #make plot of xsec as a function of pT for eta->2mu!
 if test:
@@ -34,7 +34,12 @@ else:
     #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3818_ALL.root", "read")
     ##singleVert only
     #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3844_ALL.root", "read")
-    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3860_ALL.root", "read")
+    #normal (no muon ID)
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3860_ALL.root", "read")
+    #med muon ID
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3883_ALL.root", "read")
+    #require loose muon ID!
+    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3884_ALL.root", "read")
 
 h2d = f.Get("hMvsPtmumu")
 
@@ -102,7 +107,11 @@ hRawYields = ROOT.TH1F("hRawYields", "hRawYields", newnptbins, array('d', newbin
 #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3842.root")
 #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3860.root")
 #including latest pileup corrections
-f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3865.root")
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3865.root")
+#medium (?) muon ID required
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3883.root")
+#loose muon ID required
+f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3884.root")
 ptGen1 = f2mu.Get("hpTGenAll")
 ptGen1.SetName("hpTGenAllmumu")
 #ptGen.Rebin(5)
@@ -177,7 +186,7 @@ for j in range(nptbins+1): #-1):
     hipt = nextbin
     nextbin = newbins[nb+1]
     print("*********lowbin: %d, nextbin: %d, lowpt: %f, hipt: %f******************"%(lowbin, nextbin, lowpt, hipt)) 
-    if remake and lowpt > 5: #69: #28: #40: #3: #i > 30 and i < 32: 
+    if remake and lowpt > 18: #5 #69: #28: #40: #3: #i > 30 and i < 32: 
         ctest = ROOT.TCanvas()
         ctest.cd()
     #projection = h2d.ProjectionY("hx"+str(i),i+1, i+1)
@@ -249,7 +258,14 @@ for j in range(nptbins+1): #-1):
             myfitter.set_sig_params( mg=library.Param(.547, .544, .549), sg1=library.Param(.01, .001, .02), sg2=library.Param(0.01, 0.002, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
     elif sigModel == 'DoubleGauss':
         if lowpt > 7 and lowpt < 9:
+        #if 2 + 2 == 5:
             myfitter.set_sig_params( mg=library.Param(.547, .544, .548), sg1=library.Param(.01, .001, .02), sg2=library.Param(0.005, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 25:
+            myfitter.set_sig_params( mg=library.Param(.548, .544, .548), sg1=library.Param(.013, .001, .02), sg2=library.Param(0.002, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 18:
+            myfitter.set_sig_params( mg=library.Param(.548, .544, .548), sg1=library.Param(.013, .0005, .02), sg2=library.Param(0.002, 0.0005, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 9:
+            myfitter.set_sig_params( mg=library.Param(.548, .544, .548), sg1=library.Param(.01, .001, .02), sg2=library.Param(0.005, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
     elif sigModel == 'TripleGauss':
         myfitter.set_sig_params( mg=library.Param(.547, .544, .548), sg1=library.Param(.01, .0001, .02), sg2=library.Param(0.005, 0.001, 0.1), sig1frac=library.Param(0.5, 0.05, 0.95), sg3=library.Param(0.005, 0.001, 0.1), sig2frac=library.Param(0.5, 0.05, 0.95) ) 
     elif sigModel == 'CB':
@@ -269,7 +285,12 @@ for j in range(nptbins+1): #-1):
     elif bkgMod == 'Cheb2':
         myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(.92, -1., 1.) )
     elif bkgMod == 'Cheb4':
-        myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(.92, -1., 1.), a3=library.Param(.001, -1., 1.), a4=library.Param(.05, -1., 1.))
+        if lowpt < 9:
+            myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(.92, -1., 1.), a3=library.Param(.001, -1., 1.), a4=library.Param(.05, -1., 1.))
+        elif lowpt > 25:
+            myfitter.set_bkg_params( a1=library.Param(-.40, -1, 1), a2=library.Param(.70, -1., 1.), a3=library.Param(.1, -1., 1.), a4=library.Param(.5, -1., 1.))
+        else:
+            myfitter.set_bkg_params( a1=library.Param(-.50, -1, 1), a2=library.Param(.50, -1., 1.), a3=library.Param(.001, -1., 1.), a4=library.Param(.05, -1., 1.))
     fit_result = myfitter.model.fitTo(data, ROOT.RooFit.Save()) 
     #if test:
     #    fit_func.SetParameters(14000, .1, -.1, 1000, 0.548, 0.01, .1)
@@ -339,7 +360,7 @@ for j in range(nptbins+1): #-1):
     hRawYields.SetBinContent(nb, nEta)
     hRawYields.SetBinError(nb, unct)
 
-    if remake and lowpt > 5: #69: #28: # 3: #30 and i < 32:
+    if remake and lowpt > 18: #5 #69: #28: # 3: #30 and i < 32:
         frame = rrv.frame(ROOT.RooFit.Name(f"pullframe"), ROOT.RooFit.Title(" "))
         frame.SetTitle("Two-Muon Invariant Mass spectrum, %.1f < p_{T} < %.1f GeV"%(lowpt, hipt))
         frame.GetXaxis().SetTitle("m_{2#mu} [GeV]")
@@ -408,7 +429,8 @@ for j in range(nptbins+1): #-1):
         if lowpt > 5:
             input("wait...")
         if not test:
-            ctest.SaveAs("fit_plots_%s%s/bin%d.pdf"%(sigModel, bkgMod if bkgMod != 'Cheb3' else '', lowbin-1)) 
+            #ctest.SaveAs("fit_plots_%s%s/bin%d.pdf"%(sigModel, bkgMod if bkgMod != 'Cheb3' else '', lowbin-1)) 
+            ctest.SaveAs("fit_plots_muID_%s%s/bin%d.pdf"%(sigModel, bkgMod, lowbin-1)) 
     #if nEta < 0:
     #    print("nEta < 0 ????????????")
     #    projection.Draw("hist")

@@ -1,4 +1,4 @@
-letter=E
+letter=D
 setnum=0
 procnum=$(PROCESS)
 #procnum=20
@@ -10,7 +10,7 @@ Output = logs/trigCorex_$(letter)$(setnum)_$(procnum).out
 Error = logs/trigCorex_$(letter)$(setnum)_$(procnum).err
 Log = logs/trigCorex_$(letter)$(setnum)_$(procnum).log
 Proxy_path = /uscms/homes/b/bgreenbe/x509up_u52949
-transfer_input_files = measure_trigCorrex.py,measure_trigCorrex.C,trigfilelists/
+transfer_input_files = measure_trigCorrex.C,trigfilelists/
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 #arguments = $(Proxy_path) $(letter) $(setnum) $(PROCESS)
@@ -18,12 +18,20 @@ arguments = $(Proxy_path) $(letter) $(setnum) $(procnum)
 request_cpus = 4
 request_memory = 8000
 #+JobFlavour  = "testmatch"
-#+JobFlavour  = "tomorrow"
++JobFlavour  = "tomorrow"
 #+JobFlavour  = "longlunch"
-+JobFlavour  = "workday"
+#+JobFlavour  = "workday"
 #+JobFlavour  = "espresso"
 #+JobFlavour  = "microcentury"
+#C
 #Queue 61
-Queue 222
-#Queue 241
+#D
+Queue 20
+#Queue 19
+#Queue 18
+#E
+#Queue 222
+#F
 #Queue 242
+#G
+#Queue 256

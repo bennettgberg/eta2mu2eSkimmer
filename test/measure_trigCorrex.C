@@ -32,7 +32,9 @@ std::vector<std::string> readlist(std::string fname) {
 } //end readlist function
 
 //find the sub-leading pT of muons in the event e
-float find_subleadpt(std::vector<float>* Muon_pt, bool printOn=false) {
+// return the index of it in the pt array (bc that will also allow us to get the corresponding eta, phi, etc) 
+//float find_subleadpt(std::vector<float>* Muon_pt, bool printOn=false) {
+uint8_t find_subleadpt(std::vector<float>* Muon_pt, bool printOn=false) {
     float leadpt = 0.0;
     float subleadpt = -1.0;
     if(printOn) {
@@ -147,12 +149,14 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
 
     //save all the good events of each run num: map from run number to event numbers
     //std::map<ULong64_t, std::vector<std::pair<ULong64_t, float>>> runs;
-    std::map<ULong64_t, std::vector<std::tuple<ULong64_t, float, float>>> runs;
+    std::map<ULong64_t, std::vector<std::tuple<ULong64_t, float, float, float>>> runs;
     //TH1F* hAll = new TH1F("hAll", "subleading p_{T} of DoubleElectron events with 2 muons", 100, 0.0, 100.0);
     //TH1F* hAll = new TH1F("hAll", "subleading p_{T} of SingleMuon events with 2 muons", 100, 0.0, 100.0);
     //TH1F* hAll = new TH1F("hAll", "subleading p_{T} of EGamma events with 2 muons", 100, 0.0, 100.0);
-    TH2F* hsubVdRAll = new TH2F("hsubVdRAll", "subleading p_{T} vs. #Delta R separation of muons (all)", 100, 0.0, 100.0, 100, 0.0, 1.0);
-    TH2F* hsubVdRTrig = new TH2F("hsubVdRTrig", "subleading p_{T} vs. #Delta R separation of muons (passing trigger)", 100, 0.0, 100.0, 100, 0.0, 1.0);
+    TH2F* hsubVdRAllCenter = new TH2F("hsubVdRAllCenter", "subleading p_{T} vs. #Delta R separation of muons (all) w/ |#eta|<1.4", 100, 0.0, 100.0, 100, 0.0, 1.0);
+    TH2F* hsubVdRAllOuter = new TH2F("hsubVdRAllOuter", "subleading p_{T} vs. #Delta R separation of muons (all) w/ |#eta|>1.4", 100, 0.0, 100.0, 100, 0.0, 1.0);
+    TH2F* hsubVdRTrigCenter = new TH2F("hsubVdRTrigCenter", "subleading p_{T} vs. #Delta R separation of muons (passing trigger) w/ |#eta|<1.4", 100, 0.0, 100.0, 100, 0.0, 1.0);
+    TH2F* hsubVdRTrigOuter = new TH2F("hsubVdRTrigOuter", "subleading p_{T} vs. #Delta R separation of muons (passing trigger) w/ |#eta|>1.4", 100, 0.0, 100.0, 100, 0.0, 1.0);
     //TH1F* hPassed = new TH1F("hPassed", "subleading p_{T} of passing DoubleMuon events", 100, 0.0, 100.0);
 
     //for MC, must compare file by file (whereas for data, compare all files to all files)
@@ -171,6 +175,7 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
             //fullpath << "root://cmseos.fnal.gov//store/user/bgreenbe/BParking_2022/ParkingDoubleElectronLowMass" << num << let << "/" << deF;
             //fullpath << "root://cmseos.fnal.gov//store/user/bgreenbe/BParking_2022/ParkingSingleMuon" << num << let << "/" << deF;
             fullpath << "root://cmseos.fnal.gov//store/user/bgreenbe/BParking_2022/EGamma" << let << "/" << deF;
+            //fullpath << "root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_2022/EGamma" << let << "/" << deF;
             //try to xrdcp the file instead of opening it remotely.
             stringstream xrdcmd;
             xrdcmd << "xrdcp " << fullpath.str() << " .";
@@ -226,21 +231,39 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
                 //}
                 //std::cout << "checking nMuons" << std::endl;
                 //requiring EXACTLY 2 muons of opposite charge
-                if(Muon_pt->size() != 2) {
-                    continue;
-                }
-                if((*Muon_charge)[0] == (*Muon_charge)[1]) {
-                    continue;
-                }
+                //if(Muon_pt->size() != 2) {
+                //    continue;
+                //}
+                //if((*Muon_charge)[0] == (*Muon_charge)[1]) {
+                //    continue;
+                //}
+                //find the highest pT mu+ and mu-, get their invar mass
+                uint8_t idxp, idxn;
+                float maxp, maxn;
+                maxp = -1.0;
+                maxn = -1.0;
+                idxp = 0;
+                idxn = 0;
+                for(uint8_t idx = 0; idx < Muon_pt->size(); idx++) {
+                    if((*Muon_charge)[idx] == 1 && (*Muon_pt)[idx] > maxp){
+                        maxp = (*Muon_pt)[idx];
+                        idxp = idx;
+                    }
+                    else if((*Muon_charge)[idx] != 1 && (*Muon_pt)[idx] > maxn){
+                        maxn = (*Muon_pt)[idx];
+                        idxn = idx;
+                    }
+                } //end idx loop
                 //make TLorentzVectors 
                 TLorentzVector mu0;
-                mu0.SetPtEtaPhiM((*Muon_pt)[0], (*Muon_eta)[0], (*Muon_phi)[0], mu_mass);
+                mu0.SetPtEtaPhiM((*Muon_pt)[idxp], (*Muon_eta)[idxp], (*Muon_phi)[idxp], mu_mass);
                 TLorentzVector mu1;
-                mu1.SetPtEtaPhiM((*Muon_pt)[1], (*Muon_eta)[1], (*Muon_phi)[1], mu_mass);
+                mu1.SetPtEtaPhiM((*Muon_pt)[idxn], (*Muon_eta)[idxn], (*Muon_phi)[idxn], mu_mass);
                 float Mmumu = (mu0+mu1).M();
-                if(!(Mmumu > 0.45 && Mmumu < 0.65)) {
-                    continue;
-                }
+                ////if(!(Mmumu > 0.45 && Mmumu < 0.65)) {
+                //if(Mmumu > 2.0) {
+                //    continue;
+                //}
                 ////if there are 2 opposite-sign muons with good invariant mass, this is a good event!
                 ////try all the combos of muons to see if any is good
                 ////auto t_muloop = std::chrono::high_resolution_clock::now();
@@ -278,7 +301,7 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
                 if (it == runs.end()) {
                     //add new entry to the runs map
                     //runs[run] = std::vector<std::pair<ULong64_t, float>>();
-                    runs[run] = std::vector<std::tuple<ULong64_t, float, float>>();
+                    runs[run] = std::vector<std::tuple<ULong64_t, float, float, float>>();
                 } 
 
                 //auto t_find = std::chrono::high_resolution_clock::now();
@@ -287,12 +310,14 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
                 //    std::cout << "find: Elapsed time: " << duration.count() << " seconds" << std::endl;
                 //}
                 //std::cout << "looking for subleadpt..." << std::endl;
-                float subleadpt = find_subleadpt(Muon_pt); //, true);
+                //float subleadpt = find_subleadpt(Muon_pt); //, true);
+                float subleadpt = maxp > maxn ? maxn : maxp;
+                float subleadeta = maxp > maxn ? (*Muon_eta)[idxn] : (*Muon_eta)[idxp];
 
                 float dR = mu0.DeltaR(mu1);
 
                 //now add the evt to the runs
-                runs[run].push_back(std::make_tuple(evt, subleadpt, dR));
+                runs[run].push_back(std::make_tuple(evt, subleadpt, dR, subleadeta));
                 //auto t_findsub = std::chrono::high_resolution_clock::now();
                 //if((t_findsub - t_start).count() - duration.count() > 0.5) {
                 //    duration = t_findsub - t_start;
@@ -300,7 +325,12 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
                 //}
 
                 //hAll->Fill(subleadpt);
-                hsubVdRAll->Fill(subleadpt, dR);
+                if( std::fabs(subleadeta) < 1.4 ) {
+                    hsubVdRAllCenter->Fill(subleadpt, dR);
+                }
+                else {
+                    hsubVdRAllOuter->Fill(subleadpt, dR);
+                }
                 if(subleadpt > 30) {
                     std::cout << "DE subleadpt = " << subleadpt << ": run " << run << " evt " << evt << std::endl;
                     std::cout << "     Muons: pT  \t  eta  \t  phi" << std::endl;
@@ -350,6 +380,7 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
             std::vector<uint8_t> *Muon_charge = nullptr;
             std::vector<float> *Muon_phi = nullptr;
             std::vector<float> *Muon_eta = nullptr;
+            ULong_t Triggers_fired = 0;
             ULong64_t evt = 0;
             ULong64_t run = 0;
 
@@ -358,6 +389,7 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
             muT->SetBranchAddress("Muon_charge", &Muon_charge);
             muT->SetBranchAddress("Muon_phi", &Muon_phi);
             muT->SetBranchAddress("Muon_eta", &Muon_eta);
+            muT->SetBranchAddress("Triggers_fired0", &Triggers_fired);
             muT->SetBranchAddress("evt", &evt);
             muT->SetBranchAddress("run", &run);
 
@@ -389,6 +421,12 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
                     continue;
                 }
 
+//*****            ////for now, for debugging, don't do this!!!!
+            //    //now just make sure it passed our particular triggers
+            //    if((Triggers_fired & ((1<<11) + (1<<12) + (1<<17) + (1<<25) + (1<<26) + (1<<28))) == 0){
+            //        continue;
+            //    }
+
                 //std::cout << "run " << run << " event " << evt << std::endl;
                 //std::cout << "outside Muon_pt size = " << (int)Muon_pt->size() << std::endl;
                 //    std::cout << "     Muons: pT  \t  eta  \t  phi" << std::endl;
@@ -399,9 +437,15 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
                 //float subleadpt = runs[run][itr].second;
                 float subleadpt = std::get<1>(runs[run][itr]);
                 float dR = std::get<2>(runs[run][itr]);
+                float subleadeta = std::get<3>(runs[run][itr]); 
 
                 //hPassed->Fill(subleadpt);
-                hsubVdRTrig->Fill(subleadpt, dR);
+                if(std::fabs(subleadeta) < 1.4) {
+                    hsubVdRTrigCenter->Fill(subleadpt, dR);
+                }
+                else {
+                    hsubVdRTrigOuter->Fill(subleadpt, dR);
+                }
 
                 //std::cout << "back outside Muon_pt size = " << (int)Muon_pt->size() << std::endl;
                 //if(subleadpt > 10) {
@@ -479,8 +523,10 @@ void measure_trigCorrex(std::string lett, std::string numb, std::string proc) {
     std::cout << "Opening output file " << foutname.str() << std::endl;
     TFile *fout = TFile::Open(foutname.str().c_str(), "recreate");
     //hAll->Write();
-    hsubVdRAll->Write();
+    hsubVdRAllCenter->Write();
+    hsubVdRAllOuter->Write();
     //hPassed->Write();
-    hsubVdRTrig->Write();
+    hsubVdRTrigCenter->Write();
+    hsubVdRTrigOuter->Write();
     fout->Close();
 } //end main method
