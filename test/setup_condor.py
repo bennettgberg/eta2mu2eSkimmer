@@ -10,7 +10,7 @@ import sys
 def main():
     
     #submit jobs within this script (T) or just do the setup (F)
-    submit_now = False #True
+    submit_now = True
 
     #true if running the jobs on lxplus instead of cmslpc
     lxplus = False
