@@ -30,9 +30,9 @@ if not isMC:
     #config.General.requestName = 'test1_disptau'
 else:
     if isSig:
-        config.General.requestName = 'test38MC_EtaTo2Mu2E_1'
+        config.General.requestName = 'test43MC_EtaTo2Mu2E_2'
     elif isMuMu:
-        config.General.requestName = 'test38MC_EtaToMuMu_1'
+        config.General.requestName = 'test43MC_EtaToMuMu_0'
     else:
         config.General.requestName = 'test38MC_EtaToMuMuGammaExp22'
 if central:
@@ -67,9 +67,11 @@ else:
         inputFiles = []
         #for i in range(325):
         #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2023_MINIAOD/EtaTo2Mu2E_2023Test_%d_MINIAOD_2023.root'%i)
-        for i in range(650):
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2023_MINIAOD_2/EtaTo2Mu2E_2023Test_%d_MINIAOD_2023.root'%i)
-        for i in range(650):
+        #for i in range(650):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2023_MINIAOD_2/EtaTo2Mu2E_2023Test_%d_MINIAOD_2023.root'%i)
+        #for i in range(650):
+        #    inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2023_MINIAOD_3/EtaTo2Mu2E_2023Test_%d_MINIAOD_2023.root'%i)
+        for i in range(65):
             inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2023_MINIAOD_3/EtaTo2Mu2E_2023Test_%d_MINIAOD_2023.root'%i)
         config.Data.userInputFiles = inputFiles #[
         #    #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaTo2Mu2E/Run3_2022_MINIAOD/EtaTo2Mu2E_2022Test_%d_MINIAOD_2022.root'%i for i in range(65)
@@ -77,12 +79,9 @@ else:
         #]
     elif isMuMu:
         inputFiles = []
-        for i in range(50):
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2022_MINIAOD/EtaToMuMu_2022Test_MINIAOD_%d.root'%i) 
-            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2022_MINIAOD_2/EtaToMuMu_2022Test_MINIAOD_%d.root'%i) 
+        for i in range(150):
+            inputFiles.append('root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2023_MINIAOD/EtaToMuMu_2023Test_MINIAOD_%d.root'%i) 
         config.Data.userInputFiles = inputFiles
-            #'root://cmsxrootd.fnal.gov//store/user/bgreenbe/EtaToMuMu/Run3_2022_MINIAOD/EtaToMuMu_2022Test_MINIAOD_%d.root'%i for i in range(50)
-        #]
     elif not central:
         inputFiles = []
         #for i in range(700):

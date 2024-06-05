@@ -100,7 +100,8 @@ private:
     TTree *recoT, *genT;
     //for MC only
     TH1F *allGenPt, *matchedGenPt, *alldR, *matchedGenPtE, *alldRE, *alldRMu, *allGenPtMu, *allGenPtEl,
-        *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE, *trigGenPtEta; //,
+        *matchedGenPtMu, *allGenPtEta, *matchedGenPtEta, *matchedGenPtEtaE, *trigGenPtEta, 
+        *recoMuGenPtEta, *recoElGenPtEta, *recoGenPtEta, *recoMuVtxGenPtEta, *recoElVtxGenPtEta, *recoVtxGenPtEta, *accRecoGenPtEta, *accGenPtEta; //,
     //for data and MC (but most important for data)
     TH2F *allMvsPt;
         //*hdRP, *hdRN;
@@ -242,6 +243,14 @@ void eta2mu2eAnalyzer::beginJob()
         matchedGenPtEta = new TH1F("matchedGenPtEta", "matchedGenPtEta", 10000, 0., 100.);
         matchedGenPtEtaE = new TH1F("matchedGenPtEtaE", "matchedGenPtEtaE", 10000, 0., 100.);
         trigGenPtEta = new TH1F("trigGenPtEta", "trigGenPtEta", 10000, 0., 100.);
+        recoMuGenPtEta = new TH1F("recoMuGenPtEta", "recoMuGenPtEta", 10000, 0., 100.);
+        recoElGenPtEta = new TH1F("recoElGenPtEta", "recoElGenPtEta", 10000, 0., 100.);
+        recoGenPtEta = new TH1F("recoGenPtEta", "recoGenPtEta", 10000, 0., 100.);
+        recoMuVtxGenPtEta = new TH1F("recoMuVtxGenPtEta", "eta meson gen p_{T} with at least one reco mumu vertex", 10000, 0., 100.);
+        recoElVtxGenPtEta = new TH1F("recoElVtxGenPtEta", "eta meson gen p_{T} with at least one reco elel vertex", 10000, 0., 100.);
+        recoVtxGenPtEta = new TH1F("recoVtxGenPtEta", "eta meson gen p_{T} with at least one reco mmelel vertex", 10000, 0., 100.);
+        accRecoGenPtEta = new TH1F("accRecoGenPtEta", "eta meson gen p_{T} with reco mmelel vertex in .51 < M_vtx < .60", 10000, 0., 100.);
+        accGenPtEta = new TH1F("accGenPtEta", "eta meson gen p_{T} with reco mmelel vertex in .51 < M_vtx < .60 AND passing trigger", 10000, 0., 100.);
 
         srand(time(NULL));
 
@@ -282,74 +291,67 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
     triggerPathsWithVersionNum_.clear();
     trigExist_.clear();
 
-    vector<std::string> triggerNames { "HLT_Dimuon0_Jpsi3p5_Muon2",
-        "HLT_Dimuon0_Jpsi_L1_4R_0er1p5R",
-        "HLT_Dimuon0_Jpsi_L1_NoOS",
-        "HLT_Dimuon0_Jpsi_NoVertexing_L1_4R_0er1p5R",
-        "HLT_Dimuon0_Jpsi_NoVertexing_NoOS",
-        "HLT_Dimuon0_Jpsi_NoVertexing",
-        "HLT_Dimuon0_Jpsi",
-        "HLT_Dimuon0_LowMass_L1_0er1p5R",
-        "HLT_Dimuon0_LowMass_L1_0er1p5",
-        "HLT_Dimuon0_LowMass_L1_4R",
-        "HLT_Dimuon0_LowMass_L1_4",
-        "HLT_Dimuon0_LowMass_L1_TM530",
-        "HLT_Dimuon0_LowMass",
-        "HLT_Dimuon0_Upsilon_L1_4p5NoOS",
-        "HLT_Dimuon0_Upsilon_L1_4p5",
-        "HLT_Dimuon0_Upsilon_L1_4p5er2p0M",
-        "HLT_Dimuon0_Upsilon_L1_4p5er2p0",
-        "HLT_Dimuon0_Upsilon_L1_5M",
-        "HLT_Dimuon0_Upsilon_L1_5",
-        "HLT_Dimuon0_Upsilon_Muon_L1_TM0",
-        "HLT_Dimuon0_Upsilon_Muon_NoL1Mass",
-        "HLT_Dimuon0_Upsilon_NoVertexing",
-        "HLT_Dimuon10_PsiPrime_Barrel_Seagulls",
-        "HLT_Dimuon10_Upsilon_y1p4",
-        "HLT_Dimuon12_Upsilon_y1p4",
-        "HLT_Dimuon14_Phi_Barrel_Seagulls",
-        "HLT_Dimuon14_PsiPrime_noCorrL1",
-        "HLT_Dimuon14_PsiPrime",
-        "HLT_Dimuon18_PsiPrime_noCorrL1",
-        "HLT_Dimuon18_PsiPrime",
-        "HLT_Dimuon20_Jpsi_Barrel_Seagulls",
-        "HLT_Dimuon24_Phi_noCorrL1",
-        "HLT_Dimuon24_Upsilon_noCorrL1",
-        "HLT_Dimuon25_Jpsi_noCorrL1",
-        "HLT_Dimuon25_Jpsi",
-        "HLT_DoubleMu2_Jpsi_DoubleTrk1_Phi1p05",
-        "HLT_DoubleMu3_DoubleEle7p5_CaloIdL_TrackIdL_Upsilon",
-        "HLT_DoubleMu3_TkMu_DsTau3Mu",
-        "HLT_DoubleMu3_Trk_Tau3mu_NoL1Mass",
-        "HLT_DoubleMu3_Trk_Tau3mu",
-        "HLT_DoubleMu4_3_Bs",
-        "HLT_DoubleMu4_3_Displaced_Photon4_BsToMMG",
-        "HLT_DoubleMu4_3_Jpsi",
-        "HLT_DoubleMu4_3_LowMass",
-        "HLT_DoubleMu4_3_Photon4_BsToMMG",
-        "HLT_DoubleMu4_JpsiTrkTrk_Displaced",
-        "HLT_DoubleMu4_JpsiTrk_Bc",
-        "HLT_DoubleMu4_Jpsi_Displaced",
-        "HLT_DoubleMu4_Jpsi_NoVertexing",
-        "HLT_DoubleMu4_LowMass_Displaced",
-        "HLT_DoubleMu4_MuMuTrk_Displaced",
-        "HLT_DoubleMu5_Upsilon_DoubleEle3_CaloIdL_TrackIdL",
-        "HLT_Mu20_TkMu0_Phi",
-        "HLT_Mu25_TkMu0_Onia",
-        "HLT_Mu25_TkMu0_Phi",
-        "HLT_Mu30_TkMu0_Psi",
-        "HLT_Mu30_TkMu0_Upsilon",
-        "HLT_Mu4_L1DoubleMu",
-        "HLT_Mu7p5_L2Mu2_Jpsi",
-        "HLT_Mu7p5_L2Mu2_Upsilon",
-        "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15_Charge1",
-        "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15",
-        "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15_Charge1",
-        "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15",
-        "HLT_Trimuon5_3p5_2_Upsilon_Muon",
-        "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon" };
-
-    for(std::string tName : triggerNames) {
+    vector<std::string> triggerNames { "HLT_Dimuon0_Jpsi3p5_Muon2",   //Triggers_fired[0]
+    "HLT_Dimuon0_Jpsi_L1_4R_0er1p5R",                                 //Triggers_fired[1]
+    "HLT_Dimuon0_Jpsi_L1_NoOS",                                       //Triggers_fired[2]
+    "HLT_Dimuon0_Jpsi_NoVertexing_L1_4R_0er1p5R",                     //Triggers_fired[3]
+    "HLT_Dimuon0_Jpsi_NoVertexing_NoOS",                              //Triggers_fired[4]
+    "HLT_Dimuon0_Jpsi_NoVertexing",                                   //Triggers_fired[5]
+    "HLT_Dimuon0_Jpsi",                                               //Triggers_fired[6]
+    "HLT_Dimuon0_LowMass_L1_0er1p5R",                                 //Triggers_fired[7]
+    "HLT_Dimuon0_LowMass_L1_0er1p5",                                  //Triggers_fired[8]
+    "HLT_Dimuon0_LowMass_L1_4R",                                      //Triggers_fired[9]
+    "HLT_Dimuon0_LowMass_L1_4",                                       //Triggers_fired[10]
+    "HLT_Dimuon0_LowMass_L1_TM530",                                   //Triggers_fired[11]
+    "HLT_Dimuon0_LowMass",                                            //Triggers_fired[12]
+    "HLT_Dimuon0_Upsilon_L1_4p5",                                     //Triggers_fired[13]
+    "HLT_Dimuon0_Upsilon_L1_4p5er2p0M",                               //Triggers_fired[14]
+    "HLT_Dimuon0_Upsilon_L1_4p5er2p0",                                //Triggers_fired[15]
+    "HLT_Dimuon0_Upsilon_Muon_NoL1Mass",                              //Triggers_fired[16]
+    "HLT_Dimuon0_Upsilon_NoVertexing",                                //Triggers_fired[17]
+    "HLT_Dimuon10_Upsilon_y1p4",                                      //Triggers_fired[18]
+    "HLT_Dimuon12_Upsilon_y1p4",                                      //Triggers_fired[19]
+    "HLT_Dimuon14_Phi_Barrel_Seagulls",                               //Triggers_fired[20]
+    "HLT_Dimuon14_PsiPrime_noCorrL1",                                 //Triggers_fired[21]
+    "HLT_Dimuon14_PsiPrime",                                          //Triggers_fired[22]
+    "HLT_Dimuon18_PsiPrime_noCorrL1",                                 //Triggers_fired[23]
+    "HLT_Dimuon18_PsiPrime",                                          //Triggers_fired[24]
+    "HLT_Dimuon24_Phi_noCorrL1",                                      //Triggers_fired[25]
+    "HLT_Dimuon24_Upsilon_noCorrL1",                                  //Triggers_fired[26]
+    "HLT_Dimuon25_Jpsi_noCorrL1",                                     //Triggers_fired[27]
+    "HLT_Dimuon25_Jpsi",                                              //Triggers_fired[28]
+    "HLT_DoubleMu2_Jpsi_DoubleTrk1_Phi1p05",                          //Triggers_fired[29]
+    "HLT_DoubleMu3_DoubleEle7p5_CaloIdL_TrackIdL_Upsilon",            //Triggers_fired[30]
+    "HLT_DoubleMu3_TkMu_DsTau3Mu",                                    //Triggers_fired[31]
+    "HLT_DoubleMu3_Trk_Tau3mu_NoL1Mass",                              //Triggers_fired[32]
+    "HLT_DoubleMu3_Trk_Tau3mu",                                       //Triggers_fired[33]
+    "HLT_DoubleMu4_3_Bs",                                             //Triggers_fired[34]
+    "HLT_DoubleMu4_3_Displaced_Photon4_BsToMMG",                      //Triggers_fired[35]
+    "HLT_DoubleMu4_3_Jpsi",                                           //Triggers_fired[36]
+    "HLT_DoubleMu4_3_LowMass",                                        //Triggers_fired[37]
+    "HLT_DoubleMu4_3_Photon4_BsToMMG",                                //Triggers_fired[38]
+    "HLT_DoubleMu4_JpsiTrkTrk_Displaced",                             //Triggers_fired[39]
+    "HLT_DoubleMu4_JpsiTrk_Bc",                                       //Triggers_fired[40]
+    "HLT_DoubleMu4_Jpsi_Displaced",                                   //Triggers_fired[41]
+    "HLT_DoubleMu4_Jpsi_NoVertexing",                                 //Triggers_fired[42]
+    "HLT_DoubleMu4_LowMass_Displaced",                                //Triggers_fired[43]
+    "HLT_DoubleMu4_MuMuTrk_Displaced",                                //Triggers_fired[44]
+    "HLT_DoubleMu5_Upsilon_DoubleEle3_CaloIdL_TrackIdL",              //Triggers_fired[45]
+    "HLT_Mu25_TkMu0_Phi",                                             //Triggers_fired[46]
+    "HLT_Mu30_TkMu0_Psi",                                             //Triggers_fired[47]
+    "HLT_Mu30_TkMu0_Upsilon",                                         //Triggers_fired[48]
+    "HLT_Mu4_L1DoubleMu",                                             //Triggers_fired[49]
+    "HLT_Mu7p5_L2Mu2_Jpsi",                                           //Triggers_fired[50]
+    "HLT_Mu7p5_L2Mu2_Upsilon",                                        //Triggers_fired[51]
+    "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15_Charge1",                      //Triggers_fired[52]
+    "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15",                              //Triggers_fired[53]
+    "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15_Charge1",                         //Triggers_fired[54]
+    "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15",                                 //Triggers_fired[55]
+    "HLT_Trimuon5_3p5_2_Upsilon_Muon",                                //Triggers_fired[56]
+    "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon"                            //Triggers_fired[57]
+    };                                                                
+                                                                      
+    for(std::string tName : triggerNames) {                           
         triggerPathsWithoutVersionNum_.emplace_back(tName);
     }
     
@@ -723,6 +725,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     // Assign each trigger result to a different bit
     nt.fired0_ = 0;
     nt.fired1_ = 0;
+    nt.fired2_ = 0;
     bool passedTrig = false;
     for (size_t i = 0; i < triggerPathsWithVersionNum_.size(); i++) {
         if (trigExist_.at(i)) {
@@ -734,22 +737,17 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 //}
             }
             //first 64 triggers belong to the first trigger word, next few to the second one.
-            if(i < 64) {
+            if(i < 32) {
                 //bool firstfired = nt.fired0_&(1<<11);
                 nt.fired0_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << i);
                 //std::cout << "Trigger bit " << (int)i << ": " << trigPath << ". New fired0: " << (int)nt.fired0_ << std::endl;
                 //if(!firstfired && (nt.fired0_&(1<<11))) std::cout << "trig bit 11 found!!!: " << trigPath << std::endl;
             }
-            else {
-                nt.fired1_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << (i-64));
-            }
-        }
-        else {
-            if(i < 64) {
-                nt.fired0_ |= (0 <<i);
+            else if(i < 64) {
+                nt.fired1_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << (i-32));
             }
             else {
-                nt.fired1_ |= (0 <<(i-64));
+                nt.fired2_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << (i-64));
             }
         }
     } //end loop over triggerPaths
@@ -852,6 +850,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     /****** GEN INFO *******/
 
     //std::cout << "done computing vertices." << std::endl;
+
+    //gen level eta meson
+    TLorentzVector genEtaVec;
     if (!isData) {
 
         nt.nGen_ = (int)genParticleHandle_->size();
@@ -869,8 +870,6 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             }
         }
 
-        //gen level eta meson
-        TLorentzVector genEtaVec;
         bool genEtaFound = false;
         //reco'd eta meson using PC tracks
         TLorentzVector recoEtaVec;
@@ -939,10 +938,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
                 //now do the same for pat::Electrons instead of PC tracks.
                 TLorentzVector recoLepVecE;
                 mindR = 9999.0;
-                //for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
-                for (size_t i = 0; i < recoLowPtElectronHandle_->size(); i++) {
-                    //pat::ElectronRef ele(recoElectronHandle_, i);
-                    pat::ElectronRef ele(recoLowPtElectronHandle_, i);
+                for (size_t i = 0; i < recoElectronHandle_->size(); i++) {
+                //for (size_t i = 0; i < recoLowPtElectronHandle_->size(); i++) {
+                    pat::ElectronRef ele(recoElectronHandle_, i);
+                    //pat::ElectronRef ele(recoLowPtElectronHandle_, i);
                     //make sure the Electron has the right charge!!
                     if(ele->charge() * (genParticle->charge()) < 0) continue;
                     float gendR = reco::deltaR(*ele, *genParticle);
@@ -1002,6 +1001,15 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         allGenPtEta->Fill(genEtaVec.Pt());
         if(passedTrig){
             trigGenPtEta->Fill(genEtaVec.Pt()); 
+        }
+        if(muonsP.size() > 0 && muonsN.size() > 0) {
+            recoMuGenPtEta->Fill(genEtaVec.Pt()); 
+        }
+        if(elTracksP.size() > 0 && elTracksN.size() > 0) {
+            recoElGenPtEta->Fill(genEtaVec.Pt()); 
+        }
+        if(muonsP.size() > 0 && muonsN.size() > 0 && elTracksP.size() > 0 && elTracksN.size() > 0) {
+            recoGenPtEta->Fill(genEtaVec.Pt()); 
         }
         if(genmatched && recoEtaVec.M() > etaMassMin && recoEtaVec.M() < etaMassMax) {
             matchedGenPtEta->Fill(genEtaVec.Pt());
@@ -1108,10 +1116,37 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         //std::cout << "allMvsPt not filled; bestM=" << bestM << std::endl;
     //}
     //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
-    if( nt.mmelelVtxChi2_.size() > 0 ) {
+    //test41: testing what happens if save all events
+    //if( nt.mmelelVtxChi2_.size() > 0 ) {
         recoT->Fill();
         if(!isData) {
             genT->Fill();
+        }
+    //}
+    if(!isData) {
+        if(nt.mumuVtxM_.size() > 0){
+            recoMuVtxGenPtEta->Fill(genEtaVec.Pt());
+        }
+        if(nt.elelVtxM_.size() > 0){
+            recoElVtxGenPtEta->Fill(genEtaVec.Pt());
+        }
+        if(nt.mmelelVtxM_.size() > 0){
+            //std::cout << (int)nt.mmelelVtxM_.size() << " mmelel vertices!!" << std::endl;
+            recoVtxGenPtEta->Fill(genEtaVec.Pt());
+            bool accepted = false;
+            for(float recoM : nt.mmelelVtxM_){
+                if(recoM > 0.51 && recoM < 0.60) {
+                    accepted = true;
+                    break;
+                }
+            }
+            if(accepted) {
+                accRecoGenPtEta->Fill(genEtaVec.Pt());
+            }
+            if(passedTrig && accepted){
+                accGenPtEta->Fill(genEtaVec.Pt());
+            }
+            //std::cout << "done with the filling now" << std::endl;
         }
     }
 
@@ -1135,8 +1170,16 @@ void eta2mu2eAnalyzer::endJob() {
         alldRMu->Write();
         allGenPtEta->Write();
         trigGenPtEta->Write();
+        recoMuGenPtEta->Write();
+        recoElGenPtEta->Write();
+        recoGenPtEta->Write();
         matchedGenPtEta->Write();
         matchedGenPtEtaE->Write();
+        recoMuVtxGenPtEta->Write();
+        recoElVtxGenPtEta->Write();
+        recoVtxGenPtEta->Write();
+        accRecoGenPtEta->Write();
+        accGenPtEta->Write();
     }
     //hdRP->Write();
     //hdRN->Write();

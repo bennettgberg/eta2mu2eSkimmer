@@ -31,9 +31,10 @@ public:
 
     // Trigger and event-level branches
     //first 64 trigger bits
-    uint64_t fired0_;
+    uint32_t fired0_;
     //last 8 trigger bits (but really only 2 bits used)
-    uint8_t fired1_;
+    uint32_t fired1_;
+    uint8_t fired2_;
     unsigned long long eventNum_;
     unsigned long long runNum_;
     unsigned long long lumiSec_;
