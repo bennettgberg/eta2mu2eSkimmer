@@ -348,7 +348,10 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
     "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15_Charge1",                         //Triggers_fired[54]
     "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15",                                 //Triggers_fired[55]
     "HLT_Trimuon5_3p5_2_Upsilon_Muon",                                //Triggers_fired[56]
-    "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon"                            //Triggers_fired[57]
+    "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon",                            //Triggers_fired[57]
+    "HLT_Mu0_L1DoubleMu",
+    "HLT_Mu3_PFJet40",
+    "HLT_Mu8"
     };                                                                
                                                                       
     for(std::string tName : triggerNames) {                           
