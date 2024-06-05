@@ -324,40 +324,42 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
             "HLT_Dimuon18_PsiPrime",                                     //Triggers_fired0[29]
             "HLT_Dimuon20_Jpsi_Barrel_Seagulls",                         //Triggers_fired0[30]
             "HLT_Dimuon24_Phi_noCorrL1",                                 //Triggers_fired0[31]
-            "HLT_Dimuon24_Upsilon_noCorrL1",                             //Triggers_fired0[32]
-            "HLT_Dimuon25_Jpsi_noCorrL1",                                //Triggers_fired0[33]
-            "HLT_Dimuon25_Jpsi",                                         //Triggers_fired0[34]
-            "HLT_DoubleMu2_Jpsi_DoubleTrk1_Phi1p05",                     //Triggers_fired0[35]
-            "HLT_DoubleMu3_DoubleEle7p5_CaloIdL_TrackIdL_Upsilon",       //Triggers_fired0[36]
-            "HLT_DoubleMu3_TkMu_DsTau3Mu",                               //Triggers_fired0[37]
-            "HLT_DoubleMu3_Trk_Tau3mu_NoL1Mass",                         //Triggers_fired0[38]
-            "HLT_DoubleMu3_Trk_Tau3mu",                                  //Triggers_fired0[39]
-            "HLT_DoubleMu4_3_Bs",                                        //Triggers_fired0[40]
-            "HLT_DoubleMu4_3_Displaced_Photon4_BsToMMG",                 //Triggers_fired0[41]
-            "HLT_DoubleMu4_3_Jpsi",                                      //Triggers_fired0[42]
-            "HLT_DoubleMu4_3_LowMass",                                   //Triggers_fired0[43]
-            "HLT_DoubleMu4_3_Photon4_BsToMMG",                           //Triggers_fired0[44]
-            "HLT_DoubleMu4_JpsiTrkTrk_Displaced",                        //Triggers_fired0[45]
-            "HLT_DoubleMu4_JpsiTrk_Bc",                                  //Triggers_fired0[46]
-            "HLT_DoubleMu4_Jpsi_Displaced",                              //Triggers_fired0[47]
-            "HLT_DoubleMu4_Jpsi_NoVertexing",                            //Triggers_fired0[48]
-            "HLT_DoubleMu4_LowMass_Displaced",                           //Triggers_fired0[49]
-            "HLT_DoubleMu4_MuMuTrk_Displaced",                           //Triggers_fired0[50]
-            "HLT_DoubleMu5_Upsilon_DoubleEle3_CaloIdL_TrackIdL",         //Triggers_fired0[51]
-            "HLT_Mu20_TkMu0_Phi",                                        //Triggers_fired0[52]
-            "HLT_Mu25_TkMu0_Onia",                                       //Triggers_fired0[53]
-            "HLT_Mu25_TkMu0_Phi",                                        //Triggers_fired0[54]
-            "HLT_Mu30_TkMu0_Psi",                                        //Triggers_fired0[55]
-            "HLT_Mu30_TkMu0_Upsilon",                                    //Triggers_fired0[56]
-            "HLT_Mu4_L1DoubleMu",                                        //Triggers_fired0[57]
-            "HLT_Mu7p5_L2Mu2_Jpsi",                                      //Triggers_fired0[58]
-            "HLT_Mu7p5_L2Mu2_Upsilon",                                   //Triggers_fired0[59]
-            "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15_Charge1",                 //Triggers_fired0[60]
-            "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15",                         //Triggers_fired0[61]
-            "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15_Charge1",                    //Triggers_fired0[62]
-            "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15",                            //Triggers_fired0[63]
-            "HLT_Trimuon5_3p5_2_Upsilon_Muon",                        //Triggers_fired1[0]
-            "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon" };                 //Triggers_fired1[1]
+            "HLT_Dimuon24_Upsilon_noCorrL1",                             //Triggers_fired1[0]
+            "HLT_Dimuon25_Jpsi_noCorrL1",                                //Triggers_fired1[1]
+            "HLT_Dimuon25_Jpsi",                                         //Triggers_fired1[2]
+            "HLT_DoubleMu2_Jpsi_DoubleTrk1_Phi1p05",                     //Triggers_fired1[3 ]
+            "HLT_DoubleMu3_DoubleEle7p5_CaloIdL_TrackIdL_Upsilon",       //Triggers_fired1[4 ]
+            "HLT_DoubleMu3_TkMu_DsTau3Mu",                               //Triggers_fired1[5 ]
+            "HLT_DoubleMu3_Trk_Tau3mu_NoL1Mass",                         //Triggers_fired1[6 ]
+            "HLT_DoubleMu3_Trk_Tau3mu",                                  //Triggers_fired1[7 ]
+            "HLT_DoubleMu4_3_Bs",                                        //Triggers_fired1[8 ]
+            "HLT_DoubleMu4_3_Displaced_Photon4_BsToMMG",                 //Triggers_fired1[9 ]
+            "HLT_DoubleMu4_3_Jpsi",                                      //Triggers_fired1[10]
+            "HLT_DoubleMu4_3_LowMass",                                   //Triggers_fired1[11]
+            "HLT_DoubleMu4_3_Photon4_BsToMMG",                           //Triggers_fired1[12]
+            "HLT_DoubleMu4_JpsiTrkTrk_Displaced",                        //Triggers_fired1[13]
+            "HLT_DoubleMu4_JpsiTrk_Bc",                                  //Triggers_fired1[14]
+            "HLT_DoubleMu4_Jpsi_Displaced",                              //Triggers_fired1[15]
+            "HLT_DoubleMu4_Jpsi_NoVertexing",                            //Triggers_fired1[16]
+            "HLT_DoubleMu4_LowMass_Displaced",                           //Triggers_fired1[17]
+            "HLT_DoubleMu4_MuMuTrk_Displaced",                           //Triggers_fired1[18]
+            "HLT_DoubleMu5_Upsilon_DoubleEle3_CaloIdL_TrackIdL",         //Triggers_fired1[19]
+            "HLT_Mu20_TkMu0_Phi",                                        //Triggers_fired1[20]
+            "HLT_Mu25_TkMu0_Onia",                                       //Triggers_fired1[21]
+            "HLT_Mu25_TkMu0_Phi",                                        //Triggers_fired1[22]
+            "HLT_Mu30_TkMu0_Psi",                                        //Triggers_fired1[23]
+            "HLT_Mu30_TkMu0_Upsilon",                                    //Triggers_fired1[24]
+            "HLT_Mu4_L1DoubleMu",                                        //Triggers_fired1[25]
+            "HLT_Mu7p5_L2Mu2_Jpsi",                                      //Triggers_fired1[26]
+            "HLT_Mu7p5_L2Mu2_Upsilon",                                   //Triggers_fired1[27]
+            "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15_Charge1",                 //Triggers_fired1[28]
+            "HLT_Tau3Mu_Mu7_Mu1_TkMu1_IsoTau15",                         //Triggers_fired1[29]
+            "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15_Charge1",                    //Triggers_fired1[30]
+            "HLT_Tau3Mu_Mu7_Mu1_TkMu1_Tau15",                            //Triggers_fired1[31]
+            "HLT_Trimuon5_3p5_2_Upsilon_Muon",                        //Triggers_fired2[0]
+            "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon",                   //Triggers_fired2[1]
+            "HLT_Mu3_PFJet40",                                        //Triggers_fired2[2]
+            "HLT_Mu8" };                                              //Triggers_fired2[3]
     } //end use muon triggers
     else { //use electron triggers
         triggerNames = { "HLT_DoubleEle10_eta1p22_mMax6_dz0p8",
@@ -704,7 +706,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     vector<pat::Muon> muonsP {};
     vector<pat::Muon> muonsN {};
     nt.recoNGoodMuon_ = 0;
-    std::cout << "recoMuonHandle size: " << (int)recoMuonHandle_->size() << std::endl;
+    //std::cout << "recoMuonHandle size: " << (int)recoMuonHandle_->size() << std::endl;
     for (size_t i = 0; i < recoMuonHandle_->size(); i++) {
         pat::MuonRef muonRef(recoMuonHandle_, i);
         //For DoubleMuon triggers, muon info will be added later, once we're sure this is a useful muon
@@ -797,42 +799,50 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         //nt.recoTrkCharge_.push_back(iTrack1->charge());
     }
 
-
     // Assign each trigger result to a different bit
     nt.fired0_ = 0;
     nt.fired1_ = 0;
     bool passedTrig = false;
+    //std::cout << "All passed triggers:" << std::endl;
     for (size_t i = 0; i < triggerPathsWithVersionNum_.size(); i++) {
         if (trigExist_.at(i)) {
             std::string trigPath = triggerPathsWithVersionNum_[i];
             if(trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath))) {
                 passedTrig = true;
-                //if(triggerPathsWithoutVersionNum_[i]=="HLT_Dimuon0_LowMass_L1_TM530"){
-                //    std::cout << "HLT_Dimuon0_LowMass_L1_TM530 fired!" << std::endl;
-                //}
+                //debugging
+                //std::cout << triggerPathsWithoutVersionNum_[i] << std::endl;
+                if(triggerPathsWithoutVersionNum_[i]=="HLT_DoubleMu4_3_LowMass"){
+                    //std::cout << "HLT_DoubleMu4_3_LowMass fired?: 1" << std::endl;
+                }
+            }
+            else if(triggerPathsWithoutVersionNum_[i] == "HLT_DoubleMu4_3_LowMass") {
+                //std::cout << "HLT_DoubleMu4_3_LowMass fired?: 0" << std::endl;
             }
             //first 64 triggers belong to the first trigger word, next few to the second one.
-            if(i < 64) {
+            if(i < 32) {
                 //bool firstfired = nt.fired0_&(1<<11);
                 nt.fired0_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << i);
                 //std::cout << "Trigger bit " << (int)i << ": " << trigPath << ". New fired0: " << (int)nt.fired0_ << std::endl;
                 //if(!firstfired && (nt.fired0_&(1<<11))) std::cout << "trig bit 11 found!!!: " << trigPath << std::endl;
             }
+            else if(i < 64) {
+                nt.fired1_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << (i-32));
+            }
             else {
-                nt.fired1_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << (i-64));
+                nt.fired2_ |= (trigResultsHandle_->accept(hltConfig_.triggerIndex(trigPath)) << (i-64));
                 //std::cout << "Trigger bit " << (int)i << ": " << trigPath << ". New fired1: " << (int)nt.fired1_ << std::endl;
             }
-        }
-        else {
-            if(i < 64) {
-                nt.fired0_ |= (0 <<i);
-            }
-            else {
-                nt.fired1_ |= (0 <<(i-64));
-            }
-        }
+        } //end trigger exists
     } //end loop over triggerPaths
 
+    //size_t forty_three = 43;
+    //std::cout << "bit 43 fired? " << ((nt.fired0_ & (1<<forty_three)) != 0) << std::endl;
+    //if(nt.runNum_ == 355870 && (nt.eventNum_ == 38885352 || nt.eventNum_ == 40878800 || nt.eventNum_ == 41795463 || nt.eventNum_ == 45695006)) {
+    //    std::cout << "Run = 355870, event = 38885352, Final trigger word Triggers_fired0:" << std::endl;
+        //for(size_t i = 0; i < 64; i++) {
+        //    std::cout << "Index " << (int)i << " : " << ((nt.fired0_ & (1<<i)) != 0) << std::endl;
+        //}
+    //}
     
     //std::cout << "Number of onia ConvertedPhoton Candidates: " << (int)conHandle_->size() << std::endl;
     //std::cout << "Printing onia photons:" << std::endl;
