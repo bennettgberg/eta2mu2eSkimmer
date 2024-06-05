@@ -20,6 +20,7 @@ def getArgs() :
     parser.add_argument("-l","--language",default="bash",type=str,help="Language for scripts to run (only bash or tcsh is supported for now.)")
     parser.add_argument("-myeos","--my_eos",default=0,type=int,help="input files will exist in my personal eos space (1) or won't (0)")
     parser.add_argument("-j","--doSystematics",default="false",type=str,help="doSystematics (true) or nah (false)")
+    parser.add_argument("-ge","--grpeos",default=False,action='store_true',help="use group (lpcdisptau) eos space instead of personal")
     return parser.parse_args()
 
 def beginBatchScriptTcsh(baseFileName) :
@@ -70,6 +71,7 @@ args = getArgs()
 era = str(args.year)
 isMC = True
 if args.dataType == "Data": isMC = False
+grpeos = args.grpeos
 # sample query 
 # dasgoclient --query="file dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8*/*/NANOAOD*" --limit=0   
 
@@ -162,8 +164,9 @@ for nFile in range(0, len(dataset),mjobs) :
         #outLines.append("ls\n")
         #outLines.append("echo plugins directory:\n")
         #outLines.append("ls ../plugins\n")
-        #TODO: change back elTrig to 0 to use DoubleMuon triggers!!
-        outLines.append("cmsRun run_ntuplizer_cfg.py data=1 elTrig=1 inputFiles={0:s} outputFile={1:s}\n".format(fileloop, outFileName))
+        #outLines.append("cmsRun run_ntuplizer_cfg.py data=1 elTrig=1 inputFiles={0:s} outputFile={1:s}\n".format(fileloop, outFileName))
+        #change to the above line to use DoubleElectron triggers instead of DoubleMuon
+        outLines.append("cmsRun run_ntuplizer_cfg.py data=1 elTrig=0 inputFiles={0:s} outputFile={1:s}\n".format(fileloop, outFileName))
         outLines.append("ls\n") 
         #copy the file to eos.
         #outLines.append("xrdcp {0:s} root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{1:s}/{2:s}/{0:s}\n".format(outFileName, era, args.nickName))
@@ -174,8 +177,10 @@ for nFile in range(0, len(dataset),mjobs) :
     #outLines.append("hadd -f -k all_{0:s}_{1:03d}.root *ntup *weights\n".format(args.nickName,nFile+1))
     outLines.append("hadd -f -k all_{0:s}_{1:03d}.root {0:s}*root *weights\n".format(args.nickName,nFile+1))
     #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/eta_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
-    outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
-    #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+    if grpeos:
+        outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+    else:
+        outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")
     outLines.append("rm *.ntup *.weights *.so\nrm *.pcm\nrm *cc.d *.root\n")
 #        fileloop=dataset[nFile:nFile+maxx][j]

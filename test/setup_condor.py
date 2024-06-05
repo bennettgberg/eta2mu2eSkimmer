@@ -15,6 +15,9 @@ def main():
     #true if running the jobs on lxplus instead of cmslpc
     lxplus = False
 
+    #store on group (lpcdisptau) eos space instead of my own personal?
+    grpeos = True
+
     #always delete current directory if it already exists?
     always_del = False
 
@@ -59,13 +62,16 @@ def main():
         #on lxplus can't really do this.......just make sure the eos directories already exist!!
         #also make a directory on eos for it.
         if not lxplus:
-            eos_path = "/eos/uscms/store/user/bgreenbe/BParking_%d/%s"%(year, samp_name)
+            if grpeos:
+                eos_path = "/eos/uscms/store/group/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name)
+            else:
+                eos_path = "/eos/uscms/store/user/bgreenbe/BParking_%d/%s"%(year, samp_name)
             #MUST delete all prior contents in the eos directory if it already exists.
             if os.path.exists(eos_path):
                 if not always_del:
                     cont = raw_input("Directory %s already exists. Delete all contents? (Y to delete and continue, N to cancel, O to override and proceed without deleting.) "%(eos_path))
                     if cont in ["O", "o", "override", "Override"]: 
-                        #allow to continue without deleting (MAKE SURE TO CHANGE THIS BACK!!)
+                        #allow to continue without deleting
                         always_del = False
                     elif cont not in ["Y", "y", "Yes", "yes"]:
                         sys.exit()
@@ -73,15 +79,17 @@ def main():
                         always_del = True
                 if always_del:
                     os.system("rm %s/*.root"%(eos_path))
-            os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
-            #os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
+            if grpeos:
+                os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
+            else:
+                os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
         lang = "tcsh"
         credname = "x509up_u52949"
         if lxplus:
             lang = "bash"
             credname = "x509up_u104084"
         #run the setup code
-        os.system("cd %s ; python ../../makeCondorbpg.py --dataSet %s --nickName %s --csv bpgSamples.csv --mode anaXRD --year %d -c %d -p ~/%s -l %s\n"%(new_name, sample, samp_name, year, nroot, credname, lang))
+        os.system("cd %s ; python ../../makeCondorbpg.py --dataSet %s --nickName %s --csv bpgSamples.csv --mode anaXRD --year %d -c %d -p ~/%s -l %s %s\n"%(new_name, sample, samp_name, year, nroot, credname, lang, "-ge" if grpeos else ""))
         
         this_dir = os.getcwd() #"/uscms_data/d3/bgreenbe/CMSSW_12_4_13/src/eta2mu2e/eta2mu2eSkimmer/test"
         #come back to get ready for the next one.
