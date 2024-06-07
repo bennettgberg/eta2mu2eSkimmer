@@ -1111,7 +1111,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
         //Filled later now!
         //genT->Fill();
-    }
+    } //end isMC block
 
     //std::cout << "computing vertices 0" << std::endl;
     //first get the 4-particle vertices, then get rid of all the particles/tracks that aren't involved in those.
@@ -1192,7 +1192,9 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //for the DoubleElectron trigger, only need to save the events that have at least 2 good muons
     //if( !useElTrig || nt.recoNGoodMuon_ > 1 ) {
     //if( nt.recoNGoodMuon_ > 1 ) {
-    if( (!useElTrig && nt.recoNGoodMuon_ > 1) || (useElTrig && muonsP.size() >= 1 && muonsN.size() >= 1) ) {
+    //if( (!useElTrig && nt.recoNGoodMuon_ > 1) || (useElTrig && muonsP.size() >= 1 && muonsN.size() >= 1) ) {
+    //TODO: uncomment the ABOVE and comment the BELOW to process bkgMC and make it faster-- but not good for calculating efficiencies!
+    if( (!useElTrig) || (useElTrig && muonsP.size() >= 1 && muonsN.size() >= 1) ) {
         //for electron triggers, invar mass needs to be .45 to .65 GeV
         float m2mu = .55;
         if(useElTrig) {
