@@ -234,6 +234,7 @@ void NtupleContainer::CreateTreeBranches() {
     //which triggers fired?
     recoT->Branch("Triggers_fired0", &fired0_);
     recoT->Branch("Triggers_fired1", &fired1_);
+    recoT->Branch("Triggers_fired2", &fired2_);
 
     if (!isData_) {
         genT->Branch("evt", &eventNum_);
@@ -423,6 +424,7 @@ void NtupleContainer::ClearTreeBranches() {
 
     fired0_ = 0;
     fired1_ = 0;
+    fired2_ = 0;
 
     genID_.clear();
     genHardProcess_.clear();
