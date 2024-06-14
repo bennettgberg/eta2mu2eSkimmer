@@ -39,6 +39,7 @@
 #include "FWCore/Common/interface/TriggerNames.h"
 
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
 
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
@@ -118,12 +119,14 @@ private:
     bool isData;
     bool useElTrig;
     const std::string triggerProcessName_;
+    const std::string l1triggerProcessName_;
 
     // Tokens
     const edm::EDGetTokenT<pat::MuonCollection> pfRecoMuToken_;
     const edm::EDGetTokenT<reco::GenParticleCollection> genParticleToken_;
     const edm::EDGetTokenT<edm::TriggerResults> trigResultsToken_;
     //const edm::EDGetTokenT<trigger::TriggerEvent> trigEventToken_;
+    const edm::EDGetTokenT<edm::TriggerResults> l1trigResultsToken_;
     const edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfosToken_;
     const edm::EDGetTokenT<GenEventInfoProduct> genEvtInfoToken_;
     const edm::EDGetTokenT<reco::VertexCollection>primaryVertexToken_;
@@ -145,6 +148,7 @@ private:
     edm::Handle<reco::GenParticleCollection> genParticleHandle_;
     edm::Handle<edm::TriggerResults> trigResultsHandle_;
     //edm::Handle<trigger::TriggerEvent> trigEventHandle_;
+    edm::Handle<edm::TriggerResults> l1trigResultsHandle_;
     edm::Handle<std::vector<PileupSummaryInfo>> pileupInfosHandle_;
     edm::Handle<GenEventInfoProduct> genEvtInfoHandle_;
     edm::Handle<pat::ElectronCollection> recoElectronHandle_;
@@ -162,6 +166,17 @@ private:
     std::vector<std::string> triggerPathsWithVersionNum_;
     std::vector<bool> trigExist_;
     HLTConfigProvider hltConfig_;
+    std::vector<std::string> l1triggerPathsWithoutVersionNum_;
+    std::vector<std::string> l1triggerPathsWithVersionNum_;
+    std::vector<bool> l1trigExist_;
+    HLTConfigProvider l1tConfig_;
+
+    edm::EDGetToken algToken_;
+    //edm::EDGetToken blkToken_;
+    //edm::EDGetToken extToken_;
+    //bool rpfToken_;
+    std::shared_ptr<l1t::L1TGlobalUtil> l1GtUtils_;
+    vector<std::string> l1triggerNames;
 
 };
 
@@ -170,11 +185,15 @@ eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
     isData(ps.getParameter<bool>("isData")),
     useElTrig(ps.getParameter<bool>("useElTrig")),
     triggerProcessName_(ps.getParameter<std::string>("triggerProcessName")),
+    //l1Seeds_(consumes<std::vector<std::string>>(ps.getParameter<std::vector<std::string> >("l1Seeds"))),
+    l1triggerProcessName_(ps.getParameter<std::string>("l1triggerProcessName")),
     
     pfRecoMuToken_(consumes<pat::MuonCollection>(ps.getParameter<edm::InputTag>("muon_collection"))),
     genParticleToken_(consumes<reco::GenParticleCollection>(ps.getParameter<edm::InputTag>("genParticle"))),
     trigResultsToken_(consumes<edm::TriggerResults>(ps.getParameter<edm::InputTag>("trigResult"))),
     //trigEventToken_(consumes<trigger::TriggerEvent>(ps.getParameter<edm::InputTag>("trigEvent"))),
+    l1trigResultsToken_(consumes<edm::TriggerResults>(ps.getParameter<edm::InputTag>("l1trigResult"))),
+
     pileupInfosToken_(consumes<std::vector<PileupSummaryInfo>>(ps.getParameter<edm::InputTag>("pileups"))),
     genEvtInfoToken_(consumes<GenEventInfoProduct>(ps.getParameter<edm::InputTag>("genEvt"))),
     primaryVertexToken_(consumes<reco::VertexCollection>(ps.getParameter<edm::InputTag>("primary_vertices"))),
@@ -186,10 +205,17 @@ eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
     trkToken_(consumes<pat::PackedCandidateCollection>(ps.getParameter<edm::InputTag>("packed_candidate"))),
     //conToken_(consumes<pat::CompositeCandidateCollection>(ps.getParameter<edm::InputTag>("composite_candidate")))
     bsToken_(consumes<reco::BeamSpot>(ps.getParameter<edm::InputTag>("beamspot"))),
-    convsToken_(consumes<reco::ConversionCollection>(ps.getParameter<edm::InputTag>("conversions")))
+    convsToken_(consumes<reco::ConversionCollection>(ps.getParameter<edm::InputTag>("conversions"))),
+    algToken_(consumes<BXVector<GlobalAlgBlk>>(ps.getParameter<edm::InputTag>("AlgInputTag"))),
+    //blkToken_(consumes<BXVector<GlobalAlgBlk>>(ps.getParameter<edm::InputTag>("l1tAlgBlkInputTag"))),
+    //extToken_(consumes<BXVector<GlobalAlgBlk>>(ps.getParameter<edm::InputTag>("l1tExtBlkInputTag"))),
+    //rpfToken_(ps.getParameter<bool>("ReadPrescalesFromFile")),
+    l1GtUtils_(nullptr)
 {
     usesResource("TFileService");
     m_random_generator = std::mt19937(37428479);
+    //will this work? idk
+    l1GtUtils_ = std::make_shared<l1t::L1TGlobalUtil>(ps, consumesCollector());
 }
 
 eta2mu2eAnalyzer::~eta2mu2eAnalyzer() = default;
@@ -202,7 +228,7 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     desc.add<bool>("isData", 0);
     desc.add<bool>("useElTrig", 0);
     desc.add<std::string>("triggerProcessName", "HLT");
-
+    desc.add<std::string>("l1triggerProcessName", "RECO");
     desc.add<edm::InputTag>("muon_collection", edm::InputTag("slimmedMuons"));
     desc.add<edm::InputTag>("electron_collection", edm::InputTag("slimmedElectrons"));
     desc.add<edm::InputTag>("lowpt_electron_collection", edm::InputTag("slimmedLowPtElectrons"));
@@ -211,6 +237,7 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     desc.add<edm::InputTag>("genParticle", edm::InputTag("prunedGenParticles"));
     desc.add<edm::InputTag>("trigResult", edm::InputTag("TriggerResults", "", "HLT"));
     //desc.add<edm::InputTag>("trigEvent", edm::InputTag("hltTriggerSummaryAOD", "", "HLT"));
+    desc.add<edm::InputTag>("l1trigResult", edm::InputTag("TriggerResults", "", "RECO"));
     desc.add<edm::InputTag>("pileups", edm::InputTag("slimmedAddPileupInfo"));
     desc.add<edm::InputTag>("genEvt", edm::InputTag("generator"));
     desc.add<edm::InputTag>("rho", edm::InputTag("fixedGridRhoFastjetAll"));
@@ -218,6 +245,10 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     //desc.add<edm::InputTag>("composite_candidate", edm::InputTag("oniaPhotonCandidates", "conversions"));
     desc.add<edm::InputTag>("beamspot", edm::InputTag("offlineBeamSpot"));
     desc.add<edm::InputTag>("conversions", edm::InputTag("reducedEgamma", "reducedConversions"));
+    desc.add<edm::InputTag>("AlgInputTag", edm::InputTag("gtStage2Digis"));
+    desc.add<edm::InputTag>("l1tAlgBlkInputTag", edm::InputTag("gtStage2Digis"));
+    desc.add<edm::InputTag>("l1tExtBlkInputTag", edm::InputTag("gtStage2Digis"));
+    desc.add<bool>("ReadPrescalesFromFile", 0);
     
     descriptions.add("eta2mu2eAnalyzer", desc);
 }
@@ -281,7 +312,7 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
         }
     } 
     else {
-        LogError("HLTConfig") << "eta2mu2eAnalyzer::beginRun: config extraction failure with triggerProcessName -> " << triggerProcessName_;
+        LogError("HLTConfig") << "eta2mu2eAnalyzer::beginRun: config extraction failure with triggerProcessName -> " << l1triggerProcessName_;
         return;
     }
 
@@ -359,7 +390,8 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
             "HLT_Trimuon5_3p5_2_Upsilon_Muon",                        //Triggers_fired2[0]
             "HLT_TrimuonOpen_5_3p5_2_Upsilon_Muon",                   //Triggers_fired2[1]
             "HLT_Mu3_PFJet40",                                        //Triggers_fired2[2]
-            "HLT_Mu8" };                                              //Triggers_fired2[3]
+            "HLT_Mu8"                                               //Triggers_fired2[3]
+        };                   
     } //end use muon triggers
     else { //use electron triggers
         triggerNames = { "HLT_DoubleEle10_eta1p22_mMax6_dz0p8",
@@ -429,6 +461,21 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
             //}
         }
     }
+
+    // Add trigger paths if they exist
+    l1triggerNames = { 
+        "L1_DoubleMu3er2p0_SQ_OS_dR_Max1p4",
+        "L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6", 
+        "L1_DoubleMu0er1p4_OQ_OS_dEta_Max1p6", 
+        "L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5", 
+        "L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4", 
+        "L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4",
+        "L1_DoubleMu4p5_SQ_OS_dR_Max1p2", 
+        "L1_DoubleMu4_SQ_OS_dR_Max1p2"
+    };
+
+    l1GtUtils_->retrieveL1Setup(iSetup);
+
 }
 
 
@@ -450,6 +497,7 @@ bool eta2mu2eAnalyzer::getCollections(const edm::Event& iEvent) {
     getHandle(primaryVertexToken_, primaryVertexHandle_, "primary_vertices");
     getHandle(trigResultsToken_, trigResultsHandle_, "trigResults");
     //getHandle(trigEventToken_, trigEventHandle_, "trigEvent");
+    getHandle(l1trigResultsToken_, l1trigResultsHandle_, "l1trigResults");
     getHandle(recoElectronToken_, recoElectronHandle_, "electron_collection");
     getHandle(recoLowPtElectronToken_, recoLowPtElectronHandle_, "lowpt_electron_collection");
     getHandle(recoPhotonToken_, recoPhotonHandle_, "photon_collection");
@@ -835,15 +883,33 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         } //end trigger exists
     } //end loop over triggerPaths
 
-    //size_t forty_three = 43;
-    //std::cout << "bit 43 fired? " << ((nt.fired0_ & (1<<forty_three)) != 0) << std::endl;
-    //if(nt.runNum_ == 355870 && (nt.eventNum_ == 38885352 || nt.eventNum_ == 40878800 || nt.eventNum_ == 41795463 || nt.eventNum_ == 45695006)) {
-    //    std::cout << "Run = 355870, event = 38885352, Final trigger word Triggers_fired0:" << std::endl;
-        //for(size_t i = 0; i < 64; i++) {
-        //    std::cout << "Index " << (int)i << " : " << ((nt.fired0_ & (1<<i)) != 0) << std::endl;
-        //}
-    //}
+    // Assign each l1trigger result to a different bit
+    nt.l1fired_ = 0;
     
+    l1GtUtils_->retrieveL1(iEvent, iSetup, algToken_);
+    //check if valid
+    if(l1GtUtils_->valid()) {
+        //std::cout << "l1GtUtils is valid !!! thumbs" << std::endl;
+    }
+    else {
+        std::cout << "l1GtUtils is invalid :(((((" << std::endl;
+    }
+    //print all L1 bits!
+    //const std::vector<std::pair<std::string, bool>> finalDecisions = l1GtUtils_->decisionsFinal();
+    //for(auto decs : finalDecisions) {
+    //    std::cout << decs.first << ": " << decs.second << std::endl;
+    //}
+    for (uint32_t i = 0; i < l1triggerNames.size(); i++){
+        std::string l1seed = l1triggerNames[i];
+        bool l1htbit = 0;
+        //int prescale = -1;
+        l1GtUtils_->getFinalDecisionByName(l1seed, l1htbit);
+        //l1GtUtils_->getPrescaleByName(l1seed, prescale);
+        nt.l1fired_ |= (l1htbit << i);
+        //l1_name->push_back(l1seed);
+        //l1_prescale->push_back(prescale);
+    }
+
     //std::cout << "Number of onia ConvertedPhoton Candidates: " << (int)conHandle_->size() << std::endl;
     //std::cout << "Printing onia photons:" << std::endl;
     ////get converted photons, see how many there are, if their electron tracks can be gen-matched to regular electrons?

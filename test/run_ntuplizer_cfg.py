@@ -129,6 +129,8 @@ process.ntuples = eta2mu2eAnalyzer.clone(
     isData = cms.bool(data),
     useElTrig = cms.bool(elTrig),
     primary_vertices = cms.InputTag('offlineSlimmedPrimaryVertices'),
+    AlgInputTag = cms.InputTag("gtStage2Digis"),
+    ReadPrescalesFromFile = cms.bool(False)
 )
 
 process.commonSequence = cms.Sequence(

@@ -36,6 +36,9 @@ public:
     uint32_t fired1_;
     //last 8 trigger bits (but really only 2 bits used)
     uint8_t fired2_;
+    //uint32_t fired2_;
+    //L1 trigger bits fired
+    uint8_t l1fired_;
     unsigned long long eventNum_;
     unsigned long long runNum_;
     unsigned long long lumiSec_;

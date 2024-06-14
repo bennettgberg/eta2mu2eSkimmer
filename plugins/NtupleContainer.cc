@@ -231,6 +231,8 @@ void NtupleContainer::CreateTreeBranches() {
     recoT->Branch("GsfLowPtTrack_charge", &gsfLowPtTrkCharge_);
     recoT->Branch("GsfLowPtTrack_dxy", &gsfLowPtTrkDxy_);
     recoT->Branch("GsfLowPtTrack_dz", &gsfLowPtTrkDz_);
+    //l1 triggers fired
+    recoT->Branch("L1_fired", &l1fired_);
     //which triggers fired?
     recoT->Branch("Triggers_fired0", &fired0_);
     recoT->Branch("Triggers_fired1", &fired1_);
@@ -422,6 +424,7 @@ void NtupleContainer::ClearTreeBranches() {
     //recoNPhoton_ = 0;
     recoNGoodPhoton_ = 0;
 
+    l1fired_ = 0;
     fired0_ = 0;
     fired1_ = 0;
     fired2_ = 0;
