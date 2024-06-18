@@ -39,6 +39,7 @@
 #include "FWCore/Common/interface/TriggerNames.h"
 
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "L1Trigger/L1TGlobal/interface/L1TGlobalUtil.h"
 
 #include "TrackingTools/TransientTrack/interface/TransientTrack.h"
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
@@ -165,6 +166,10 @@ private:
     std::vector<bool> trigExist_;
     HLTConfigProvider hltConfig_;
 
+    edm::EDGetToken algToken_;
+    std::shared_ptr<l1t::L1TGlobalUtil> l1GtUtils_;
+    vector<std::string> l1triggerNames; 
+
 };
 
 
@@ -187,10 +192,13 @@ eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
     trkToken_(consumes<pat::PackedCandidateCollection>(ps.getParameter<edm::InputTag>("packed_candidate"))),
     //conToken_(consumes<pat::CompositeCandidateCollection>(ps.getParameter<edm::InputTag>("composite_candidate")))
     bsToken_(consumes<reco::BeamSpot>(ps.getParameter<edm::InputTag>("beamspot"))),
-    convsToken_(consumes<reco::ConversionCollection>(ps.getParameter<edm::InputTag>("conversions")))
+    convsToken_(consumes<reco::ConversionCollection>(ps.getParameter<edm::InputTag>("conversions"))),
+    algToken_(consumes<BXVector<GlobalAlgBlk>>(ps.getParameter<edm::InputTag>("AlgInputTag"))),
+    l1GtUtils_(nullptr)
 {
     usesResource("TFileService");
     m_random_generator = std::mt19937(37428479);
+    l1GtUtils_ = std::make_shared<l1t::L1TGlobalUtil>(ps, consumesCollector());
 }
 
 eta2mu2eAnalyzer::~eta2mu2eAnalyzer() = default;
@@ -218,6 +226,10 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     //desc.add<edm::InputTag>("composite_candidate", edm::InputTag("oniaPhotonCandidates", "conversions"));
     desc.add<edm::InputTag>("beamspot", edm::InputTag("offlineBeamSpot"));
     desc.add<edm::InputTag>("conversions", edm::InputTag("reducedEgamma", "reducedConversions"));
+    desc.add<edm::InputTag>("AlgInputTag", edm::InputTag("gtStage2Digis"));
+    desc.add<edm::InputTag>("l1tAlgBlkInputTag", edm::InputTag("gtStage2Digis"));
+    desc.add<edm::InputTag>("l1tExtBlkInputTag", edm::InputTag("gtStage2Digis"));
+    desc.add<bool>("ReadPrescalesFromFile", 0);
     
     descriptions.add("eta2mu2eAnalyzer", desc);
 }
@@ -378,6 +390,20 @@ void eta2mu2eAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSe
             //}
         }
     }
+
+    l1triggerNames = {
+        "L1_DoubleMu3er2p0_SQ_OS_dR_Max1p4",
+        "L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p6",
+        "L1_DoubleMu0er1p4_OQ_OS_dEta_Max1p6",
+        "L1_DoubleMu0er2p0_SQ_OS_dEta_Max1p5",
+        "L1_DoubleMu0er1p4_SQ_OS_dR_Max1p4",
+        "L1_DoubleMu0er1p5_SQ_OS_dR_Max1p4",
+        "L1_DoubleMu4p5_SQ_OS_dR_Max1p2",
+        "L1_DoubleMu4_SQ_OS_dR_Max1p2"
+    };
+    
+    l1GtUtils_->retrieveL1Setup(iSetup);
+
 }
 
 
@@ -755,6 +781,32 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         }
     } //end loop over triggerPaths
 
+    // Assign each l1trigger result to a different bit
+    nt.l1fired_ = 0;
+
+    l1GtUtils_->retrieveL1(iEvent, iSetup, algToken_);
+    //check if valid
+    if(l1GtUtils_->valid()) {
+        //std::cout << "l1GtUtils is valid !!! thumbs" << std::endl;
+    }
+    else {
+        std::cout << "l1GtUtils is invalid :(((((" << std::endl;
+    }
+    //print all L1 bits!
+    //const std::vector<std::pair<std::string, bool>> finalDecisions = l1GtUtils_->decisionsFinal();
+    //for(auto decs : finalDecisions) {
+    //    std::cout << decs.first << ": " << decs.second << std::endl;
+    //}
+    for (uint32_t i = 0; i < l1triggerNames.size(); i++){
+        std::string l1seed = l1triggerNames[i];
+        bool l1htbit = 0;
+        //int prescale = -1;
+        l1GtUtils_->getFinalDecisionByName(l1seed, l1htbit);
+        //l1GtUtils_->getPrescaleByName(l1seed, prescale);
+        nt.l1fired_ |= (l1htbit << i);
+        //l1_name->push_back(l1seed);
+        //l1_prescale->push_back(prescale);
+    }
     
     //std::cout << "Number of onia ConvertedPhoton Candidates: " << (int)conHandle_->size() << std::endl;
     //std::cout << "Printing onia photons:" << std::endl;
