@@ -1174,12 +1174,12 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //}
     //std::cout << "Event " << (int)nt.eventNum_ << " filled!" << std::endl;
     //test41: testing what happens if save all events
-    //if( nt.mmelelVtxChi2_.size() > 0 ) {
+    if( nt.mmelelVtxChi2_.size() > 0 ) {
         recoT->Fill();
         if(!isData) {
             genT->Fill();
         }
-    //}
+    }
     if(!isData) {
         if(nt.mumuVtxM_.size() > 0){
             recoMuVtxGenPtEta->Fill(genEtaVec.Pt());
