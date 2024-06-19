@@ -218,6 +218,8 @@ for file in scriptList :
         base = base[:-1]
     #print base,"     OR     ",file[:-3]
     outLines = ['universe = vanilla\n']
+    if args.language == "bash":
+        outLines.append('requirements = (OpSysAndVer =?= "CentOS7")\n')
     outLines.append('Executable = {0:s}\n'.format(file))
     outLines.append('Output = {0:s}.out\n'.format(base))
     outLines.append('Error = {0:s}.err\n'.format(base))

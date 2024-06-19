@@ -1149,7 +1149,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //computeVertices(allTracksP, allTracksN, "pcpc", theB, kvf, nt);
 
 
-    //only fill with the BEST mumu vertex, not all of them.
+    //Fill with ALL mumu vertices.
     float bestPt = -1.0;
     float bestM = -1.0;
     float bestProb = -1.0;
@@ -1157,16 +1157,18 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
         //std::cout << "vv = " << (int)vv << std::endl;
         float vtxProb = TMath::Prob(nt.mumuVtxChi2_[vv], nt.mumuVtxNdof_[vv]);
         //std::cout << "vv=" << (int)vv << ", vtxProb=" << vtxProb << ", Pt=" << nt.mumuVtxPt_[vv] << ", M=" << nt.mumuVtxM_[vv] << std::endl;
-        if(vtxProb > bestProb) {
-            bestPt = nt.mumuVtxPt_[vv];
-            bestM = nt.mumuVtxM_[vv];
-            bestProb = vtxProb;
+        bestPt = nt.mumuVtxPt_[vv];
+        bestM = nt.mumuVtxM_[vv];
+       
+        if(bestM > 0.2 && bestM < 1.0) {
+            allMvsPt->Fill(bestPt, bestM);
+            //std::cout << "bestM value of " << bestM << " filled into the allMvsPt hist!" << std::endl;
         }
     }
-    if(bestM > 0.2 && bestM < 0.8) {
-        allMvsPt->Fill(bestPt, bestM);
-        //std::cout << "bestM value of " << bestM << " filled into the allMvsPt hist!" << std::endl;
-    }
+    //if(bestM > 0.2 && bestM < 0.8) {
+    //    allMvsPt->Fill(bestPt, bestM);
+    //    //std::cout << "bestM value of " << bestM << " filled into the allMvsPt hist!" << std::endl;
+    //}
     //else {
         //std::cout << "allMvsPt not filled; bestM=" << bestM << std::endl;
     //}
