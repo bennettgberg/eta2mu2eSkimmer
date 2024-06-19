@@ -3,10 +3,10 @@ config = config()
 
 isMC = True
 #signal or MC background?
-isSig = True
+isSig = False
 
 #EtaToMuMuGamma sample
-isMuMu = False
+isMuMu = True
 
 #doing test with central MC production?
 central = False
@@ -32,7 +32,7 @@ else:
     if isSig:
         config.General.requestName = 'test43MC_EtaTo2Mu2E_2'
     elif isMuMu:
-        config.General.requestName = 'test43MC_EtaToMuMu_0'
+        config.General.requestName = 'test47MC_EtaToMuMu'
     else:
         config.General.requestName = 'test38MC_EtaToMuMuGammaExp22'
 if central:
