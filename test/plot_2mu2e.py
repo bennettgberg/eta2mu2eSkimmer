@@ -41,7 +41,7 @@ do_trigCor = True
 new_wt = 1
 
 #what test number to label the output files with
-testnum = 38103
+testnum = 38130
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -263,6 +263,8 @@ hNcand = {}
 hMvsPt = {}
 #sublead pT vs dR of muon pair
 hsubVdR = {}
+#L1 seeds passed
+hL1 = {}
 #2-d hist of ee invar mass vs mmee
 hMeeVsMmmee = ROOT.TH2F("hMeeVsMmmee", "", 200, 0.0, 1.0, 200, 0.0, 1.0) 
 if isMC and not isSig:
@@ -288,6 +290,7 @@ for vtype in vtypes:
     else:
         hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
     hM[vtype].Sumw2()
+    hL1[vtype] = ROOT.TH1D("hL1"+vtype, "L1 pass rates for each seed, amongst events surviving all cuts for "+vtype+" vertices", 8, 0, 8)
     hRchi2[vtype] = ROOT.TH1F("hRchi2"+vtype, "Reduced #chi^{2} with "+vtype+" vertices", 500, 0.0, 5.0)
     hRchi2[vtype].Sumw2()
     hMNoWt[vtype] = ROOT.TH1F("hMNoWt"+vtype, "UNWEIGHTED Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
@@ -1147,6 +1150,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         ncand += 1
                     if not passedTrig:
                         hMFailedTrig[vtype].Fill(m, evt_weight) 
+                    for l1b in range(8):
+                        if ord(e.L1_fired) & (1<<l1b) != 0:
+                            hL1[vtype].Fill(l1b+0.5)
                     hMNoWt[vtype].Fill(m)
                     hnPVgood[vtype].Fill(e.nPV, evt_weight)
                     if not (year == 2023 and vtype == "mumu"):
@@ -1755,6 +1761,7 @@ def finish_processing(foutname):
         hM[vtype].Write()
         hMNoWt[vtype].Write()
         hMFailedTrig[vtype].Write()
+        hL1[vtype].Write()
         hnPVgood[vtype].Write()
         #if vtype != "mumu" and vtype != "mmg":
         hpT[vtype].Write()
