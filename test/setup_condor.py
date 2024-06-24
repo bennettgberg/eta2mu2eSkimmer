@@ -13,7 +13,7 @@ def main():
     submit_now = True
 
     #true if running the jobs on lxplus instead of cmslpc
-    lxplus = False
+    lxplus = True #False
 
     #store on group (lpcdisptau) eos space instead of my own personal?
     grpeos = True
@@ -24,7 +24,7 @@ def main():
     year = 2022
     
     #number of root files to run in a single job
-    nroot = 10 #5
+    nroot = 1
 
     #do systematics or nah (will take way longer)
     doSyst = False
@@ -83,6 +83,14 @@ def main():
                 os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
             else:
                 os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
+        else:
+            #is lxplus
+            #can't really tell if the directory exists easily, so just make it again (even if it's an 'already exists' error, doesn't hurt anyone)
+            if grpeos:
+                os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
+            else:
+                os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
+            
         lang = "tcsh"
         credname = "x509up_u52949"
         if lxplus:
