@@ -10,10 +10,10 @@ import sys
 def main():
     
     #submit jobs within this script (T) or just do the setup (F)
-    submit_now = True
+    submit_now = False
 
     #true if running the jobs on lxplus instead of cmslpc
-    lxplus = False
+    lxplus = True
 
     #store on group (lpcdisptau) eos space instead of my own personal?
     grpeos = True
@@ -89,7 +89,7 @@ def main():
             lang = "bash"
             credname = "x509up_u104084"
         #run the setup code
-        os.system("cd %s ; python ../../makeCondorbpg.py --dataSet %s --nickName %s --csv bpgSamples.csv --mode anaXRD --year %d -c %d -p ~/%s -l %s %s\n"%(new_name, sample, samp_name, year, nroot, credname, lang, "-ge" if grpeos else ""))
+        os.system("cd %s ; python3 ../../makeCondorbpg.py --dataSet %s --nickName %s --csv bpgSamples.csv --mode anaXRD --year %d -c %d -p ~/%s -l %s %s\n"%(new_name, sample, samp_name, year, nroot, credname, lang, "-ge" if grpeos else ""))
         
         this_dir = os.getcwd() #"/uscms_data/d3/bgreenbe/CMSSW_12_4_13/src/eta2mu2e/eta2mu2eSkimmer/test"
         #come back to get ready for the next one.
@@ -119,7 +119,7 @@ def main():
 
         #submit the jobs now (if we're supposed to)
         if submit_now:
-            os.system("cd %s; python submit_jobs.py"%(new_name))
+            os.system("cd %s; python3 submit_jobs.py"%(new_name))
             
 if __name__=="__main__":
     main()
