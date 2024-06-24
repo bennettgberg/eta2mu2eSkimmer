@@ -30,6 +30,7 @@ for let in lets:
         nf = int(nfiles/njobs)
         #number of jobs with one extra file
         nextra = nfiles % njobs
+        kfiles = 0
         for j in range(njobs):
             outn = "filelists_new/flist_%d%s_%d.txt"%(num, let, j)
             outf = open(outn, 'w')
@@ -37,5 +38,8 @@ for let in lets:
             if j < nextra:
                 jfiles += 1 
             for k in range(jfiles):
-                outf.write(flist[j*njobs+k]+'\n')
+                outf.write(flist[kfiles]+'\n')
+                kfiles += 1
             outf.close()
+        if kfiles != nfiles:
+            print("aaaaa kfiles=%d at end but nfiles=%d aaaaaaaaa"%(kfiles, nfiles)) 
