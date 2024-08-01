@@ -3,6 +3,7 @@ import math
 
 #run letters of 2022 to go over
 lets = ['C', 'Dv1', 'Dv2', 'E', 'F', 'G']
+#lets = ['F']
 #which sets of LowMass BParking data to go over
 nums = [i for i in range(8)]
 ##which testnumber ?
@@ -11,10 +12,12 @@ nums = [i for i in range(8)]
 njobs = 32
 
 for let in lets:
-    for num in nums:
+    #for num in nums:
+    for num in [1]:
         nfiles = 0
         flist = []
-        dpath = "BParking_2022/ParkingDoubleMuonLowMass%d%s"%(num, let)
+        #dpath = "BParking_2022/ParkingDoubleMuonLowMass%d%s"%(num, let)
+        dpath = "BParking_2022_old/ParkingDoubleMuonLowMass%d%s"%(num, let)
         if not os.path.exists(dpath):
             continue
         while True:
@@ -32,7 +35,7 @@ for let in lets:
         nextra = nfiles % njobs
         kfiles = 0
         for j in range(njobs):
-            outn = "filelists_new/flist_%d%s_%d.txt"%(num, let, j)
+            outn = "filelists_new/flist_%s%d_%d.txt"%(let, num, j)
             outf = open(outn, 'w')
             jfiles = nf
             if j < nextra:
