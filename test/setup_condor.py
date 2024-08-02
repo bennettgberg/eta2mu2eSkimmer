@@ -10,10 +10,10 @@ import sys
 def main():
     
     #submit jobs within this script (T) or just do the setup (F)
-    submit_now = False
+    submit_now = True
 
     #true if running the jobs on lxplus instead of cmslpc
-    lxplus = True #False
+    lxplus = False
 
     #store on group (lpcdisptau) eos space instead of my own personal?
     grpeos = True
@@ -63,13 +63,17 @@ def main():
         #also make a directory on eos for it.
         if not lxplus:
             if grpeos:
-                eos_path = "/eos/uscms/store/group/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name)
+                #eos_path = "/eos/uscms/store/group/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name)
+                eosp = "/store/group/lpcdisptau/eta2mu2e/BParking_%d_L1/%s"%(year, samp_name)
+                eos_path = "/eos/uscms%s"%(eosp)
             else:
-                eos_path = "/eos/uscms/store/user/bgreenbe/BParking_%d/%s"%(year, samp_name)
+                eosp = "/store/user/bgreenbe/BParking_%d"%(year)
+                eos_path = "/eos/uscms%s/%s"%(year, samp_name)
             #MUST delete all prior contents in the eos directory if it already exists.
             if os.path.exists(eos_path):
                 if not always_del:
-                    cont = raw_input("Directory %s already exists. Delete all contents? (Y to delete and continue, N to cancel, O to override and proceed without deleting.) "%(eos_path))
+                    #cont = raw_input("Directory %s already exists. Delete all contents? (Y to delete and continue, N to cancel, O to override and proceed without deleting.) "%(eos_path))
+                    cont = input("Directory %s already exists. Delete all contents? (Y to delete and continue, N to cancel, O to override and proceed without deleting.) "%(eos_path))
                     if cont in ["O", "o", "override", "Override"]: 
                         #allow to continue without deleting
                         always_del = False
@@ -79,10 +83,7 @@ def main():
                         always_del = True
                 if always_del:
                     os.system("rm %s/*.root"%(eos_path))
-            if grpeos:
-                os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
-            else:
-                os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
+            os.system("eos root://cmseos.fnal.gov mkdir %s"%(eosp))
         else:
             #is lxplus
             #can't really tell if the directory exists easily, so just make it again (even if it's an 'already exists' error, doesn't hurt anyone)

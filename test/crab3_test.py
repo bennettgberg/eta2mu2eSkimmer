@@ -6,10 +6,10 @@ isMC = True
 isSig = False
 
 #EtaToMuMuGamma sample
-isMuMu = True
+isMuMu = False
 
-#doing test with central MC production?
-central = False
+#using central MC production instead of private?
+central = True
 
 #set True to use DoubleElectron triggers instead of DoubleMuon (esp to test trigger eff in data)
 useElTrig = False
@@ -35,9 +35,12 @@ else:
     elif isMuMu:
         config.General.requestName = 'test47MC_EtaToMuMu_preEE2'
     else:
-        config.General.requestName = 'test45MC_EtaToMuMuGamma_2'
-if central:
-    config.General.requestName = 'test22MC_CentralJPsi'
+        if central:
+            config.General.requestName = 'test45MC_EtaToMuMuGamma_centralpostEE'
+        else:
+            config.General.requestName = 'test45MC_EtaToMuMuGamma_2'
+#if central:
+#    config.General.requestName = 'test22MC_CentralJPsi'
 config.General.workArea = 'crab_MiniAnalyzer'
 config.General.transferOutputs = True
 config.General.transferLogs = True
@@ -232,20 +235,22 @@ else:
 #        ]
     else:
         #is central
-        config.Data.userInputFiles = [
-            'root://cmsxrootd.fnal.gov//store/mc/Run3Summer22EEMiniAODv3/LambdaBToX3872Lambda_X3872ToJPsiRho_JPsiTo2Mu_RhoTo2Pi_TuneCP5_13p6TeV_pythia8-evtgen/MINIAODSIM/124X_mcRun3_2022_realistic_postEE_v1-v2/2810000/004dd08c-4890-4cc9-8acf-6ef929bf443a.root']
+        #config.Data.userInputFiles = [
+        #    'root://cmsxrootd.fnal.gov//store/mc/Run3Summer22EEMiniAODv3/LambdaBToX3872Lambda_X3872ToJPsiRho_JPsiTo2Mu_RhoTo2Pi_TuneCP5_13p6TeV_pythia8-evtgen/MINIAODSIM/124X_mcRun3_2022_realistic_postEE_v1-v2/2810000/004dd08c-4890-4cc9-8acf-6ef929bf443a.root'
+        #]
+        config.Data.inputDataset = '/EtaTo2MuGamma_PtExpGun_TuneCP5_13p6TeV-pythia8/Run3Summer22EEMiniAODv4-130X_mcRun3_2022_realistic_postEE_v6-v2/MINIAODSIM'
 
 config.Data.inputDBS = 'global'
-if isMC:
+if isMC and not central:
     config.Data.splitting = 'FileBased'
     config.Data.unitsPerJob = 1 #10 #2
     config.Data.totalUnits = 100000 #10000
 else:
-    #config.Data.splitting = 'Automatic'
+    config.Data.splitting = 'Automatic'
     ### for test only
-    config.Data.splitting = 'FileBased'
-    config.Data.unitsPerJob = 1 #2
-    config.Data.totalUnits = 1000000 #10000
+    #config.Data.splitting = 'FileBased'
+    #config.Data.unitsPerJob = 1 #2
+    #config.Data.totalUnits = 1000000 #10000
     ###  ###
 config.Data.publication = False
 config.Data.outputDatasetTag = config.General.requestName
