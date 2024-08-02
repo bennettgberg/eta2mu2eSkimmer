@@ -13,9 +13,9 @@ if abs(trg_var < 100):
 
 #set this true to REJECT ANY event that have a reconstructed photon!
 reject_photon = False
-#set this true to reject any event that has a valid eta->mumu (.51 to .60 GeV invar. mass)
+#set this true to reject any event that has a valid eta->mumu (.52 to .58 GeV invar. mass)
 reject_etamumu = False
-#set this to true to reject any event that has a valid eta->mumugamma (.51 to .60 GeV invar. mass)
+#set this to true to reject any event that has a valid eta->mumugamma (.52 to .58 GeV invar. mass)
 reject_mmg = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
 basic_cuts = True
@@ -41,13 +41,20 @@ do_trigCor = True #False #True
 #use the new event weights (calculated from DG/Cheb4 2mu fits)?
 new_wt = 1
 #-1: preEE, +1: postEE, 0: all together
-EEperiod = 0
+EEperiod = -1
+#use WP80 elID and medium muID instead of WP90, loose?
+tight = False
+#fractional shift (scale factor) to apply to all muon pT values, for MC ONLY 
+musf = -0.0015
+
+peakmin = .52
+peakmax = .58
 
 #apply Golden JSON?
 golden = True
 
 #what test number to label the output files with
-testnum = 38130
+testnum = 4715
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -147,6 +154,10 @@ el_mass = .000511
 etamass = .547862
 pi_mass = .13957
 
+#scale factors are for MC ONLY
+if not isMC:
+    musf = 0
+
 #if true, add only the vertex with the highest chi2 prob to the histogram
 singleVert = False #True #not syncTest
 ##maximum reduced chi2 on the vertex that is allowed to be kept (-1 for no cut, 2.70554 for chi2 prob>.1 for 2-lep vertices; 1.84727 for 4-lepton) 
@@ -159,7 +170,7 @@ useLowPt = False #not syncTest
 #if True, genmatch the Onia photon tracks to the LowPt electrons and discard any that are a match
 useOnia = False
 #minimum dR for it to be considered a successful genmatch
-dRcut = 0.05 #0.02 #.002 #.05
+dRcut = 0.13 #0.02 #.002 #.05
 
 #parameters for invar mass histogram
 #nbins = 350
@@ -250,7 +261,7 @@ hMComb = ROOT.TH1F("hMComb", "Invar. mass of event N's dimuon, event N-1's diele
 hMReal = ROOT.TH1F("hMReal", "Control plot for hMComb: event N's dimuon+dielectron", 2000, 0.0, 10.0) 
 #pT histogram 
 hpT = {}
-#pT of events IN eta mass window (.51-.60 GeV) ONLY
+#pT of events IN eta mass window (.52-.58 GeV) ONLY
 hpTSig = {}
 #pT of events JUST OUTSIDE eta mass window (.45-.49,.62-.67 GeV) ONLY
 hpTSide = {}
@@ -282,8 +293,9 @@ hNcand = {}
 hMvsPt = {}
 #sublead pT vs dR of muon pair
 hsubVdR = {}
+hL1all = {}
 #L1 seeds passed
-hL1 = {}
+hL1pass = {}
 #2-d hist of ee invar mass vs mmee
 hMeeVsMmmee = ROOT.TH2F("hMeeVsMmmee", "", 200, 0.0, 1.0, 200, 0.0, 1.0) 
 if isMC and not isSig:
@@ -309,7 +321,8 @@ for vtype in vtypes:
     else:
         hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
     hM[vtype].Sumw2()
-    hL1[vtype] = ROOT.TH1D("hL1"+vtype, "L1 pass rates for each seed, amongst events surviving all cuts for "+vtype+" vertices", 8, 0, 8)
+    hL1all[vtype] = ROOT.TH1D("hL1all"+vtype, "Events surviving all cuts for "+vtype+" vertices that have L1 seed info", 1, 0, 1)
+    hL1pass[vtype] = ROOT.TH1D("hL1pass"+vtype, "L1 pass rates for each seed, amongst events surviving all cuts for "+vtype+" vertices", 8, 0, 8)
     hRchi2[vtype] = ROOT.TH1F("hRchi2"+vtype, "Reduced #chi^{2} with "+vtype+" vertices", 500, 0.0, 5.0)
     hRchi2[vtype].Sumw2()
     hMNoWt[vtype] = ROOT.TH1F("hMNoWt"+vtype, "UNWEIGHTED Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
@@ -318,8 +331,8 @@ for vtype in vtypes:
     hMFailedTrig[vtype].Sumw2()
     hnPVgood[vtype] = ROOT.TH1D("hnPVgood"+vtype, "Number of primary vertices in good "+vtype+" vertices", 200, 0, 200) 
     hpT[vtype] = ROOT.TH1F("hpT"+vtype, "pT with "+vtype+" vertices", 500, 0., 100.) 
-    hpTSig[vtype] = ROOT.TH1F("hpTSig"+vtype, "p_{T}^{2#mu2e} w/ .51<m_{2#mu2e}<.60 GeV w/ "+vtype+" vertices", 500, 0., 100.) 
-    hpTSide[vtype] = ROOT.TH1F("hpTSide"+vtype, "p_{T}^{2#mu2e} w/ .45<m_{2#mu2e}<.49 or .62<m_{2#mu2e}<.67 GeV w/ "+vtype+" vertices", 500, 0., 100.) 
+    hpTSig[vtype] = ROOT.TH1F("hpTSig"+vtype, "p_{T}^{2#mu2e} w/ .52<m_{2#mu2e}<.58 GeV w/ "+vtype+" vertices", 500, 0., 100.) 
+    hpTSide[vtype] = ROOT.TH1F("hpTSide"+vtype, "p_{T}^{2#mu2e} w/ 0.61<m_{2#mu2e}<0.8 GeV w/ "+vtype+" vertices", 500, 0., 100.) 
     hpT[vtype].Sumw2()
     hpTEl[vtype] = ROOT.TH1F("hpTEl"+vtype, "Weighted pT of electrons in "+vtype+" vertices", 500, 0., 100.) 
     hpTElNoWt[vtype] = ROOT.TH1F("hpTElNoWt"+vtype, "Unweighted pT of electrons in "+vtype+" vertices", 500, 0., 100.) 
@@ -330,7 +343,7 @@ for vtype in vtypes:
     #pseudorapidity distribution of the reconstructed eta mesons
     hEta[vtype] = ROOT.TH1F("hEta"+vtype, "pseudorapidity with "+vtype+" vertices", 2000, -10., 10.) 
     hEta[vtype].Sumw2()
-    hNcand[vtype] = ROOT.TH1D("hNcand"+vtype, "Number of candidates in [.51, .60] for "+vtype+" vertices", 20, 0, 20) 
+    hNcand[vtype] = ROOT.TH1D("hNcand"+vtype, "Number of candidates in [.52, .58] for "+vtype+" vertices", 20, 0, 20) 
     #hdRP[vtype] = ROOT.TH1F("hdRP"+vtype, "dR b/t Onia and lowPtelectrons Pos", 1000, 0, 10.)
     #hdRN[vtype] = ROOT.TH1F("hdRN"+vtype, "dR b/t Onia and lowPtelectrons Neg", 1000, 0, 10.)
     #hMhiVxy[vtype] = ROOT.TH1F("hMhiVxy"+vtype, "Invar. mass with "+vtype+" vertices, Vxy>1.2", nbins, xmin, xmax) 
@@ -411,13 +424,18 @@ if isMC:
     #number of modified electron efficiency points
     nMod = 12
     hMMod = {}
+    #this modification is ON TOP of musf (if it is non-zero)
     hMModmu = {}
+    hpTModmu = {}
     sf = [0.0 for s in range(nMod)]
+    sfmu = [0.0 for s in range(nMod)]
     for s in range(nMod):
         ss = s if s < 6 else s+1
-        sf[s] = -3.0 + 0.5*ss
+        sf[s] = -1.2 + 0.2*ss
+        sfmu[s] = -0.3 + 0.05*ss
         hMMod[s] = ROOT.TH1F("hMMod"+str(s), "mmelel Invar. mass with electron p_{T} modified by "+str(sf[s])+"\%", 1000, 0.0, 1.0) 
-        hMModmu[s] = ROOT.TH1F("hMModmu"+str(s), "mmelel Invar. mass with muon p_{T} modified by "+str(sf[s])+"\%", 1000, 0.0, 1.0) 
+        hMModmu[s] = ROOT.TH1F("hMModmu"+str(s), "mmelel Invar. mass with muon p_{T} modified by "+str(sfmu[s])+"\%", 1000, 0.0, 1.0) 
+        hpTModmu[s] = ROOT.TH1F("hpTModmu"+str(s), "p_{T} mod'd by "+str(sfmu[s])+"\%, evts in sig peak .52-.58 GeV for"+str(vtype)+" verts", 500, 0.0, 100.0) 
     for vtype in vtypes:
         #if vtype in ["mumu", "elel", "pcpc", "lplp"]:
         #    hMUp[vtype] = ROOT.TH1F("hMUp"+vtype, "Upper Invar. mass with "+vtype+" vertices", 1000, 0.0, 1.0) 
@@ -584,18 +602,41 @@ def elEff(elpt):
     #p4 = 0.0233852
     #p5 = -8.28340e-7
     #p6 = -227.643
-    p0     =      3.44966e+00
-    p1     =      9.82250e-01
-    p2     =      1.93835e+01
-    p3     =      8.28920e+00
-    p4     =      2.10418e-02
-    p5     =     -1.64434e-06
-    p6     =     -1.81210e+02
+    #p0     =      3.44966e+00
+    #p1     =      9.82250e-01
+    #p2     =      1.93835e+01
+    #p3     =      8.28920e+00
+    #p4     =      2.10418e-02
+    #p5     =     -1.64434e-06
+    #p6     =     -1.81210e+02
+    p0                        =      5.43551  
+    p1                        =      1.47295  
+    p2                        =      26.8049  
+    p3                        =       9.7099  
+    p4                        =    0.0245243  
+    p5                        = -2.19139e-06  
+    p6                        =     -161.112
     return p0 / (p1*elpt + ROOT.TMath.Exp(-(elpt - p2)/p3)) - p4/elpt + p5*(elpt-p6)**2
 
 #fit for the muon efficiency
 def muEff(mupt):
-    return 1
+    #dR cut 0.05
+    #if mupt > 20:
+    #    return muEff(20)
+    #p0    =       3.27069e+01
+    #p1    =       9.47365e-01
+    #p2    =       9.50122e-01
+    #p3    =       5.63010e+00
+    #p4    =      -2.45779e+02
+    #p5    =       3.60675e+01
+    #dR cut 0.13
+    p0     =      2.01098e+01
+    p1     =     -3.42298e-01
+    p2     =      9.82785e-01
+    p3     =      5.64684e+00
+    p4     =     -2.62466e+02
+    p5     =      1.18172e+01
+    return p0 / (ROOT.TMath.Exp(ROOT.TMath.Exp(-(mupt - p1)/p2) + p3)+p4+p5/mupt)
 
 #randomly assign a trigger pass/fail value according to the fitted model as a function of subleading muon pT (threshold varied by trg_var)
 def toyTrig(subpt): #, subeta=9999):
@@ -626,7 +667,7 @@ def toyTrig(subpt): #, subeta=9999):
     #efficiency at this pT value
     #toyEff = plat / (1 + ROOT.TMath.Exp(-(subpt - p50) / w)) 
     #toyEff = plat / (1 + ROOT.TMath.Exp(-(subpt - p50) / w))**alpha 
-    toyEff = plat / ROOT.TMath.Exp(ROOT.TMath.Exp(-(subpt - p50) / w) - 1)
+    toyEff = plat / (ROOT.TMath.Exp(ROOT.TMath.Exp(-(subpt - p50) / w) - 1))
     #old fit doesn't work well anymore because now using only a single trigger path.
     #new fit: [0]/((x-[1])/[2]+[3]/(x-[4])+TMath::Exp(-(x-[5])/[6]))
     #p0 = 4.256
@@ -650,7 +691,7 @@ def toyTrig(subpt): #, subeta=9999):
 # useOnia: true to remove any tracks matched to Onia conversion candidates, false to not
 # g: gen event (if MC only, obviously)
 #def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, genEtaPt=0, passedTrig=True):
-def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, gen_eta=None, passedTrig=True):
+def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, gen_eta=None, passedTrig=True, recod=False):
 
     #print("vtx %s Run %d ls %d evt %d"%(vtype, e.run, e.lumi_sec, e.evt)) 
 
@@ -665,8 +706,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             vec_muN = ROOT.TLorentzVector()
             mp = ord(e.Vertex_mumu_muP[mV])
             mn = ord(e.Vertex_mumu_muN[mV])
-            vec_muP.SetPtEtaPhiM(e.Muon_pt[mp], e.Muon_eta[mp], e.Muon_phi[mp], mu_mass)
-            vec_muN.SetPtEtaPhiM(e.Muon_pt[mn], e.Muon_eta[mn], e.Muon_phi[mn], mu_mass)
+            vec_muP.SetPtEtaPhiM(e.Muon_pt[mp]*(1+musf), e.Muon_eta[mp], e.Muon_phi[mp], mu_mass)
+            vec_muN.SetPtEtaPhiM(e.Muon_pt[mn]*(1+musf), e.Muon_eta[mn], e.Muon_phi[mn], mu_mass)
             dimu = vec_muP + vec_muN
             global old_diel
             if old_diel != None:
@@ -746,8 +787,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 vec_muN = ROOT.TLorentzVector()
                 vec_elP.SetPtEtaPhiM(e.Electron_pt[ord(vtx_veleP[j])], e.Electron_eta[ord(vtx_veleP[j])], e.Electron_phi[ord(vtx_veleP[j])], el_mass)
                 vec_elN.SetPtEtaPhiM(e.Electron_pt[ord(vtx_veleN[j])], e.Electron_eta[ord(vtx_veleN[j])], e.Electron_phi[ord(vtx_veleN[j])], el_mass)
-                vec_muP.SetPtEtaPhiM(e.Muon_pt[ord(vtx_vmuP[j])], e.Muon_eta[ord(vtx_vmuP[j])], e.Muon_phi[ord(vtx_vmuP[j])], mu_mass)
-                vec_muN.SetPtEtaPhiM(e.Muon_pt[ord(vtx_vmuN[j])], e.Muon_eta[ord(vtx_vmuN[j])], e.Muon_phi[ord(vtx_vmuN[j])], mu_mass)
+                vec_muP.SetPtEtaPhiM(e.Muon_pt[ord(vtx_vmuP[j])]*(1+musf), e.Muon_eta[ord(vtx_vmuP[j])], e.Muon_phi[ord(vtx_vmuP[j])], mu_mass)
+                vec_muN.SetPtEtaPhiM(e.Muon_pt[ord(vtx_vmuN[j])]*(1+musf), e.Muon_eta[ord(vtx_vmuN[j])], e.Muon_phi[ord(vtx_vmuN[j])], mu_mass)
                 mdeleted = (vec_elP + vec_elN + vec_muP + vec_muN).M()
                 hMdeleted.Fill(mdeleted)
                 hRchi2deleted.Fill(vtx_vrechi2[j]) 
@@ -968,7 +1009,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #if WP80ID_p == 0 or WP80ID_n == 0:
             #require elID on BOTH electrons
             if require_elID and (WP90ID_p == 0 or WP90ID_n == 0):
-            #if require_elID and (WP80ID_p == 0 or WP80ID_n == 0):
+                continue
+            if tight and require_elID and (WP80ID_p == 0 or WP80ID_n == 0):
                 continue
             try:
                 vxy = (vtx_vvx[j]**2 + vtx_vvy[j]**2)**0.5
@@ -1042,15 +1084,20 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             mp = ord(vtx_vmuP[jj]) 
             vec_muP = ROOT.TLorentzVector()
             #print("mp: " + str(mp) + "; nGoodMuon: " + str(ord(e.nGoodMuon)) + "; len(mp): " + str(len(vtx_vmuP)))
-            vec_muP.SetPtEtaPhiM(e.Muon_pt[mp], e.Muon_eta[mp], e.Muon_phi[mp], mu_mass)
+            #vec_muP.SetPtEtaPhiM(e.Muon_pt[mp], e.Muon_eta[mp], e.Muon_phi[mp], mu_mass)
+            vec_muP.SetPtEtaPhiM(e.Muon_pt[mp]*(1+musf), e.Muon_eta[mp], e.Muon_phi[mp], mu_mass)
             mm = ord(vtx_vmuN[jj]) 
             # < 4 for requiring tight muID
             try:
-                #failed_muID = require_muID and (ord(e.Muon_id[mp]) < 4 or ord(e.Muon_id[mm]) < 4)
-                failed_muID = require_muID and (ord(e.Muon_id[mp]) == 0 or ord(e.Muon_id[mm]) == 0)
+                if tight:
+                    failed_muID = require_muID and (ord(e.Muon_id[mp]) < 4 or ord(e.Muon_id[mm]) < 4)
+                else:
+                    failed_muID = require_muID and (ord(e.Muon_id[mp]) == 0 or ord(e.Muon_id[mm]) == 0)
             except TypeError:
-                #failed_muID = require_muID and (e.Muon_id[mp] < 4 or e.Muon_id[mm] < 4)
-                failed_muID = require_muID and (e.Muon_id[mp] == 0 or e.Muon_id[mm] == 0)
+                if tight:
+                    failed_muID = require_muID and (e.Muon_id[mp] < 4 or e.Muon_id[mm] < 4)
+                else:
+                    failed_muID = require_muID and (e.Muon_id[mp] == 0 or e.Muon_id[mm] == 0)
             if failed_muID:
                 continue
             #move these down further so can measure efficiency uncty!!
@@ -1063,9 +1110,12 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #print("mm: " + str(mm) + "; nGoodMuon: " + str(ord(e.nGoodMuon)) + "; len(mm): " + str(len(vtx_vmuN))) 
             #make the 4-vector, fill the hists
             vec_muN = ROOT.TLorentzVector()
-            vec_muN.SetPtEtaPhiM(e.Muon_pt[mm], e.Muon_eta[mm], e.Muon_phi[mm], mu_mass)
+            vec_muN.SetPtEtaPhiM(e.Muon_pt[mm]*(1+musf), e.Muon_eta[mm], e.Muon_phi[mm], mu_mass)
+            #adjust the event weight (slightly) according to the scaled muon efficiency!
+            Rmusf = (muEff(e.Muon_pt[mm]*(1+musf)) / muEff(e.Muon_pt[mm]) * muEff(e.Muon_pt[mp]*(1+musf))/muEff(e.Muon_pt[mp]))
+            my_evt_weight = Rmusf*evt_weight 
             if vtype == "elel":
-                hMReal.Fill((diel+dimu).M(), evt_weight)
+                hMReal.Fill((diel+dimu).M(), my_evt_weight)
             if vtype == "mmg":
                 #find the best photon
                 bestg = -1
@@ -1092,9 +1142,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         vec_bb.SetPtEtaPhiM(e.Electron_pt[bb], e.Electron_eta[bb], e.Electron_phi[bb], el_mass)
                         vec_rand = vec_muP + vec_muN + vec_aa + vec_bb
                         if e.Electron_charge[aa] == e.Electron_charge[bb]:
-                            hMSSe.Fill(vec_rand.M(), evt_weight)
+                            hMSSe.Fill(vec_rand.M(), my_evt_weight)
                         else:
-                            hMOSe.Fill(vec_rand.M(), evt_weight)
+                            hMOSe.Fill(vec_rand.M(), my_evt_weight)
             else:
                 vec_eta = vec_muP + vec_muN + vec_elP + vec_elN
                 mee = (vec_elP + vec_elN).M()
@@ -1129,7 +1179,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 #TESTING TO SEE WHAT DIFFERENCE THIS MAKES (SHOULD BE NEGLIGIBLE)
                 #if dr < dRcut:
                 #    gm = True
-                if m > .52 and m < .58:
+                if m > peakmin and m < .58:
                     gm = True
                 if gm: 
                     #hpTGenReco[vtype].Fill(genEtaPt)
@@ -1140,156 +1190,189 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         #hpTGenAcc[vtype].Fill(genEtaPt)
                         hpTGenAcc[vtype].Fill(gen_eta.Pt())
                         if gen_eta.Pt() > 25:
-                            hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity(), evt_weight)
-                        acc_weight[vtype][1] += evt_weight
+                            hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity(), my_evt_weight)
+                        acc_weight[vtype][1] += my_evt_weight
                         acc_filled[1] = True
                     #now see if it also passes the stricter cuts
                     if passedTrig and vtype not in ["mmg", "mumu"]:
-                        if e.Electron_pt[elP] > 2 and e.Electron_pt[elN] > 2 and abs(e.Electron_eta[elP]) < 2.5 and abs(e.Electron_eta[elN]) < 2.5 and \
-                            e.Muon_pt[mp] > 3 and e.Muon_pt[mm] > 3 and abs(e.Muon_eta[mp]) < 2.4 and abs(e.Muon_eta[mm]) < 2.4:
+                        if e.Electron_pt[elP] > 2 and e.Electron_pt[elN] > elpTcut and \
+                            abs(e.Electron_eta[elP]) < elEtacut and abs(e.Electron_eta[elN]) < elEtacut and \
+                            e.Muon_pt[mp]*(1+musf) > mupTcut and e.Muon_pt[mm]*(1+musf) > mupTcut and abs(e.Muon_eta[mp]) < muEtacut and abs(e.Muon_eta[mm]) < muEtacut and \
+                            (e.Muon_pt[mp]*(1+musf) > muleadpTcut or e.Muon_pt[mm]*(1+musf) > muleadpTcut) :
                             if (not acc_filled[2]):
-                                acc_weight[vtype][2] += evt_weight
+                                acc_weight[vtype][2] += my_evt_weight
                                 acc_filled[2] = True
                             if (not acc_filled[3]) and (WP90ID_p > 0 and WP90ID_n > 0):
-                                acc_weight[vtype][3] += evt_weight
+                                acc_weight[vtype][3] += my_evt_weight
                                 acc_filled[3] = True
                                 if (not acc_filled[7]) and (mee < 0.04 or mee > 0.09):
-                                    acc_weight[vtype][7] += evt_weight
+                                    acc_weight[vtype][7] += my_evt_weight
                                     acc_filled[7] = True
                             if (not acc_filled[4]) and (WP90ID_p > 0 or WP90ID_n > 0):
-                                acc_weight[vtype][4] += evt_weight
+                                acc_weight[vtype][4] += my_evt_weight
                                 acc_filled[4] = True
                                 if (not acc_filled[8]) and (mee < 0.04 or mee > 0.09):
-                                    acc_weight[vtype][8] += evt_weight
+                                    acc_weight[vtype][8] += my_evt_weight
                                     acc_filled[8] = True
                             if (not acc_filled[5]) and (WP80ID_p > 0 and WP80ID_n > 0):
-                                acc_weight[vtype][5] += evt_weight
+                                acc_weight[vtype][5] += my_evt_weight
                                 acc_filled[5] = True
                                 if (not acc_filled[9]) and (mee < 0.04 or mee > 0.09):
-                                    acc_weight[vtype][9] += evt_weight
+                                    acc_weight[vtype][9] += my_evt_weight
                                     acc_filled[9] = True
                             if (not acc_filled[6]) and (mee < 0.04 or mee > 0.09):
-                                acc_weight[vtype][6] += evt_weight
+                                acc_weight[vtype][6] += my_evt_weight
                                 acc_filled[6] = True
-                if dr < dRcut and passedTrig and not accdR_filled:
-                    hpTGenAccdR[vtype].Fill(gen_eta.Pt()) 
-                    accdR_weight[vtype] += evt_weight
-                    accdR_filled = True
+                if recod and passedTrig and not accdR_filled:
+                    #make sure it passed the rest of the event selections
+                    if e.Muon_pt[mp]*(1+musf) > mupTcut and e.Muon_pt[mm]*(1+musf) > mupTcut and abs(e.Muon_eta[mp]) < muEtacut and abs(e.Muon_eta[mm]) < muEtacut and \
+                        (e.Muon_pt[mp]*(1+musf) > muleadpTcut or e.Muon_pt[mm]*(1+musf) > muleadpTcut) and \
+                        (not failed_muID):
+
+                        if vtype in ["mumu", "mmg"] or (e.Electron_pt[elP] > elpTcut and e.Electron_pt[elN] > elpTcut and \
+                            abs(e.Electron_eta[elP]) < elEtacut and abs(e.Electron_eta[elN]) < elEtacut and \
+                            WP90ID_p > 0 and WP90ID_n > 0) :
+
+                            hpTGenAccdR[vtype].Fill(gen_eta.Pt()) 
+                            accdR_weight[vtype] += my_evt_weight
+                            accdR_filled = True
             #danEvent = False
 
             #if syncTest and vtype == "mumu" and m < .58 and m > .52:
             ##if syncTest and vtype == "mumu" and e.evt in dan_events:
             #    danEvent = True
             global nPrint
-            if isMC and vtype == "mmelel" and m > .52 and m < .58 and nPrint > 0:
+            if isMC and vtype == "mmelel" and m > peakmin and m < .58 and nPrint > 0:
                 #global nPrint
                 try:
                     printEvent.printEvent(e, isMC, g if isMC else None)
                 except AttributeError:
                     printEvent_backup.printEvent(e, isMC, g if isMC else None)
-                print(vtype + " vtx " + str(jj) + " mass: %f"%m + " evtWeight: %f"%evt_weight) 
+                print(vtype + " vtx " + str(jj) + " mass: %f"%m + " evtWeight: %f"%my_evt_weight) 
                 nPrint -= 1
 
             if not fillAtEnd:
+                #do the nominal muons pass the pt cuts?
+                mu_fail = (mupTcut > -1 and (vec_muP.Pt() < mupTcut or vec_muN.Pt() < mupTcut)) or (muleadpTcut > -1 and vec_muP.Pt() < muleadpTcut and vec_muN.Pt() < muleadpTcut)
+                #do the nominal electrons pass the pt cuts?
+                el_fail = ("elel" in vtype and elpTcut > -1 and (e.Electron_pt[elP] < elpTcut or e.Electron_pt[elN] < elpTcut)) 
                 if vtype == "mumu" and m > 0.45 and m < 0.65:
                     #see if can fill hpTGoodL1Pass, hpTGoodHLTPass
                     if vec_muP.Pt() > 5 and vec_muN.Pt() > 5 and (e.Triggers_fired0 & (1 << 25)):
                         musubpt = min(vec_muP.Pt(), vec_muN.Pt())
-                        hpTGoodL1Pass.Fill(musubpt, evt_weight ) 
+                        hpTGoodL1Pass.Fill(musubpt, my_evt_weight ) 
                         if (e.Triggers_fired0 & (1 << 11)) :
-                            hpTGoodHLTPass.Fill(musubpt, evt_weight)
+                            hpTGoodHLTPass.Fill(musubpt, my_evt_weight)
                 if vstr != "mumu":
                     elptP = vec_elP.Pt()
                     elptN = vec_elN.Pt()
                 muptP = vec_muP.Pt()
                 muptN = vec_muN.Pt()
                 #for electron efficiency uncty calculations
-                if isMC and vtype == "mmelel":
-                    for s in range(nMod):
-                        R = elEff(elptP*(1.0 + sf[s]/100.0)) / elEff(elptP) * elEff(elptN*(1.0 + sf[s]/100.0)) / elEff(elptN)
-                        evt_weightMod = evt_weight * R
-                        vec_elPmod = ROOT.TLorentzVector()
-                        vec_elPmod.SetPtEtaPhiM(elptP*(1.0 + sf[s]/100.0), vec_elP.PseudoRapidity(), vec_elP.Phi(), el_mass)
-                        vec_elNmod = ROOT.TLorentzVector()
-                        vec_elNmod.SetPtEtaPhiM(elptN*(1.0 + sf[s]/100.0), vec_elN.PseudoRapidity(), vec_elN.Phi(), el_mass)
-                        if not (elpTcut > -1 and (vec_elPmod.Pt() < elpTcut or vec_elNmod.Pt() < elpTcut)):
-                            mmod = (vec_elPmod + vec_elNmod + vec_muP + vec_muN).M()
-                            hMMod[s].Fill(mmod, evt_weightMod)
-                        Rmu = muEff(muptP*(1.0 + sf[s]/100.0)) / muEff(muptP) * muEff(muptN*(1.0 + sf[s]/100.0)) / muEff(muptN)
-                        evt_weightModmu = evt_weight * Rmu
-                        vec_muPmod = ROOT.TLorentzVector()
-                        vec_muPmod.SetPtEtaPhiM(muptP*(1.0 + sf[s]/100.0), vec_muP.PseudoRapidity(), vec_muP.Phi(), mu_mass)
-                        vec_muNmod = ROOT.TLorentzVector()
-                        vec_muNmod.SetPtEtaPhiM(muptN*(1.0 + sf[s]/100.0), vec_muN.PseudoRapidity(), vec_muN.Phi(), mu_mass)
-                        if not ((mupTcut > -1 and (vec_muPmod.Pt() < mupTcut or vec_muNmod.Pt() < mupTcut)) or (muleadpTcut > -1 and vec_muPmod.Pt() < muleadpTcut and vec_muNmod.Pt() < muleadpTcut)):
-                            mmodmu = (vec_muPmod + vec_muNmod + vec_muP + vec_muN).M()
-                            hMModmu[s].Fill(mmodmu, evt_weightModmu)
-                if not (("elel" in vtype and elpTcut > -1 and (e.Electron_pt[elP] < elpTcut or e.Electron_pt[elN] < elpTcut)) or (mupTcut > -1 and (vec_muP.Pt() < mupTcut or vec_muN.Pt() < mupTcut)) or (muleadpTcut > -1 and vec_muP.Pt() < muleadpTcut and vec_muN.Pt() < muleadpTcut)):
-                    hpT[vtype].Fill(pt, evt_weight)
-                    if m > .51 and m < .60:
-                        hpTSig[vtype].Fill(pt, evt_weight)
-                    elif (m > .45 and m < .49) or (m > .62 and m < .67):
-                        hpTSide[vtype].Fill(pt, evt_weight)
+                if isMC:
+                    if vtype == "mmelel" and not mu_fail:
+                        for s in range(nMod):
+                            R = elEff(elptP*(1.0 + sf[s]/100.0)) / elEff(elptP) * elEff(elptN*(1.0 + sf[s]/100.0)) / elEff(elptN)
+                            evt_weightMod = my_evt_weight * R
+                            vec_elPmod = ROOT.TLorentzVector()
+                            vec_elPmod.SetPtEtaPhiM(elptP*(1.0 + sf[s]/100.0), vec_elP.PseudoRapidity(), vec_elP.Phi(), el_mass)
+                            vec_elNmod = ROOT.TLorentzVector()
+                            vec_elNmod.SetPtEtaPhiM(elptN*(1.0 + sf[s]/100.0), vec_elN.PseudoRapidity(), vec_elN.Phi(), el_mass)
+                            if not (elpTcut > -1 and (vec_elPmod.Pt() < elpTcut or vec_elNmod.Pt() < elpTcut)):
+                                mmod = (vec_elPmod + vec_elNmod + vec_muP + vec_muN).M()
+                                hMMod[s].Fill(mmod, evt_weightMod)
+                    if ((isMuMu and vtype == "mumu") or (isMC and vtype == "mmelel" and not isMuMu)) and not el_fail:
+                        for s in range(nMod):
+                            Rmu = muEff(muptP*(1.0 + sfmu[s]/100.0)) / muEff(muptP) * muEff(muptN*(1.0 + sfmu[s]/100.0)) / muEff(muptN)
+                            evt_weightModmu = my_evt_weight * Rmu
+                            vec_muPmod = ROOT.TLorentzVector()
+                            vec_muPmod.SetPtEtaPhiM(muptP*(1.0 + sfmu[s]/100.0), vec_muP.PseudoRapidity(), vec_muP.Phi(), mu_mass)
+                            vec_muNmod = ROOT.TLorentzVector()
+                            vec_muNmod.SetPtEtaPhiM(muptN*(1.0 + sfmu[s]/100.0), vec_muN.PseudoRapidity(), vec_muN.Phi(), mu_mass)
+                            if not ((mupTcut > -1 and (vec_muPmod.Pt() < mupTcut or vec_muNmod.Pt() < mupTcut)) or (muleadpTcut > -1 and vec_muPmod.Pt() < muleadpTcut and vec_muNmod.Pt() < muleadpTcut)):
+                                if "elel" in vtype:
+                                    etamodmu = vec_muPmod + vec_muNmod + vec_elP + vec_elN
+                                    #print("muptP,muptN=%f,%f, Rmu=%f"%(muptP, muptN, Rmu)) 
+                                    #print("mmodmu: %f; regular m: %f"%(mmodmu, m)) 
+                                else:
+                                    etamodmu = vec_muPmod + vec_muNmod
+                                mmodmu = etamodmu.M()
+                                ptmodmu = etamodmu.Pt()
+                                hMModmu[s].Fill(mmodmu, evt_weightModmu)
+                                if mmodmu > peakmin and mmodmu < peakmax:
+                                    hpTModmu[s].Fill(ptmodmu, evt_weightModmu)
+                if not (el_fail or mu_fail):
+                    hpT[vtype].Fill(pt, my_evt_weight)
+                    if m > peakmin and m < peakmax:
+                        hpTSig[vtype].Fill(pt, my_evt_weight)
+                    #elif (m > (peakmin-2*.03) and m < (peakmin-.03)) or (m > (peakmax+.03) and m < (peakmax+2*.03)):
+                    #sidebands are strictly greater than peak now!
+                    elif m > (peakmax+.03) and m < 0.80:
+                        hpTSide[vtype].Fill(pt, my_evt_weight)
                     if vstr != "mumu":
-                        hpTEl[vtype].Fill(elptP, evt_weight)
-                        hpTEl[vtype].Fill(elptN, evt_weight)
+                        hpTEl[vtype].Fill(elptP, my_evt_weight)
+                        hpTEl[vtype].Fill(elptN, my_evt_weight)
                         hpTElNoWt[vtype].Fill(elptP)
                         hpTElNoWt[vtype].Fill(elptN)
-                    hpTMu[vtype].Fill(muptP, evt_weight)
-                    hpTMu[vtype].Fill(muptN, evt_weight)
+                    hpTMu[vtype].Fill(muptP, my_evt_weight)
+                    hpTMu[vtype].Fill(muptN, my_evt_weight)
                     if abs(vec_muP.PseudoRapidity()) > 1.5:
-                        hpTMuF[vtype].Fill(muptP, evt_weight)
+                        hpTMuF[vtype].Fill(muptP, my_evt_weight)
                     if abs(vec_muN.PseudoRapidity()) > 1.5:
-                        hpTMuF[vtype].Fill(muptN, evt_weight)
+                        hpTMuF[vtype].Fill(muptN, my_evt_weight)
                     hpTMuNoWt[vtype].Fill(muptP)
                     hpTMuNoWt[vtype].Fill(muptN)
                     hEtaMu[vtype].Fill(vec_muP.PseudoRapidity())
                     hEtaMu[vtype].Fill(vec_muN.PseudoRapidity())
-                    hEta[vtype].Fill(vec_eta.PseudoRapidity(), evt_weight)
+                    hEta[vtype].Fill(vec_eta.PseudoRapidity(), my_evt_weight)
                     if isMC:
                         #fill event weight histograms only for ACCEPTED events (correct mass reco'd)
-                        if m > .52 and m < .58:
-                            hEventWeight[vtype].Fill(evt_weight)
-                            hEvtWtVsPt[vtype].Fill(gen_eta.Pt(), evt_weight)
+                        if m > peakmin and m < peakmax:
+                            hEventWeight[vtype].Fill(my_evt_weight)
+                            hEvtWtVsPt[vtype].Fill(gen_eta.Pt(), my_evt_weight)
                     ##test: see what happens if fill hist ONLY for high-vxy bois
                     #if vxy > 1.2: continue
                     ###### TEST #####
-                    hM[vtype].Fill(m, evt_weight)
-                    if m > .51 and m < .60:
+                    hM[vtype].Fill(m, my_evt_weight)
+                    if m > peakmin and m < peakmax:
                         ncand += 1
+                        try:
+                            for l1b in range(8):
+                                if ord(e.L1_fired) & (1<<l1b) != 0:
+                                    hL1pass[vtype].Fill(l1b+0.5)
+                            hL1all[vtype].Fill(0.5)
+                        except AttributeError:
+                            pass
                     if not passedTrig:
-                        hMFailedTrig[vtype].Fill(m, evt_weight) 
-                    for l1b in range(8):
-                        if ord(e.L1_fired) & (1<<l1b) != 0:
-                            hL1[vtype].Fill(l1b+0.5)
+                        hMFailedTrig[vtype].Fill(m, my_evt_weight) 
                     hMNoWt[vtype].Fill(m)
-                    hnPVgood[vtype].Fill(e.nPV, evt_weight)
+                    hnPVgood[vtype].Fill(e.nPV, my_evt_weight)
                     if not (year == 2023 and vtype == "mumu"):
-                        hMvsPt[vtype].Fill(pt, m, evt_weight) 
+                        hMvsPt[vtype].Fill(pt, m, my_evt_weight) 
                     hsubVdR[vtype].Fill(subpt, mudR)
                     hVxy[vtype].Fill(vxy)
                     hRchi2[vtype].Fill(vtx_vrechi2[j])
-                    if vtype == "mmelel" and m > .51 and m < .60:
-                        hMNoEl.Fill( (vec_muP+vec_muN).M(), evt_weight)
+                    if vtype == "mmelel" and m > peakmin and m < peakmax:
+                        hMNoEl.Fill( (vec_muP+vec_muN).M(), my_evt_weight)
                         mee = (vec_elP+vec_elN).M()
-                        hMNoMu.Fill(mee, evt_weight)
-                        #hMNoMuPiM.Fill( (vec_piP+vec_piN).M(), evt_weight)
-                    if vtype == "mmelel" and m > .45 and m < .49 :
-                        hMNoElLSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
-                        hMNoMuLSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
-                    if vtype == "mmelel" and m > .62 and m < .67:
-                        hMNoElRSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
-                        hMNoMuRSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
-                    if vtype == "mmelel" and ((m > .62 and m < .67) or (m > .45 and m < .49)):
-                        hMNoElSide.Fill( (vec_muP+vec_muN).M(), evt_weight)
-                        hMNoMuSide.Fill( (vec_elP+vec_elN).M(), evt_weight)
+                        hMNoMu.Fill(mee, my_evt_weight)
+                        #hMNoMuPiM.Fill( (vec_piP+vec_piN).M(), my_evt_weight)
+                    if vtype == "mmelel" and m > (peakmin-2*.03) and m < (peakmin-.03) :
+                        hMNoElLSide.Fill( (vec_muP+vec_muN).M(), my_evt_weight)
+                        hMNoMuLSide.Fill( (vec_elP+vec_elN).M(), my_evt_weight)
+                    if vtype == "mmelel" and m > (peakmax+.03) and m < (peakmax+2*.03):
+                        hMNoElRSide.Fill( (vec_muP+vec_muN).M(), my_evt_weight)
+                        hMNoMuRSide.Fill( (vec_elP+vec_elN).M(), my_evt_weight)
+                    if vtype == "mmelel" and ((m > (peakmax+.03) and m < (peakmax+2*.03)) or (m > (peakmin-2*.03) and m < (peakmin-.03))):
+                        hMNoElSide.Fill( (vec_muP+vec_muN).M(), my_evt_weight)
+                        hMNoMuSide.Fill( (vec_elP+vec_elN).M(), my_evt_weight)
                         
                     #if vtype == "elel":
                     if vtype == "mmelel":
                         mee = (vec_elP+vec_elN).M()
-                        hMee.Fill(mee, evt_weight)
-                        if m > .51 and m < .60:
-                            hMeePeak.Fill(mee, evt_weight)
+                        hMee.Fill(mee, my_evt_weight)
+                        if m > peakmin and m < peakmax:
+                            hMeePeak.Fill(mee, my_evt_weight)
                         if isMC and not isMuMu:
                             #min dR for pos, neg electrons
                             mindrp = 9999.9
@@ -1306,13 +1389,13 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                                         mindrp = drp
                                     if drn < mindrn and ((not isSig) or g.GenPart_charge != 1):
                                         mindrn = drn
-                            hMeedR.Fill(mindrp, evt_weight)
-                            hMeedR.Fill(mindrn, evt_weight)
+                            hMeedR.Fill(mindrp, my_evt_weight)
+                            hMeedR.Fill(mindrn, my_evt_weight)
                             if mindrp < dRcut and mindrn < dRcut:
-                                hMeeGM.Fill(mee, evt_weight) 
+                                hMeeGM.Fill(mee, my_evt_weight) 
                 #if syncTest and vtype == "mmelel" and m < 1.0:
                 #if danEvent and m > .52 and m < .58:
-                if syncTest and vtype == "mumu" and m > .51 and m < .60:
+                if syncTest and vtype == "mumu" and m > peakmin and m < peakmax:
                 #if syncTest and vtype == "mumu" and e.evt in dan_events:
                     syncFile.write("%d %f\n"%(e.evt, m)) 
                     #global nPrint
@@ -1324,7 +1407,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         print("mass: %f"%m) 
                         nPrint -= 1
             #good eta if in the right mass range
-            if m > .51 and m < .60:
+            if m > peakmin and m < peakmax:
                 good = True
             if not singleVert:
                 Vxy = vxy
@@ -1368,11 +1451,11 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             hEta[vtype].Fill(besteta, evt_weight)
             if isMC:
                 #fill event weight histograms ONLY for accepted events! (correct mass range)
-                if bestm > .51 and bestm < .60:
+                if bestm > peakmin and bestm < peakmax:
                     hEventWeight[vtype].Fill(evt_weight) 
                     hEvtWtVsPt[vtype].Fill(gen_eta.Pt(), evt_weight)
             #if danEvent and bestm > .52 and bestm < .58:
-            if syncTest and vtype == "mumu" and bestm > .51 and bestm < .60:
+            if syncTest and vtype == "mumu" and bestm > peakmin and bestm < peakmax:
                 syncFile.write("%d %f\n"%(e.evt, bestm)) 
                 #try:
                 #    printEvent.printEvent(e)
@@ -1384,7 +1467,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #hMNoWt[vtype].Fill(m)
             #hMvsPt[vtype].Fill(pt, m, evt_weight)
             hM[vtype].Fill(bestm, evt_weight)
-            if bestm > .51 and bestm < .60:
+            if bestm > peakmin and bestm < peakmax:
                 ncand += 1
             hMNoWt[vtype].Fill(bestm)
             hnPVgood[vtype].Fill(e.nPV, evt_weight)
@@ -1398,7 +1481,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 hMvsPt[vtype].Fill(bestpt, bestm, evt_weight)
             hVxy[vtype].Fill(Vxy)
             hRchi2[vtype].Fill(bestChi2)
-            if vtype == "mmelel" and m > .51 and m < .60:
+            if vtype == "mmelel" and m > peakmin and m < peakmax:
                 hMNoEl.Fill(bestm2mu, evt_weight)
                 hMNoMu.Fill(bestm2el, evt_weight)
             #if vtype == "mmelel" and m < .52 and m > .45 :
@@ -1407,7 +1490,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #if vtype == "mmelel" and m > .58 and m < .8 :
             #    hMNoElRSide.Fill(bestm2mu, evt_weight)
             #    hMNoMuRSide.Fill(bestm2el, evt_weight)
-            if vtype == "mmelel" and ((m > .60 and m < .65) or (m > .47 and m < .51)) :
+            if vtype == "mmelel" and ((m > (peakmax+.03) and m < (peakmax+2*.03)) or (m > (peakmin-2*.03) and m < (peakmin-2*.03))) :
                 hMNoElSide.Fill(bestm2mu, evt_weight)
                 hMNoMuSide.Fill(bestm2el, evt_weight)
             #if vxy > 1.2:
@@ -1466,6 +1549,10 @@ def process_file(fname, singleVert, useOnia, hWeights):
     print("Opening file %s"%fname) 
     f = ROOT.TFile.Open(fname)
     t = f.Get("ntuples/recoT") 
+    if "output_" in fname:
+        isCentral = True
+    else:
+        isCentral = False
     if not t:
         t = f.Get("recoT")  
     nTot = t.GetEntries()
@@ -1535,12 +1622,15 @@ def process_file(fname, singleVert, useOnia, hWeights):
         #if trig0 & ((1<<27) + (1<<26)) > 0:
         #if year == 2022 and (trig0 & ((1<<11) + (1<<12) + (1<<17) + (1<<25) + (1<<26) + (1<<28)) > 0):
         #if year == 2022 and (trig0 & (1<<25) > 0):
-        if int(str(testnum)[:2]) > 38:
+        if int(str(testnum)[:2]) > 38 or ((not isMC) and (let == "Dv1" or (let == "F" and num == 1))) or (isMC and (not isSig) and (not isMuMu) and isCentral) :
             #new trigger words
             if year == 2022 and (trig1 & (1<<11) > 0):
                 passedTrig = True
-            elif year == 2023 and (trig1 & (1<<5) > 0):
-                passedTrig = True
+            elif year == 2023: 
+                try:
+                    passedTrig = (trig1 & (1<<5) > 0)
+                except TypeError:
+                    passedTrig = (ord(trig1) & (1<<5) > 0)
             elif trg_only:
                 if not isMC:
                     pass
@@ -1556,8 +1646,11 @@ def process_file(fname, singleVert, useOnia, hWeights):
             if year == 2022 and (trig0 & (1<<11) > 0):
                 passedTrig = True
             #elif year == 2023 and (ord(trig0) & (1<<5) > 0):
-            elif year == 2023 and (trig0 & (1<<11) > 0):
-                passedTrig = True
+            elif year == 2023 :
+                if 'v' in let and let != 'Cv4':
+                    passedTrig = (trig1 & (1<<11) > 0)
+                else:
+                    passedTrig = (trig0 & (1<<11) > 0)
         if testnum == 38104:
             passedTrig = (trig0 != 0 or trig1 != 0) 
 
@@ -1655,7 +1748,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
                             if ch == 1 and gid < 0: continue
                             elif ch != 1 and gid > 0: continue
                             rec_vec = ROOT.TLorentzVector()
-                            rec_vec.SetPtEtaPhiM(e.Muon_pt[k], e.Muon_eta[k], e.Muon_phi[k], mu_mass) 
+                            rec_vec.SetPtEtaPhiM(e.Muon_pt[k]*(1+musf), e.Muon_eta[k], e.Muon_phi[k], mu_mass) 
                             rec_dr = rec_vec.DeltaR(new_vec) 
                             if rec_dr < dRcut and not foundmatch:
                                 hGenMupTRec.Fill(g.GenPart_pt[j]) 
@@ -1843,10 +1936,26 @@ def process_file(fname, singleVert, useOnia, hWeights):
         mu_subpt = find_subpt(e)
         if int(str(testnum)[:2]) > 38: 
             #see if passed the L1 one
-            if (year == 2022 and (trig1 & (1<<25))) or (year == 2023 and (ord(trig1) & (1<<26))):
+            l1pass = False
+            hlpass = False
+            if year == 2022 :
+                l1pass = (trig1 & (1<<25)) != 0
+            elif year == 2023 :
+                try:
+                    l1pass = (ord(trig1) & (1<<26))
+                except TypeError:
+                    l1pass = False
+            if year == 2022 :
+                hlpass = (trig1 & (1<<11) > 0)
+            elif year == 2023:
+                try:
+                    hlpass = (trig1 & (1<<5) != 0)
+                except TypeError:
+                    hlpass = False
+            if l1pass:
                 hpTL1Pass.Fill(mu_subpt, evt_weight)
-                if (year == 2022 and (trig1 & (1<<11))) or (year == 2023 and (trig1 & (1<<5))):
-                    hpTHLTPass.Fill(mu_subpt, evt_weight)
+            if hlpass:
+                hpTHLTPass.Fill(mu_subpt, evt_weight)
         else:
             #see if passed the L1 one
             #if (year == 2022 and (trig0 & (1<<25))) or (year == 2023 and (trig0 & (1<<26))):
@@ -1925,7 +2034,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
                 if vtype == "mumu" and reject_mmg and goodmmg:
                     continue
 
-                isGood = process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g, gen_eta, passedTrig)
+                isGood = process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g, gen_eta, passedTrig, recod)
                 #isGood = False
             else:
                 #must continue AFTER filling the reco eff, to make sure it has no regard to trigger eff!!!
@@ -1981,7 +2090,8 @@ def finish_processing(foutname):
         hM[vtype].Write()
         hMNoWt[vtype].Write()
         hMFailedTrig[vtype].Write()
-        hL1[vtype].Write()
+        hL1all[vtype].Write()
+        hL1pass[vtype].Write()
         hnPVgood[vtype].Write()
         #if vtype != "mumu" and vtype != "mmg":
         hpT[vtype].Write()
@@ -2038,6 +2148,8 @@ def finish_processing(foutname):
         hEtaGenAll.Write()
         for s in range(nMod):
             hMMod[s].Write()
+            hMModmu[s].Write()
+            hpTModmu[s].Write()
         sel = {}
         for vtype in vtypes:
             #hMUp[vtype].Write()
@@ -2144,15 +2256,21 @@ if isMC:
     elif central:
         flistname = "centralMCList.txt"
     else:
-        flistname = "bkgMCList.txt"
-        if arg > -1:
-            flist2name = "bkgMCList%d.txt"%arg
+        if EEperiod == -1:
+            flistname = "bkgMCpreEEList.txt"
+            if arg > -1:
+                flist2name = flistname
+        else:
+            flistname = "bkgMCList.txt"
+            if arg > -1:
+                flist2name = "bkgMCList%d.txt"%arg
 elif syncTest and singleFile:
     flistname = "syncList.txt"
 elif year == 2023 and not isMC:
     flistname = "data2023List.txt"
 else:
-    flistname = "flist_%s%d_%d.txt"%(let, num, arg)
+    #flistname = "flist_%s%d_%d.txt"%(let, num, arg)
+    flistname = "flist_%d%s_%d.txt"%(num, let, arg)
     #flistname = "flist_whack.txt"
     #print("WARNING: USING WHACK FLIST!!!!!")
     if not os.path.exists(flistname):
