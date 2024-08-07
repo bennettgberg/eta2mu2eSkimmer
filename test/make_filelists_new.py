@@ -2,7 +2,8 @@ import os,sys
 import math
 
 #run letters of 2022 to go over
-lets = ['C', 'Dv1', 'Dv2', 'E', 'F', 'G']
+#lets = ['C', 'Dv1', 'Dv2', 'E', 'F', 'G']
+lets = ['F']
 #which sets of LowMass BParking data to go over
 nums = [i for i in range(8)]
 ##which testnumber ?

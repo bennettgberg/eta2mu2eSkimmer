@@ -10,7 +10,7 @@ import sys
 def main():
     
     #submit jobs within this script (T) or just do the setup (F)
-    submit_now = True
+    submit_now = False #True
 
     #true if running the jobs on lxplus instead of cmslpc
     lxplus = False
@@ -63,8 +63,8 @@ def main():
         #also make a directory on eos for it.
         if not lxplus:
             if grpeos:
-                #eos_path = "/eos/uscms/store/group/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name)
-                eosp = "/store/group/lpcdisptau/eta2mu2e/BParking_%d_L1/%s"%(year, samp_name)
+                eosp = "/store/group/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name)
+                #eosp = "/store/group/lpcdisptau/eta2mu2e/BParking_%d_L1/%s"%(year, samp_name)
                 eos_path = "/eos/uscms%s"%(eosp)
             else:
                 eosp = "/store/user/bgreenbe/BParking_%d"%(year)
