@@ -4,6 +4,8 @@ import printEvent_backup
 
 #allow events that pass the trigger only?
 trg_only = True
+if not trg_only:
+    input("Are you *sure* you want trg_only False???")
 
 #instead of looking at trigger bits, do toy MC simulation to find effect of trigger turn-on threshold uncty
 # how much to vary the turn-on threshold by? 0: nominal (closure); over 100: off (regular MC)
@@ -27,6 +29,8 @@ require_muID = True
 elpTcut = 2
 #cut on electron |pseudoRapidity|
 elEtacut = 2.5
+#also cut out the electrons in the transition from barrel to endcap: 1.44 < |eta| < 1.57 ?
+cut_trans = True
 #cut on muon pT
 mupTcut = 3
 muleadpTcut = 4
@@ -41,11 +45,15 @@ do_trigCor = True #False #True
 #use the new event weights (calculated from DG/Cheb4 2mu fits)?
 new_wt = 1
 #-1: preEE, +1: postEE, 0: all together
-EEperiod = -1
+EEperiod = 0
 #use WP80 elID and medium muID instead of WP90, loose?
 tight = False
 #fractional shift (scale factor) to apply to all muon pT values, for MC ONLY 
-musf = -0.0015
+musf = -0.0014
+elsf = 0.001
+#add in the (vertical) electron sf (from the json file)
+do_ElIDsf = True
+do_ElRecsf = True
 
 peakmin = .52
 peakmax = .58
@@ -54,7 +62,7 @@ peakmax = .58
 golden = True
 
 #what test number to label the output files with
-testnum = 4715
+testnum = 38175
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -157,6 +165,14 @@ pi_mass = .13957
 #scale factors are for MC ONLY
 if not isMC:
     musf = 0
+    elsf = 0
+    do_ElIDsf = False
+    do_ElRecsf = False
+
+if do_ElIDsf or do_ElRecsf:
+    #open the json file
+    from correctionlib import _core
+    evaluator = _core.CorrectionSet.from_file('electron.json.gz')
 
 #if true, add only the vertex with the highest chi2 prob to the histogram
 singleVert = False #True #not syncTest
@@ -170,7 +186,7 @@ useLowPt = False #not syncTest
 #if True, genmatch the Onia photon tracks to the LowPt electrons and discard any that are a match
 useOnia = False
 #minimum dR for it to be considered a successful genmatch
-dRcut = 0.13 #0.02 #.002 #.05
+dRcut = 0.03 #0.13 #0.08
 
 #parameters for invar mass histogram
 #nbins = 350
@@ -203,14 +219,17 @@ vtypes = ["mmelel", "mumu", "elel"]
 #vtypes = ["mmg", "mumu", "mmelel"] 
 if useLowPt:
     #2-low-pT pat::Electron; mu-mu-2-low-pT pat::Electron
-    vtypes.append("lplp")
+    #vtypes.append("lplp")
     vtypes.append("mmlplp")
 if isMuMu and "mumu" not in vtypes:
     print("WARNING: adding mumu vertices to vtypes.")
     vtypes.append("mumu")
 if isMC and not isSig and not isMuMu and len(vtypes) > 1:
     print("WARNING: changing vtypes to just one type for resonant background MC!")
-    vtypes = ["mmelel"]
+    if useLowPt:
+        vtypes = ["mmlplp"]
+    else:
+        vtypes = ["mmelel"]
     #vtypes = ["elel"]
     #vtypes = ["mumu"]
 
@@ -221,6 +240,8 @@ mmelelExclusive = False # True
 #list of particle types
 #ptypes = ["PCTrack", "patElectron", "lowpTElectron"]
 ptypes = ["patElectron"]
+if useLowPt:
+    ptypes.append("lowpTElectron")
 
 #just keep track of the total number of events processed.
 hNevt = ROOT.TH1D("hNevt", "Total number of events processed", 1, 0, 2) 
@@ -235,6 +256,20 @@ hpTHLTPass = ROOT.TH1F("hpTHLTPass", "", 500, 0, 50)
 hpTGoodL1Pass = ROOT.TH1F("hpTGoodL1Pass", "", 500, 0, 50)
 #HLTPass and ALSO is a good mumu event
 hpTGoodHLTPass = ROOT.TH1F("hpTGoodHLTPass", "", 500, 0, 50)
+#pT of all electrons
+hpTElAll = ROOT.TH1F("hpTElAll", "", 100, 0.0, 50.0) 
+hpTElAll0 = ROOT.TH1F("hpTElAll0", "electron #Delta R < 0.0005", 100, 0.0, 50.0) 
+hpTElAll1 = ROOT.TH1F("hpTElAll1", "0.0005 < electron #Delta R < 0.0025", 100, 0.0, 50.0) 
+hpTElAll2 = ROOT.TH1F("hpTElAll2", "0.0025 < electron #Delta R < 0.005", 100, 0.0, 50.0) 
+hpTElAll3 = ROOT.TH1F("hpTElAll3", "electron #Delta R > 0.005", 100, 0.0, 50.0) 
+#pT of all electrons that pass the electron ID (individually)
+hpTElIDPass = ROOT.TH1F("hpTElIDPass", "", 100, 0.0, 50.0) 
+hpTElIDPass0 = ROOT.TH1F("hpTElIDPass0", "electron #Delta R < 0.0005", 100, 0.0, 50.0) 
+hpTElIDPass1 = ROOT.TH1F("hpTElIDPass1", "0.0005 < electron #Delta R < 0.0025", 100, 0.0, 50.0) 
+hpTElIDPass2 = ROOT.TH1F("hpTElIDPass2", "0.0025 < electron #Delta R < 0.005", 100, 0.0, 50.0) 
+hpTElIDPass3 = ROOT.TH1F("hpTElIDPass3", "electron #Delta R > 0.005", 100, 0.0, 50.0) 
+#deltaR between reco'd electrons of mmelel vertices
+hdREl = {}  
 #invar mass, pT dists (dictionary for ease of adding new vertex types)
 hM = {}
 #invar mass with INVERTED electron charge requirement (ie same-sign electrons req'd instead of oppo-sign) 
@@ -242,9 +277,10 @@ hMSSe = ROOT.TH1F("hMSSe", "#mu#muee invar. mass with same-sign electrons", nbin
 hMOSe = ROOT.TH1F("hMOSe", "#mu#muee invar. mass with oppo-sign electrons, filled same way as hMSSe", nbins, xmin, xmax)
 hMee = ROOT.TH1F("hMee", "Invar. mass of elel vertices", 200, 0.0, 1.0)
 hMeePeak = ROOT.TH1F("hMeePeak", "Invar. mass of elel vertices with mmelel in the eta mass window", 200, 0.0, 1.0)
-if isMC and not isMuMu:
-    hMeedR = ROOT.TH1F("hMeedR", "min #DeltaR between reco. electrons in elel vertices and gen electrons or photon", 1000, 0.0, 1.0)
-    hMeeGM = ROOT.TH1F("hMeeGM", "Invar. mass of elel vertices with e^{-},e^{+} gen-matched to gen electrons or photon (#DeltaR<%f)"%dRcut, 200, 0.0, 1.0)
+if isMC: # and not isMuMu:
+    hMeedR = ROOT.TH1F("hMeedR", "min #DeltaR between reco. electrons in mmelel vertices and gen electrons or photon", 1000, 0.0, 1.0)
+    hMmmdR = ROOT.TH1F("hMmmdR", "min #DeltaR between reco. muons in peak and gen muons", 1000, 0.0, 1.0)
+    hMeeGM = ROOT.TH1F("hMeeGM", "Invar. mass of mmelel vertices with e^{-},e^{+} gen-matched to gen electrons or photon (#DeltaR<%f)"%dRcut, 200, 0.0, 1.0)
     hEldR = ROOT.TH1F("hEldR", "min #DeltaR b/t gen electron and reco electron of same charge or photon", 1000, 0.0, 1.0) 
     
 #reduced chi2 of the vertices filling the histogram
@@ -291,6 +327,14 @@ hVxy = {}
 hNcand = {}
 #2-d hist of invar. mass vs. pT
 hMvsPt = {}
+#2-d hist of electron scale factors as a function of pT, eta
+hElRecsf = {}
+hElRecsfUp = {}
+hElRecsfDn = {}
+hElIDsf = {}
+hElIDsfUp = {}
+hElIDsfDn = {}
+hEletapt = {}
 #sublead pT vs dR of muon pair
 hsubVdR = {}
 hL1all = {}
@@ -316,11 +360,26 @@ hMNoMuRSide = ROOT.TH1F("hMNoMuRSide", "Invar. mass of electrons ONLY to RIGHT o
 #invariant mass distribution of just electrons in the mu-mu-e-e, but assuming pion mass instead of electron mass
 #hMNoMuPiM = ROOT.TH1F("hMNoMuPiM", "Invar. mass of electrons ONLY in mmelel signal window, assuming pion mass instead", 200, 0.0, 1.0) 
 for vtype in vtypes:
+    if isMC and vtype not in ["mumu", "mmg"]:
+        #hElRecsf[vtype] = ROOT.TH2F("hElRecsf"+vtype, "Electron SF as a function of #eta, p_{T}", 48, -2.4, 2.4, 50, 0, 50.0) 
+        #hElRecsfUp[vtype] = ROOT.TH2F("hElRecsfUp"+vtype, "Electron SF up variation as a function of #eta, p_{T}", 48, -2.4, 2.4, 50, 0, 50.0) 
+        #hElRecsfDn[vtype] = ROOT.TH2F("hElRecsfDn"+vtype, "Electron SF down variation as a function of #eta, p_{T}", 48, -2.4, 2.4, 50, 0, 50.0) 
+        #hElRecsf[vtype] = ROOT.TH2F("hElRecsf"+vtype, "Electron SF as a function of #eta, p_{T}", 48, -2.4, 2.4, 50, 0, 50.0) 
+        #hElRecsfUp[vtype] = ROOT.TH2F("hElRecsfUp"+vtype, "Electron SF up variation as a function of #eta, p_{T}", 48, -2.4, 2.4, 50, 0, 50.0) 
+        #hElRecsfDn[vtype] = ROOT.TH2F("hElRecsfDn"+vtype, "Electron SF down variation as a function of #eta, p_{T}", 48, -2.4, 2.4, 50, 0, 50.0) 
+        hElRecsf[vtype] = ROOT.TH1F("hElRecsf"+vtype, "Electron SF as a function of #eta, p_{T}", 48, -2.4, 2.4) 
+        hElRecsfUp[vtype] = ROOT.TH1F("hElRecsfUp"+vtype, "Electron SF up variation as a function of #eta, p_{T}", 48, -2.4, 2.4) 
+        hElRecsfDn[vtype] = ROOT.TH1F("hElRecsfDn"+vtype, "Electron SF down variation as a function of #eta, p_{T}", 48, -2.4, 2.4) 
+        hElIDsf[vtype] = ROOT.TH1F("hElIDsf"+vtype, "Electron SF as a function of #eta, p_{T}", 48, -2.4, 2.4) 
+        hElIDsfUp[vtype] = ROOT.TH1F("hElIDsfUp"+vtype, "Electron SF up variation as a function of #eta, p_{T}", 48, -2.4, 2.4) 
+        hElIDsfDn[vtype] = ROOT.TH1F("hElIDsfDn"+vtype, "Electron SF down variation as a function of #eta, p_{T}", 48, -2.4, 2.4) 
+        hEletapt[vtype] = ROOT.TH2F("hEletapt"+vtype, "Electron #eta, pt distributions", 480, -2.4, 2.4, 50, 0, 50.0) 
     if vtype in ["mumu", "elel", "pcpc", "lplp"]:
         hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", 1000, 0.0, 1.0) 
     else:
         hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
     hM[vtype].Sumw2()
+    hdREl[vtype] = ROOT.TH1F("hdREl"+vtype, "", 1000, 0.0, 0.1)
     hL1all[vtype] = ROOT.TH1D("hL1all"+vtype, "Events surviving all cuts for "+vtype+" vertices that have L1 seed info", 1, 0, 1)
     hL1pass[vtype] = ROOT.TH1D("hL1pass"+vtype, "L1 pass rates for each seed, amongst events surviving all cuts for "+vtype+" vertices", 8, 0, 8)
     hRchi2[vtype] = ROOT.TH1F("hRchi2"+vtype, "Reduced #chi^{2} with "+vtype+" vertices", 500, 0.0, 5.0)
@@ -419,8 +478,10 @@ if isMC:
     #hxs0 = []
     #hxs1 = []
     #upper and lower values of hM considering evt weight uncertainties
-    #hMUp = {}
-    #hMDn = {}
+    hMRecUp = {}
+    hMRecDn = {}
+    hMIDUp = {}
+    hMIDDn = {}
     #number of modified electron efficiency points
     nMod = 12
     hMMod = {}
@@ -437,12 +498,16 @@ if isMC:
         hMModmu[s] = ROOT.TH1F("hMModmu"+str(s), "mmelel Invar. mass with muon p_{T} modified by "+str(sfmu[s])+"\%", 1000, 0.0, 1.0) 
         hpTModmu[s] = ROOT.TH1F("hpTModmu"+str(s), "p_{T} mod'd by "+str(sfmu[s])+"\%, evts in sig peak .52-.58 GeV for"+str(vtype)+" verts", 500, 0.0, 100.0) 
     for vtype in vtypes:
-        #if vtype in ["mumu", "elel", "pcpc", "lplp"]:
-        #    hMUp[vtype] = ROOT.TH1F("hMUp"+vtype, "Upper Invar. mass with "+vtype+" vertices", 1000, 0.0, 1.0) 
-        #    hMDn[vtype] = ROOT.TH1F("hMDn"+vtype, "Lower Invar. mass with "+vtype+" vertices", 1000, 0.0, 1.0) 
-        #else:
-        #    hMUp[vtype] = ROOT.TH1F("hMUp"+vtype, "Upper Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
-        #    hMDn[vtype] = ROOT.TH1F("hMDn"+vtype, "Lower Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
+        if vtype in ["mumu", "elel", "pcpc", "lplp"]:
+            hMRecUp[vtype] = ROOT.TH1F("hMRecUp"+vtype, "Invar. mass with "+vtype+" vertices, electron reco SF varied up", 1000, 0.0, 1.0) 
+            hMRecDn[vtype] = ROOT.TH1F("hMRecDn"+vtype, "Invar. mass with "+vtype+" vertices, electron reco SF varied down", 1000, 0.0, 1.0) 
+            hMIDUp[vtype] = ROOT.TH1F("hMIDUp"+vtype, "Invar. mass with "+vtype+" vertices, electron ID SF varied up", 1000, 0.0, 1.0) 
+            hMIDDn[vtype] = ROOT.TH1F("hMIDDn"+vtype, "Invar. mass with "+vtype+" vertices, electron ID SF varied down", 1000, 0.0, 1.0) 
+        else:
+            hMRecUp[vtype] = ROOT.TH1F("hMRecUp"+vtype, "Invar. mass with "+vtype+" vertices, electron reco SF varied up", nbins, xmin, xmax) 
+            hMRecDn[vtype] = ROOT.TH1F("hMRecDn"+vtype, "Invar. mass with "+vtype+" vertices, electron reco SF varied down", nbins, xmin, xmax) 
+            hMIDUp[vtype] = ROOT.TH1F("hMIDUp"+vtype, "Invar. mass with "+vtype+" vertices, electron ID SF varied up", nbins, xmin, xmax) 
+            hMIDDn[vtype] = ROOT.TH1F("hMIDDn"+vtype, "Invar. mass with "+vtype+" vertices, electron ID SF varied down", nbins, xmin, xmax) 
         #histogram of surviving event weights
         hEventWeight[vtype] = ROOT.TH1F("hEventWeight"+vtype, "Event weights surviving all cuts", 1000, 0.0, 100.0)
         hEventWeight[vtype].Sumw2()
@@ -480,6 +545,9 @@ if isMC:
     #electron pT
     hGenElpTAll = ROOT.TH1F("hGenElpTAll", "p_{T} of gen electrons", 10000, 0.0, 100.0) 
     hGenElpTRec = ROOT.TH1F("hGenElpTRec", "p_{T} of gen-matched gen electrons", 10000, 0.0, 100.0) 
+    #electron dR
+    hGenEldRvPtAll = ROOT.TH2F("hGenEldRvPtAll", "gen dR vs. p_{T} for all gen electrons", 8000, 0.0, 0.2, 100, 0.0, 50.0) 
+    hGenEldRvPtRec = ROOT.TH2F("hGenEldRvPtRec", "gen dR vs. p_{T} gen-matched gen electrons", 8000, 0.0, 0.2, 100, 0.0, 50.0) 
     #hGenElpT.Sumw2()
 
     if isSig:
@@ -587,55 +655,40 @@ diel = None
 
 #fit for the electron efficiency
 def elEff(elpt):
-   # p0 = 2.6248
-   # p1 = 1.3603
-   # p2 = 12.3381
-   # p3 = 4.69384
-   # p4 = -0.0219539
-   # return p0 / (p1*elpt + ROOT.TMath.Exp(-(elpt - p2)/p3)) + p4/elpt
-    if elpt > 27:
-        return elEff(27)
-    #p0 = 2.0059
-    #p1 = 0.710199
-    #p2 = 13.7092
-    #p3 = 6.46240
-    #p4 = 0.0233852
-    #p5 = -8.28340e-7
-    #p6 = -227.643
-    #p0     =      3.44966e+00
-    #p1     =      9.82250e-01
-    #p2     =      1.93835e+01
-    #p3     =      8.28920e+00
-    #p4     =      2.10418e-02
-    #p5     =     -1.64434e-06
-    #p6     =     -1.81210e+02
-    p0                        =      5.43551  
-    p1                        =      1.47295  
-    p2                        =      26.8049  
-    p3                        =       9.7099  
-    p4                        =    0.0245243  
-    p5                        = -2.19139e-06  
-    p6                        =     -161.112
-    return p0 / (p1*elpt + ROOT.TMath.Exp(-(elpt - p2)/p3)) - p4/elpt + p5*(elpt-p6)**2
+    #if elpt > 27:
+    #    return elEff(27)
+    #p0                        =      5.43551  
+    #p1                        =      1.47295  
+    #p2                        =      26.8049  
+    #p3                        =       9.7099  
+    #p4                        =    0.0245243  
+    #p5                        = -2.19139e-06  
+    #p6                        =     -161.112
+    #return p0 / (p1*elpt + ROOT.TMath.Exp(-(elpt - p2)/p3)) - p4/elpt + p5*(elpt-p6)**2
+    p0                        =       203.27 
+    p1                        =      2.38773 
+    p2                        =     0.331089 
+    p3                        =      4.79575 
+    p4                        =       184.13 
+    p5                        =      1081.15 
+    return p0 / (ROOT.TMath.Exp(ROOT.TMath.Exp(-(elpt - p1)/p2) + p3)+p4+p5/elpt)
 
 #fit for the muon efficiency
 def muEff(mupt):
-    #dR cut 0.05
-    #if mupt > 20:
-    #    return muEff(20)
-    #p0    =       3.27069e+01
-    #p1    =       9.47365e-01
-    #p2    =       9.50122e-01
-    #p3    =       5.63010e+00
-    #p4    =      -2.45779e+02
-    #p5    =       3.60675e+01
-    #dR cut 0.13
-    p0     =      2.01098e+01
-    p1     =     -3.42298e-01
-    p2     =      9.82785e-01
-    p3     =      5.64684e+00
-    p4     =     -2.62466e+02
-    p5     =      1.18172e+01
+    ##dR cut 0.13
+    #p0     =      2.01098e+01
+    #p1     =     -3.42298e-01
+    #p2     =      9.82785e-01
+    #p3     =      5.64684e+00
+    #p4     =     -2.62466e+02
+    #p5     =      1.18172e+01
+    #dR cut 0.03
+    p0                        =      93.0934  
+    p1                        =      1.74031  
+    p2                        =      1.05146  
+    p3                        =      5.07463  
+    p4                        =     -64.5288  
+    p5                        =      49.4846  
     return p0 / (ROOT.TMath.Exp(ROOT.TMath.Exp(-(mupt - p1)/p2) + p3)+p4+p5/mupt)
 
 #randomly assign a trigger pass/fail value according to the fitted model as a function of subleading muon pT (threshold varied by trg_var)
@@ -785,8 +838,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 vec_elN = ROOT.TLorentzVector()
                 vec_muP = ROOT.TLorentzVector()
                 vec_muN = ROOT.TLorentzVector()
-                vec_elP.SetPtEtaPhiM(e.Electron_pt[ord(vtx_veleP[j])], e.Electron_eta[ord(vtx_veleP[j])], e.Electron_phi[ord(vtx_veleP[j])], el_mass)
-                vec_elN.SetPtEtaPhiM(e.Electron_pt[ord(vtx_veleN[j])], e.Electron_eta[ord(vtx_veleN[j])], e.Electron_phi[ord(vtx_veleN[j])], el_mass)
+                vec_elP.SetPtEtaPhiM(e.Electron_pt[ord(vtx_veleP[j])]*(1+elsf), e.Electron_eta[ord(vtx_veleP[j])], e.Electron_phi[ord(vtx_veleP[j])], el_mass)
+                vec_elN.SetPtEtaPhiM(e.Electron_pt[ord(vtx_veleN[j])]*(1+elsf), e.Electron_eta[ord(vtx_veleN[j])], e.Electron_phi[ord(vtx_veleN[j])], el_mass)
                 vec_muP.SetPtEtaPhiM(e.Muon_pt[ord(vtx_vmuP[j])]*(1+musf), e.Muon_eta[ord(vtx_vmuP[j])], e.Muon_phi[ord(vtx_vmuP[j])], mu_mass)
                 vec_muN.SetPtEtaPhiM(e.Muon_pt[ord(vtx_vmuN[j])]*(1+musf), e.Muon_eta[ord(vtx_vmuN[j])], e.Muon_phi[ord(vtx_vmuN[j])], mu_mass)
                 mdeleted = (vec_elP + vec_elN + vec_muP + vec_muN).M()
@@ -829,8 +882,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 vec_elN = ROOT.TLorentzVector()
                 elP = ord(vtx_veleP[j])
                 elN = ord(vtx_veleN[j])
-                elptP = eval("e.%sElectron_pt[elP]"%(lptstr))
-                elptN = eval("e.%sElectron_pt[elN]"%(lptstr))
+                elptP = eval("e.%sElectron_pt[elP]"%(lptstr))*(1+elsf)
+                elptN = eval("e.%sElectron_pt[elN]"%(lptstr))*(1+elsf)
                 eletaP = eval("e.%sElectron_eta[elP]"%(lptstr))
                 eletaN = eval("e.%sElectron_eta[elN]"%(lptstr))
                 elphiP = eval("e.%sElectron_phi[elP]"%(lptstr))
@@ -963,34 +1016,17 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             vec_piP = ROOT.TLorentzVector()
             vec_piN = ROOT.TLorentzVector()
             elP = ord(vtx_veleP[j])
-            pt = eval("e.%sElectron_pt[elP]"%(lptstr)) 
+            pt = eval("e.%sElectron_pt[elP]"%(lptstr))*(1+elsf) 
             eta = eval("e.%sElectron_eta[elP]"%(lptstr)) 
             phi = eval("e.%sElectron_phi[elP]"%(lptstr))
             vec_elP.SetPtEtaPhiM(pt, eta, phi, el_mass)
             vec_piP.SetPtEtaPhiM(pt, eta, phi, pi_mass)
             elN = ord(vtx_veleN[j])
-            pt = eval("e.%sElectron_pt[elN]"%(lptstr)) 
+            pt = eval("e.%sElectron_pt[elN]"%(lptstr))*(1+elsf) 
             eta = eval("e.%sElectron_eta[elN]"%(lptstr)) 
             phi = eval("e.%sElectron_phi[elN]"%(lptstr))
             vec_elN.SetPtEtaPhiM(pt, eta, phi, el_mass)
             vec_piN.SetPtEtaPhiM(pt, eta, phi, pi_mass)
-            if basic_cuts:
-                vetoP = ord(e.Electron_convVeto[elP]) != 0
-                vetoN = ord(e.Electron_convVeto[elN]) != 0
-                if vetoP or vetoN:
-                    continue
-                nMissP = ord(e.Electron_nMissingHits[elP])
-                nMissN = ord(e.Electron_nMissingHits[elN])
-                if nMissP > 3 or nMissN > 3:
-                #if nMissP > 2 or nMissN > 2:
-                #if nMissP > 1 or nMissN > 1:
-                #if nMissP > 0 or nMissN > 0:
-                    continue
-            #for purposes of electron efficiency uncertainty calculation, need to move this further down.
-            #if elpTcut > -1 and (e.Electron_pt[elP] < elpTcut or e.Electron_pt[elN] < elpTcut):
-            #    continue
-            if elEtacut > -1 and (abs(e.Electron_eta[elP]) > elEtacut or abs(e.Electron_eta[elN]) > elEtacut):
-                continue
             elIDP = eval("ord(e.%sElectron_id[elP])"%(lptstr))
             elIDN = eval("ord(e.%sElectron_id[elN])"%(lptstr))
             #loose ID
@@ -1008,9 +1044,35 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #if looseID_p == 0 or looseID_n == 0:
             #if WP80ID_p == 0 or WP80ID_n == 0:
             #require elID on BOTH electrons
-            if require_elID and (WP90ID_p == 0 or WP90ID_n == 0):
+            if basic_cuts and "elel" in vtype:
+                vetoP = ord(e.Electron_convVeto[elP]) != 0
+                vetoN = ord(e.Electron_convVeto[elN]) != 0
+                if vetoP or vetoN:
+                    continue
+                nMissP = ord(e.Electron_nMissingHits[elP])
+                nMissN = ord(e.Electron_nMissingHits[elN])
+                if nMissP > 3 or nMissN > 3:
+                #if nMissP > 2 or nMissN > 2:
+                #if nMissP > 1 or nMissN > 1:
+                #if nMissP > 0 or nMissN > 0:
+                    continue
+            #for purposes of electron efficiency uncertainty calculation, need to move this further down.
+            #if elpTcut > -1 and (e.Electron_pt[elP] < elpTcut or e.Electron_pt[elN] < elpTcut):
+            #    continue
+            if "elel" in vtype and elEtacut > -1 and (abs(e.Electron_eta[elP]) > elEtacut or abs(e.Electron_eta[elN]) > elEtacut):
                 continue
-            if tight and require_elID and (WP80ID_p == 0 or WP80ID_n == 0):
+            if "elel" in vtype and cut_trans and ( (abs(e.Electron_eta[elP]) > 1.44 and abs(e.Electron_eta[elP]) < 1.57) or (abs(e.Electron_eta[elN]) > 1.44 and abs(e.Electron_eta[elN]) < 1.57) ):
+                continue
+            if vtype == "mmelel":
+                hpTElAll.Fill(e.Electron_pt[elP]*(1+elsf), evt_weight)
+                hpTElAll.Fill(e.Electron_pt[elN]*(1+elsf), evt_weight) 
+                if WP90ID_p > 0:
+                    hpTElIDPass.Fill(e.Electron_pt[elP]*(1+elsf), evt_weight)
+                if WP90ID_n > 0:
+                    hpTElIDPass.Fill(e.Electron_pt[elN]*(1+elsf), evt_weight)
+            if (require_elID and "lplp" not in vtype) and (WP90ID_p == 0 or WP90ID_n == 0):
+                continue
+            if (tight or "lplp" in vtype) and require_elID and (WP80ID_p == 0 or WP80ID_n == 0):
                 continue
             try:
                 vxy = (vtx_vvx[j]**2 + vtx_vvy[j]**2)**0.5
@@ -1114,6 +1176,122 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #adjust the event weight (slightly) according to the scaled muon efficiency!
             Rmusf = (muEff(e.Muon_pt[mm]*(1+musf)) / muEff(e.Muon_pt[mm]) * muEff(e.Muon_pt[mp]*(1+musf))/muEff(e.Muon_pt[mp]))
             my_evt_weight = Rmusf*evt_weight 
+            if vtype not in ["mumu", "mmg", "mmlplp"]:
+                try:
+                    Relsf = (elEff(e.Electron_pt[elP]*(1+elsf)) / elEff(e.Electron_pt[elN]) * elEff(e.Electron_pt[elP]*(1+elsf))/elEff(e.Electron_pt[elP]))
+                except ZeroDivisionError:
+                    Relsf = 0
+                my_evt_weight *= Relsf
+                if do_ElRecsf:
+                    recoNameP = "RecoBelow20"
+                    recoNameN = "RecoBelow20"
+                    ptp = e.Electron_pt[elP]*(1+elsf)
+                    if ptp > 20 and ptp < 75:
+                        recoNameP = "Reco20to75"
+                    elif ptp > 75:
+                        recoNameP = "RecoAbove75"
+                    ptn = e.Electron_pt[elN]*(1+elsf)
+                    if ptn > 20 and ptn < 75:
+                        recoNameN = "Reco20to75"
+                    elif ptn > 75:
+                        recoNameN = "RecoAbove75"
+                    valsfPRec = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                    valsfNRec = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                    valsfPRecUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                    valsfNRecUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                    valsfPRecDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                    valsfNRecDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                    #valsfPRec = 0.98
+                    #valsfPRecUp = 1.01
+                    #valsfPRecDn = 0.95
+                    #if (abs(e.Electron_eta[elP]) > 1.5 and abs(e.Electron_eta[elP]) < 2) or abs(e.Electron_eta[elP]) < 1:
+                    #    valsfPRec = 0.99
+                    #    valsfPRecUp = 1.02
+                    #    valsfPRecDn = 0.96
+                    #valsfNRec = 0.98
+                    #valsfNRecUp = 1.01
+                    #valsfNRecDn = 0.95
+                    #if (abs(e.Electron_eta[elN]) > 1.5 and abs(e.Electron_eta[elN]) < 2) or abs(e.Electron_eta[elN]) < 1:
+                    #    valsfNRec = 0.99
+                    #    valsfNRecUp = 1.02
+                    #    valsfNRecDn = 0.96
+                    my_evt_weight *= (valsfPRec*valsfNRec)
+                    evt_weightRecUp = my_evt_weight * (valsfPRecUp/valsfPRec) * (valsfNRecUp/valsfNRec)
+                    evt_weightRecDn = my_evt_weight * (valsfPRecDn/valsfPRec) * (valsfNRecDn/valsfNRec)
+                    if recoNameP == "RecoBelow20":
+                        print("valsfPRec: " + str(valsfPRec)) 
+                        hElRecsf[vtype].SetBinContent(hElRecsf[vtype].FindBin(e.Electron_eta[elP]), valsfPRec)
+                        hElRecsfUp[vtype].SetBinContent(hElRecsfUp[vtype].FindBin(e.Electron_eta[elP]), valsfPRecUp)
+                        hElRecsfDn[vtype].SetBinContent(hElRecsfDn[vtype].FindBin(e.Electron_eta[elP]), valsfPRecDn)
+                    if recoNameN == "RecoBelow20":
+                        hElRecsf[vtype].SetBinContent(hElRecsf[vtype].FindBin(e.Electron_eta[elN]), valsfNRec)
+                        hElRecsfUp[vtype].SetBinContent(hElRecsfUp[vtype].FindBin(e.Electron_eta[elN]), valsfNRecUp)
+                        hElRecsfDn[vtype].SetBinContent(hElRecsfDn[vtype].FindBin(e.Electron_eta[elN]), valsfNRecDn)
+                if do_ElIDsf:
+                    valsfPID = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", "wp90noiso", e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                    valsfNID = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", "wp90noiso", e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                    valsfPIDUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", "wp90noiso", e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                    valsfNIDUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", "wp90noiso", e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                    valsfPIDDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", "wp90noiso", e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                    valsfNIDDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", "wp90noiso", e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                    ##I double the uncertainties shown in the Run2 paper to be extra conservative!!
+                    #if abs(e.Electron_eta[elP]) < 0.80:
+                    #    valsfPID = 0.98
+                    #    valsfPIDUp = 1.02
+                    #    valsfPIDDn = 0.94
+                    #elif abs(e.Electron_eta[elP]) < 1.44:
+                    #    valsfPID = 0.99
+                    #    valsfPIDUp = 1.01
+                    #    valsfPIDDn = 0.97
+                    #elif abs(e.Electron_eta[elP]) > 1.57 and abs(e.Electron_eta[elP]) < 2.00:
+                    #    valsfPID = 0.96
+                    #    valsfPIDUp = 1.02
+                    #    valsfPIDDn = 0.90
+                    #elif abs(e.Electron_eta[elP]) > 2.00 and abs(e.Electron_eta[elP]) < 2.50:
+                    #    valsfPID = 1.00
+                    #    valsfPIDUp = 1.04
+                    #    valsfPIDDn = 0.96
+                    #else:
+                    #    print("Warning: Run %d evt %d electron eta value %f, not correcting."%(e.run, e.evt, e.Electron_eta[elP])) 
+                    #    valsfPID = 1.00
+                    #    valsfPIDUp = 1.00
+                    #    valsfPIDDn = 1.00
+                    #if abs(e.Electron_eta[elN]) < 0.80:
+                    #    valsfNID = 0.98
+                    #    valsfNIDUp = 1.02
+                    #    valsfNIDDn = 0.94
+                    #elif abs(e.Electron_eta[elN]) < 1.44:
+                    #    valsfNID = 0.99
+                    #    valsfNIDUp = 1.01
+                    #    valsfNIDDn = 0.97
+                    #elif abs(e.Electron_eta[elN]) > 1.57 and abs(e.Electron_eta[elN]) < 2.00:
+                    #    valsfNID = 0.96
+                    #    valsfNIDUp = 1.02
+                    #    valsfNIDDn = 0.90
+                    #elif abs(e.Electron_eta[elN]) > 2.00 and abs(e.Electron_eta[elN]) < 2.50:
+                    #    valsfNID = 1.00
+                    #    valsfNIDUp = 1.04
+                    #    valsfNIDDn = 0.96
+                    #else:
+                    #    print("Warning: Run %d evt %d electron eta value %f, not correcting."%(e.run, e.evt, e.Electron_eta[elN])) 
+                    #    valsfNID = 1.00
+                    #    valsfNIDUp = 1.00
+                    #    valsfNIDDn = 1.00
+                    my_evt_weight *= (valsfPID*valsfNID)
+                    evt_weightRecUp *= (valsfPID*valsfNID)
+                    evt_weightRecDn *= (valsfPID*valsfNID)
+                    evt_weightIDUp = my_evt_weight * (valsfPIDUp/valsfPID) * (valsfNIDUp/valsfNID)
+                    evt_weightIDDn = my_evt_weight * (valsfPIDDn/valsfPID) * (valsfNIDDn/valsfNID)
+                    if e.Electron_pt[elP]*(1+elsf) < 10:
+                        hElIDsf[vtype].SetBinContent(hElIDsf[vtype].FindBin(e.Electron_eta[elP]), valsfPID)
+                        hElIDsfUp[vtype].SetBinContent(hElIDsfUp[vtype].FindBin(e.Electron_eta[elP]), valsfPIDUp)
+                        hElIDsfDn[vtype].SetBinContent(hElIDsfDn[vtype].FindBin(e.Electron_eta[elP]), valsfPIDDn)
+                    if e.Electron_pt[elN]*(1+elsf) < 10:
+                        hElIDsf[vtype].SetBinContent(hElIDsf[vtype].FindBin(e.Electron_eta[elN]), valsfNID)
+                        hElIDsfUp[vtype].SetBinContent(hElIDsfUp[vtype].FindBin(e.Electron_eta[elN]), valsfNIDUp)
+                        hElIDsfDn[vtype].SetBinContent(hElIDsfDn[vtype].FindBin(e.Electron_eta[elN]), valsfNIDDn)
+                    hEletapt[vtype].Fill(e.Electron_eta[elP], e.Electron_pt[elP]*(1+elsf), my_evt_weight)
+                    hEletapt[vtype].Fill(e.Electron_eta[elN], e.Electron_pt[elN]*(1+elsf), my_evt_weight)
             if vtype == "elel":
                 hMReal.Fill((diel+dimu).M(), my_evt_weight)
             if vtype == "mmg":
@@ -1138,8 +1316,8 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         #form the 4-lepton invariant mass
                         vec_aa = ROOT.TLorentzVector()
                         vec_bb = ROOT.TLorentzVector()
-                        vec_aa.SetPtEtaPhiM(e.Electron_pt[aa], e.Electron_eta[aa], e.Electron_phi[aa], el_mass)
-                        vec_bb.SetPtEtaPhiM(e.Electron_pt[bb], e.Electron_eta[bb], e.Electron_phi[bb], el_mass)
+                        vec_aa.SetPtEtaPhiM(e.Electron_pt[aa]*(1+elsf), e.Electron_eta[aa], e.Electron_phi[aa], el_mass)
+                        vec_bb.SetPtEtaPhiM(e.Electron_pt[bb]*(1+elsf), e.Electron_eta[bb], e.Electron_phi[bb], el_mass)
                         vec_rand = vec_muP + vec_muN + vec_aa + vec_bb
                         if e.Electron_charge[aa] == e.Electron_charge[bb]:
                             hMSSe.Fill(vec_rand.M(), my_evt_weight)
@@ -1159,7 +1337,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             mudR = vec_muP.DeltaR(vec_muN)
 
             if vtype == "mmelel":
-                hMeeVsMmmee.Fill(mee, m) 
+                hMeeVsMmmee.Fill(mee, m, my_evt_weight) 
 
             if danEvent:
                 print(vtype + " vtx " + str(jj) + " mass: %f"%m) 
@@ -1194,10 +1372,11 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         acc_weight[vtype][1] += my_evt_weight
                         acc_filled[1] = True
                     #now see if it also passes the stricter cuts
-                    if passedTrig and vtype not in ["mmg", "mumu"]:
-                        if e.Electron_pt[elP] > 2 and e.Electron_pt[elN] > elpTcut and \
-                            abs(e.Electron_eta[elP]) < elEtacut and abs(e.Electron_eta[elN]) < elEtacut and \
-                            e.Muon_pt[mp]*(1+musf) > mupTcut and e.Muon_pt[mm]*(1+musf) > mupTcut and abs(e.Muon_eta[mp]) < muEtacut and abs(e.Muon_eta[mm]) < muEtacut and \
+                    if passedTrig and vtype not in ["mmg", "mumu", "mmlplp"]:
+                        if e.Electron_pt[elP]*(1+elsf) > elpTcut and e.Electron_pt[elN]*(1+elsf) > elpTcut and \
+                            ((elEtacut < 0) or (abs(e.Electron_eta[elP]) < elEtacut and abs(e.Electron_eta[elN]) < elEtacut)) and \
+                            e.Muon_pt[mp]*(1+musf) > mupTcut and e.Muon_pt[mm]*(1+musf) > mupTcut and \
+                            ((muEtacut < -1) or (abs(e.Muon_eta[mp]) < muEtacut and abs(e.Muon_eta[mm]) < muEtacut)) and \
                             (e.Muon_pt[mp]*(1+musf) > muleadpTcut or e.Muon_pt[mm]*(1+musf) > muleadpTcut) :
                             if (not acc_filled[2]):
                                 acc_weight[vtype][2] += my_evt_weight
@@ -1223,15 +1402,18 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                             if (not acc_filled[6]) and (mee < 0.04 or mee > 0.09):
                                 acc_weight[vtype][6] += my_evt_weight
                                 acc_filled[6] = True
+                #if vtype == "mmlplp":
+                #    print("vtype=%s recod=%s passedTrig=%s accdR_filled=%s"%(vtype, recod, passedTrig, accdR_filled))
                 if recod and passedTrig and not accdR_filled:
                     #make sure it passed the rest of the event selections
-                    if e.Muon_pt[mp]*(1+musf) > mupTcut and e.Muon_pt[mm]*(1+musf) > mupTcut and abs(e.Muon_eta[mp]) < muEtacut and abs(e.Muon_eta[mm]) < muEtacut and \
+                    if e.Muon_pt[mp]*(1+musf) > mupTcut and e.Muon_pt[mm]*(1+musf) > mupTcut and \
+                        (muEtacut < 0 or (abs(e.Muon_eta[mp]) < muEtacut and abs(e.Muon_eta[mm]) < muEtacut)) and \
                         (e.Muon_pt[mp]*(1+musf) > muleadpTcut or e.Muon_pt[mm]*(1+musf) > muleadpTcut) and \
                         (not failed_muID):
 
-                        if vtype in ["mumu", "mmg"] or (e.Electron_pt[elP] > elpTcut and e.Electron_pt[elN] > elpTcut and \
-                            abs(e.Electron_eta[elP]) < elEtacut and abs(e.Electron_eta[elN]) < elEtacut and \
-                            WP90ID_p > 0 and WP90ID_n > 0) :
+                        if vtype in ["mumu", "mmg"] or ("elel" in vtype and e.Electron_pt[elP]*(1+elsf) > elpTcut and e.Electron_pt[elN]*(1+elsf) > elpTcut and \
+                            (elEtacut < 0 or (abs(e.Electron_eta[elP]) < elEtacut and abs(e.Electron_eta[elN]) < elEtacut)) and \
+                            WP90ID_p > 0 and WP90ID_n > 0) or "lplp" in vtype :
 
                             hpTGenAccdR[vtype].Fill(gen_eta.Pt()) 
                             accdR_weight[vtype] += my_evt_weight
@@ -1255,7 +1437,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 #do the nominal muons pass the pt cuts?
                 mu_fail = (mupTcut > -1 and (vec_muP.Pt() < mupTcut or vec_muN.Pt() < mupTcut)) or (muleadpTcut > -1 and vec_muP.Pt() < muleadpTcut and vec_muN.Pt() < muleadpTcut)
                 #do the nominal electrons pass the pt cuts?
-                el_fail = ("elel" in vtype and elpTcut > -1 and (e.Electron_pt[elP] < elpTcut or e.Electron_pt[elN] < elpTcut)) 
+                el_fail = ("elel" in vtype and elpTcut > -1 and (e.Electron_pt[elP]*(1+elsf) < elpTcut or e.Electron_pt[elN]*(1+elsf) < elpTcut)) 
                 if vtype == "mumu" and m > 0.45 and m < 0.65:
                     #see if can fill hpTGoodL1Pass, hpTGoodHLTPass
                     if vec_muP.Pt() > 5 and vec_muN.Pt() > 5 and (e.Triggers_fired0 & (1 << 25)):
@@ -1314,6 +1496,36 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         hpTEl[vtype].Fill(elptN, my_evt_weight)
                         hpTElNoWt[vtype].Fill(elptP)
                         hpTElNoWt[vtype].Fill(elptN)
+                        eldR = vec_elP.DeltaR(vec_elN)
+                        hdREl[vtype].Fill(eldR, my_evt_weight)
+                        if eldR > 0.005:
+                            hpTElAll3.Fill(elptP, my_evt_weight)
+                            hpTElAll3.Fill(elptN, my_evt_weight)
+                            if WP90ID_p != 0:
+                                hpTElIDPass3.Fill(elptP, my_evt_weight)
+                            if WP90ID_n != 0:
+                                hpTElIDPass3.Fill(elptN, my_evt_weight)
+                        elif eldR > 0.0025:
+                            hpTElAll2.Fill(elptP, my_evt_weight)
+                            hpTElAll2.Fill(elptN, my_evt_weight)
+                            if WP90ID_p != 0:
+                                hpTElIDPass2.Fill(elptP, my_evt_weight)
+                            if WP90ID_n != 0:
+                                hpTElIDPass2.Fill(elptN, my_evt_weight)
+                        elif eldR > 0.0005:
+                            hpTElAll1.Fill(elptP, my_evt_weight)
+                            hpTElAll1.Fill(elptN, my_evt_weight)
+                            if WP90ID_p != 0:
+                                hpTElIDPass1.Fill(elptP, my_evt_weight)
+                            if WP90ID_n != 0:
+                                hpTElIDPass1.Fill(elptN, my_evt_weight)
+                        else:
+                            hpTElAll0.Fill(elptP, my_evt_weight)
+                            hpTElAll0.Fill(elptN, my_evt_weight)
+                            if WP90ID_p != 0:
+                                hpTElIDPass0.Fill(elptP, my_evt_weight)
+                            if WP90ID_n != 0:
+                                hpTElIDPass0.Fill(elptN, my_evt_weight)
                     hpTMu[vtype].Fill(muptP, my_evt_weight)
                     hpTMu[vtype].Fill(muptN, my_evt_weight)
                     if abs(vec_muP.PseudoRapidity()) > 1.5:
@@ -1343,6 +1555,13 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                             hL1all[vtype].Fill(0.5)
                         except AttributeError:
                             pass
+                    if isMC and vtype not in ["mumu", "mmg", "mmlplp"]: 
+                        if do_ElRecsf:
+                            hMRecUp[vtype].Fill(m, evt_weightRecUp)
+                            hMRecDn[vtype].Fill(m, evt_weightRecDn)
+                        if do_ElIDsf:
+                            hMIDUp[vtype].Fill(m, evt_weightIDUp)
+                            hMIDDn[vtype].Fill(m, evt_weightIDDn)
                     if not passedTrig:
                         hMFailedTrig[vtype].Fill(m, my_evt_weight) 
                     hMNoWt[vtype].Fill(m)
@@ -1368,31 +1587,46 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         hMNoMuSide.Fill( (vec_elP+vec_elN).M(), my_evt_weight)
                         
                     #if vtype == "elel":
-                    if vtype == "mmelel":
-                        mee = (vec_elP+vec_elN).M()
-                        hMee.Fill(mee, my_evt_weight)
-                        if m > peakmin and m < peakmax:
-                            hMeePeak.Fill(mee, my_evt_weight)
-                        if isMC and not isMuMu:
+                    if ((isSig or not isMuMu) and vtype == "mmelel") or (isMuMu and vtype == "mumu"):
+                        if not isMuMu:
+                            mee = (vec_elP+vec_elN).M()
+                            hMee.Fill(mee, my_evt_weight)
+                            if m > peakmin and m < peakmax:
+                                hMeePeak.Fill(mee, my_evt_weight)
+                        if isMC: # and not isMuMu:
                             #min dR for pos, neg electrons
-                            mindrp = 9999.9
-                            mindrn = 9999.9
-                            #see if can genmatch-- loop thru all gen electrons/photons
+                            mindrpE = 9999.9
+                            mindrnE = 9999.9
+                            #min dR for pos, neg muons
+                            mindrpM = 9999.9
+                            mindrnM = 9999.9
+                            #see if can genmatch-- loop thru all gen electrons/photons AND muons
                             for ge in range(g.nGenPart):
-                                if (isSig and abs(g.GenPart_pdgId[ge]) == 11) or ((not isSig) and g.GenPart_pdgId[ge] == 22):
-                                    gv = ROOT.TLorentzVector()
-                                    gv.SetPtEtaPhiM(g.GenPart_pt[ge], g.GenPart_eta[ge], g.GenPart_phi[ge], g.GenPart_mass[ge]) 
-                                    drp = vec_elP.DeltaR(gv)
-                                    drn = vec_elN.DeltaR(gv)
+                                gv = ROOT.TLorentzVector()
+                                gv.SetPtEtaPhiM(g.GenPart_pt[ge], g.GenPart_eta[ge], g.GenPart_phi[ge], g.GenPart_mass[ge]) 
+                                #if (isSig and abs(g.GenPart_pdgId[ge]) == 11) or ((not isSig) and g.GenPart_pdgId[ge] == 22):
+                                if abs(g.GenPart_pdgId[ge]) in [11, 22]:
+                                    drpE = vec_elP.DeltaR(gv)
+                                    drnE = vec_elN.DeltaR(gv)
                                     #valid dR if it's the same charge electron, or if it's a photon (in case of resBkg)
-                                    if drp < mindrp and ((not isSig) or g.GenPart_charge == 1):
-                                        mindrp = drp
-                                    if drn < mindrn and ((not isSig) or g.GenPart_charge != 1):
-                                        mindrn = drn
-                            hMeedR.Fill(mindrp, my_evt_weight)
-                            hMeedR.Fill(mindrn, my_evt_weight)
-                            if mindrp < dRcut and mindrn < dRcut:
-                                hMeeGM.Fill(mee, my_evt_weight) 
+                                    if drpE < mindrpE and ((not isSig) or g.GenPart_charge == 1):
+                                        mindrpE = drpE
+                                    if drnE < mindrnE and ((not isSig) or g.GenPart_charge != 1):
+                                        mindrnE = drnE
+                                elif abs(g.GenPart_pdgId[ge]) == 13:
+                                    drpM = vec_muP.DeltaR(gv)
+                                    drnM = vec_muN.DeltaR(gv)
+                                    if g.GenPart_charge == 1 and drpM < mindrpM:
+                                        mindrpM = drpM
+                                    if g.GenPart_charge != 1 and drnM < mindrnM:
+                                        mindrnM = drnM
+                            if vtype == "mmelel":
+                                hMeedR.Fill(mindrpE, my_evt_weight)
+                                hMeedR.Fill(mindrnE, my_evt_weight)
+                                if mindrpE < dRcut and mindrnE < dRcut:
+                                    hMeeGM.Fill(mee, my_evt_weight) 
+                            hMmmdR.Fill(mindrpM, my_evt_weight)
+                            hMmmdR.Fill(mindrnM, my_evt_weight)
                 #if syncTest and vtype == "mmelel" and m < 1.0:
                 #if danEvent and m > .52 and m < .58:
                 if syncTest and vtype == "mumu" and m > peakmin and m < peakmax:
@@ -1471,9 +1705,13 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 ncand += 1
             hMNoWt[vtype].Fill(bestm)
             hnPVgood[vtype].Fill(e.nPV, evt_weight)
-            #if isMC:
-            #    hMUp[vtype].Fill(bestm, evt_weightUp)
-            #    hMDn[vtype].Fill(bestm, evt_weightDn)
+            if isMC:
+                if do_ElRecsf:
+                    hMRecUp[vtype].Fill(bestm, evt_weightRecUp)
+                    hMRecDn[vtype].Fill(bestm, evt_weightRecDn)
+                if do_ElIDsf:
+                    hMIDUp[vtype].Fill(bestm, evt_weightIDUp)
+                    hMIDDn[vtype].Fill(bestm, evt_weightIDDn)
             if not passedTrig:
                 print("filling failedTrig!!!! mass %f, weight %f"%(bestm, evt_weight))
                 hMFailedTrig[vtype].Fill(bestm, evt_weight) 
@@ -1664,9 +1902,12 @@ def process_file(fname, singleVert, useOnia, hWeights):
             genEtaPt = 0
             genEtaEta = -9999
             pTmu = -1
+            pTel = -1
+            old_matched = False
             gen_eta = ROOT.TLorentzVector()
             #first muon encountered
             old_vec = ROOT.TLorentzVector()
+            old_elV = ROOT.TLorentzVector()
             if not isSig and 221 not in g.GenPart_pdgId:
                 #print("No gen eta meson??? Evt %d; pdgIds: %s"%(i, str(g.GenPart_pdgId)))
                 continue
@@ -1675,7 +1916,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
 
             #recod will be false if any gen particle doesn't get genmatched to a reco'd particle
             recodmumu = True
-            recodelel = True
+            recodelel = True if isSig or isMuMu else False
             mindrmup = 9999
             mindrmun = 9999
             mindrelp = 9999
@@ -1745,8 +1986,9 @@ def process_file(fname, singleVert, useOnia, hWeights):
                         #see if this gen particle has a reco gen match -- if not, recod=False
                         for k in range(len(e.Muon_eta)):
                             ch = ord(e.Muon_charge[k])
-                            if ch == 1 and gid < 0: continue
-                            elif ch != 1 and gid > 0: continue
+                            #NEGATIVE muons have POSITIVE pdgId!!!
+                            if ch == 1 and gid > 0: continue
+                            elif ch != 1 and gid < 0: continue
                             rec_vec = ROOT.TLorentzVector()
                             rec_vec.SetPtEtaPhiM(e.Muon_pt[k]*(1+musf), e.Muon_eta[k], e.Muon_phi[k], mu_mass) 
                             rec_dr = rec_vec.DeltaR(new_vec) 
@@ -1761,27 +2003,69 @@ def process_file(fname, singleVert, useOnia, hWeights):
                             hMudRvPt.Fill(rec_dr, gpt) 
                     elif abs(gid) == 11:
                         hGenElpTAll.Fill(g.GenPart_pt[j]) 
-                        #see if this gen particle has a reco gen match -- if not, recod=False
-                        for k in range(len(e.Electron_eta)):
-                            ch = ord(e.Electron_charge[k])
-                            if ch == 1 and gid < 0: continue
-                            elif ch != 1 and gid > 0: continue
-                            rec_vec = ROOT.TLorentzVector()
-                            rec_vec.SetPtEtaPhiM(e.Electron_pt[k], e.Electron_eta[k], e.Electron_phi[k], el_mass) 
-                            rec_dr = rec_vec.DeltaR(new_vec) 
-                            #for electrons need higher dRcut!
-                            if rec_dr < dRcut and not foundmatch:
-                                foundmatch = True
-                                hGenElpTRec.Fill(g.GenPart_pt[j]) 
-                                #break
-                            if ch == 1 and rec_dr < mindrelp:
-                                mindrelp = rec_dr
-                            elif ch != 1 and rec_dr < mindreln:
-                                mindreln = rec_dr
-                            hMudRvPt.Fill(rec_dr, gpt) 
-                            hEldR.Fill(rec_dr)
+                        if not useLowPt:
+                            if pTel == -1:
+                                pTel = g.GenPart_pt[j]
+                                old_elV = new_vec
+                            else:
+                                geneldR = old_elV.DeltaR(new_vec)
+                                #fill the dR hist twice for the two electrons
+                                hGenEldRvPtAll.Fill(geneldR, pTel, evt_weight)
+                                hGenEldRvPtAll.Fill(geneldR, g.GenPart_pt[j], evt_weight)
+                                if old_matched:
+                                    hGenEldRvPtRec.Fill(geneldR, pTel, evt_weight) 
+                                pTel = -1
+                            #see if this gen particle has a reco gen match -- if not, recod=False
+                            for k in range(len(e.Electron_eta)):
+                                ch = ord(e.Electron_charge[k])
+                                #electrons have a POSITIVE ID, positrons have NEGATIVE
+                                if ch == 1 and gid > 0: continue
+                                elif ch != 1 and gid < 0: continue
+                                rec_vec = ROOT.TLorentzVector()
+                                rec_vec.SetPtEtaPhiM(e.Electron_pt[k]*(1+elsf), e.Electron_eta[k], e.Electron_phi[k], el_mass) 
+                                rec_dr = rec_vec.DeltaR(new_vec) 
+                                #for electrons need higher dRcut!
+                                if rec_dr < dRcut and not foundmatch:
+                                    foundmatch = True
+                                    hGenElpTRec.Fill(g.GenPart_pt[j]) 
+                                    if pTel == -1:
+                                        #pTel would only be -1 here if both gen electrons have been looped thru so we have a geneldR
+                                        hGenEldRvPtRec.Fill(geneldR, g.GenPart_pt[j], evt_weight)
+                                    else:
+                                        #we'll fill this when we find the partner electron (need it to know what the dR is)
+                                        old_matched = True
+                                    #break
+                                if ch == 1 and rec_dr < mindrelp:
+                                    mindrelp = rec_dr
+                                elif ch != 1 and rec_dr < mindreln:
+                                    mindreln = rec_dr
+                                #hEldRvPt.Fill(rec_dr, gpt) 
+                                hEldR.Fill(rec_dr)
+                        else:
+                            #use lowpt electrons instead
+                            for k in range(len(e.LowPtElectron_eta)):
+                                ch = ord(e.LowPtElectron_charge[k])
+                                if ch == 1 and gid > 0: continue
+                                elif ch != 1 and gid < 0: continue
+                                rec_vec = ROOT.TLorentzVector()
+                                rec_vec.SetPtEtaPhiM(e.LowPtElectron_pt[k]*(1+elsf), e.LowPtElectron_eta[k], e.LowPtElectron_phi[k], el_mass) 
+                                rec_dr = rec_vec.DeltaR(new_vec) 
+                                #for electrons need higher dRcut!
+                                if rec_dr < dRcut and not foundmatch:
+                                    foundmatch = True
+                                    hGenElpTRec.Fill(g.GenPart_pt[j]) 
+                                    #break
+                                if ch == 1 and rec_dr < mindrelp:
+                                    mindrelp = rec_dr
+                                elif ch != 1 and rec_dr < mindreln:
+                                    mindreln = rec_dr
+                                #hEldRvPt.Fill(rec_dr, gpt) 
+                                hEldR.Fill(rec_dr)
                     #photon
-                    elif gid == 21:
+                    elif gid == 22:
+                        if not isSig and not isMuMu:
+                            #set it to true for now (will be set to false later if not actually recod)
+                            recodelel = True
                         #for photons, need to find the pos and neg electron match!
                         foundpos = False
                         foundneg = False
@@ -1790,7 +2074,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
                             if ch == 1 and foundpos: continue
                             elif ch != 1 and foundneg: continue
                             rec_vec = ROOT.TLorentzVector()
-                            rec_vec.SetPtEtaPhiM(e.Electron_pt[k], e.Electron_eta[k], e.Electron_phi[k], el_mass) 
+                            rec_vec.SetPtEtaPhiM(e.Electron_pt[k]*(1+elsf), e.Electron_eta[k], e.Electron_phi[k], el_mass) 
                             rec_dr = rec_vec.DeltaR(new_vec) 
                             if rec_dr < dRcut:
                                 if ch == 1:
@@ -1803,8 +2087,14 @@ def process_file(fname, singleVert, useOnia, hWeights):
                             hEldR.Fill(rec_dr)
                     if abs(gid) == 13 and not foundmatch:
                         recodmumu = False
-                    elif (abs(gid) == 11 or gid == 21) and not foundmatch:
+                    elif (abs(gid) == 11 or gid == 22) and not foundmatch:
                         recodelel = False
+                        #if g.GenPart_pt[j] > 20:
+                        #    print("NO e MATCH!!!")
+                        #    if int(str(testnum)[:2]) > 38:
+                        #        printEvent.printEvent(e, True, g)
+                        #    else:
+                        #        printEvent_backup.printEvent(e, True, g)
                 #only 4 gen particles max probably
                 if j == (g.nGenPart-1) and genEtaPt == 0:
                     genEtaPt = gen_eta.Pt()
@@ -1975,7 +2265,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
                     recod = True
                 elif vtype == "elel" and recodelel:
                     recod = True
-                elif vtype == "mmelel" and recodmumu and recodelel:
+                elif vtype in ["mmelel", "mmlplp"] and recodmumu and recodelel:
                     recod = True
                 #new reco eff measure: req gen matching!! -- done above
                 ##require opposite charge pairs even for background sample (where memory consumption can get extreme)?
@@ -2054,7 +2344,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
 
     #rm the file now that you're done with it.
     #if not (isMC and not isSig):
-    if not isMC and not syncTest and year != 2023:
+    if (not isMC) and (not syncTest) and year != 2023:
         os.system("rm %s"%fname)
 
 #finish the processing and write to an output file
@@ -2081,15 +2371,36 @@ def finish_processing(foutname):
     hMeePeak.Write()
     hMComb.Write()
     hMReal.Write()
-    if isMC and not isMuMu:
-        hMeedR.Write()
-        hMeeGM.Write()
-        hEldR.Write()
+    if isMC: #and not isMuMu:
+        if not isMuMu:
+            hMeedR.Write()
+            hMeeGM.Write()
+            hEldR.Write()
+        hMmmdR.Write()
     hMeeVsMmmee.Write()
+    hpTElAll.Write()
+    hpTElAll0.Write()
+    hpTElAll1.Write()
+    hpTElAll2.Write()
+    hpTElAll3.Write()
+    hpTElIDPass.Write()
+    hpTElIDPass0.Write()
+    hpTElIDPass1.Write()
+    hpTElIDPass2.Write()
+    hpTElIDPass3.Write()
     for vtype in vtypes:
+        if isMC and vtype not in ["mumu", "mmg"]:
+            hElRecsf[vtype].Write()
+            hElRecsfUp[vtype].Write()
+            hElRecsfDn[vtype].Write()
+            hElIDsf[vtype].Write()
+            hElIDsfUp[vtype].Write()
+            hElIDsfDn[vtype].Write()
+            hEletapt[vtype].Write()
         hM[vtype].Write()
         hMNoWt[vtype].Write()
         hMFailedTrig[vtype].Write()
+        hdREl[vtype].Write()
         hL1all[vtype].Write()
         hL1pass[vtype].Write()
         hnPVgood[vtype].Write()
@@ -2152,8 +2463,10 @@ def finish_processing(foutname):
             hpTModmu[s].Write()
         sel = {}
         for vtype in vtypes:
-            #hMUp[vtype].Write()
-            #hMDn[vtype].Write()
+            hMRecUp[vtype].Write()
+            hMRecDn[vtype].Write()
+            hMIDUp[vtype].Write()
+            hMIDDn[vtype].Write()
             hEventWeight[vtype].Write()
             hEvtWtVsPt[vtype].Write()
             hpTGenReco[vtype].Write()
@@ -2183,6 +2496,8 @@ def finish_processing(foutname):
         hGenMupTRec.Write()
         hGenElpTAll.Write()
         hGenElpTRec.Write()
+        hGenEldRvPtAll.Write()
+        hGenEldRvPtRec.Write()
         hsubVdRGenAllC.Write()
         hsubVdRGenTrigC.Write()
         hsubVdRGenAllF.Write()
@@ -2306,7 +2621,7 @@ for lnum,line in enumerate(fl):
     print("Copying file %s"%(fullpath)) 
     #print("WARNING: NOT DOING xrdcp!!!")
     #if not (isMC and not isSig):
-    if not isMC and not syncTest and year != 2023:
+    if (not isMC) and (not syncTest) and year != 2023:
         try:
             os.system("xrdcp %s ."%fullpath)
             fname = path.split('/')[-1]

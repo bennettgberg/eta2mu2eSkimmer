@@ -3,7 +3,7 @@ import math
 
 #run letters of 2022 to go over
 #lets = ['C', 'Dv1', 'Dv2', 'E', 'F', 'G']
-lets = ['F']
+lets = ['G']
 #which sets of LowMass BParking data to go over
 nums = [i for i in range(8)]
 ##which testnumber ?
@@ -13,6 +13,7 @@ njobs = 32
 
 for let in lets:
     for num in nums:
+        if num != 0: continue
         nfiles = 0
         flist = []
         dpath = "BParking_2022/ParkingDoubleMuonLowMass%d%s"%(num, let)

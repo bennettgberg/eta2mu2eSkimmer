@@ -15,14 +15,31 @@ year = 2022 #2223
 #how many electrons to require elID: 0, 1, 2 (both), or 3 (not actually 3 but just means WP80 required on both)?
 req_elID = 2
 
+#require muon ID or nah?
+req_muID = True
+
 #True if want to use the selection where events with .04 < M_ee < .09 GeV are cut
 cut_mee = False
 
 #include pileup corrections or nah
 do_pileup = True
 
+#include trigger efficiency corrections or nah?
+do_trigCor = True
+
 #use new event weights from DG/Cheb4 2mu fits?
 new_wt = 1 #True
+
+#use lowPt electrons instead of regular ones?
+useLowPt = False
+
+#include pre/post-EE distinction?
+#incEE = True
+
+#use modified invar mass distribution (for electron efficiency calculation) ? 
+modnum = -1
+if len(sys.argv) > 1:
+    modnum = int(sys.argv[1]) 
 
 #infile = "hipTpair/data_DoubleMuon_Run2_skimmed.root"
 #infile = "multiquad/data_DoubleMuon_Run2_skimmed.root"
@@ -57,10 +74,26 @@ if req_elID == 2:
         #cut .04 < M_ee < .09
         infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3851_ALL.root"
     else:
-        #**Nominal**
-        #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3837_ALL.root"
-        #including cuts on muon pt, eta, etc
-        infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3860_ALL.root"
+        if req_muID:
+            #medium ID
+            #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3883_ALL.root"
+            #loose ID
+            #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3884_ALL.root"
+            #nominal!!
+            #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38107_ALL.root"
+            #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38126_ALL.root"
+            #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38130_ALL.root"
+            #reprocessed, nd stuff
+            #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4715_ALL.root"
+            if useLowPt:
+                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4734_ALL.root"
+            else:
+                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4733_ALL.root"
+        else:
+            #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3837_ALL.root"
+            #including cuts on muon pt, eta, etc
+            #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3860_ALL.root"
+            infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3882_ALL.root"
     #electron pT > 2 AND 2023 data included
 elif req_elID == 1:
     if year != 2022:
@@ -71,7 +104,9 @@ elif req_elID == 1:
 elif req_elID == 3:
     #tight (WP80) elID req'd on both electrons
     #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3839_ALL.root"
-    infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3871_ALL.root"
+    #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3871_ALL.root"
+    #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38122_ALL.root"
+    infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38138_ALL.root"
 elif req_elID == 0:
     if cut_mee:
         #cut out .04 < M_ee < .09
@@ -87,17 +122,30 @@ elif req_elID == 0:
 #distname = "hMlpe"
 #distname = "hMlplp"
 #distname = "hMmmlplp"
-distname = "hMmmelel"
+if modnum > -1:
+    distname = "hMMod"+str(modnum)
+else:
+    if useLowPt:
+        distname = "hMmmlplp"
+    else:
+        distname = "hMmmelel"
+    #distname = "hMModmu2"
+    #distname = "hMModmu3"
+    #distname = "hMMod6"
 #accidentally used the wrong name!
 #distname = "Ptmmee"
-compare_sigMC = True
+compare_sigMC = False
 compare_bkgMC = True
 
 f = ROOT.TFile.Open(infile)
 f.Print()
 
 #t = f.Get("Events") 
-h = f.Get(distname)
+#h = f.Get(distname)
+if useLowPt:
+    h = f.Get("hMmmlplp")
+else:
+    h = f.Get("hMmmelel")
 #if year == 2223:
 #    #get the 2023 data
 #    h.SetName("hM2223")
@@ -163,17 +211,17 @@ rrv.setRange("full", fitmin, fitmax)
 #myfitter = fitter.fitter_2mu2e(mass=rrv, bkg_model='ConstGauss', sig_model='Voigtian')
 
 #set this to -1 for a smaller fit range (.52-.575 GeV) or +1 for a big fit range (.50-.60 GeV)
-fitsize = 1
+fitsize = 0
 nresparam = 1 #only normalization allowed to float for resonant background
 if req_elID == 2 or req_elID == 3:
     #sigMod = 'BreitWigner'
     #nsigparam = 3
     #sigMod = 'Voigtian'
     #nsigparam = 4
-    #sigMod = ''
-    #nsigparam = 0
-    sigMod = 'DoubleGauss' #nominal!!!
-    nsigparam = 5 
+    sigMod = ''
+    nsigparam = 0
+    #sigMod = 'DoubleGauss' #nominal!!!
+    #nsigparam = 5 
     #CB_Gauss
     #sigMod = 'CB_Gauss'
     #nsigparam = 7
@@ -232,12 +280,20 @@ elif req_elID == 1:
 
 #read resonant background parameters in from the txt file!
 bparamfname = "fit_results/bkgMCParams_" + resBkgMod
+if useLowPt:
+    bparamfname += "_lowPt"
 if new_wt:
     bparamfname += "_newWt%s"%(str(new_wt) if new_wt > 1 else "")
+if modnum > -1:
+    bparamfname += "_mod"+str(modnum)
+if req_muID:
+    bparamfname += "_reqMuID"
 if req_elID != 2:
     bparamfname += "_req%d"%req_elID
 if not do_pileup:
     bparamfname += "_noPU"
+if do_trigCor:
+    bparamfname += "_trigCor"
 if year != 2022:
     bparamfname += "_2023"
 if rebin != 5:
@@ -333,156 +389,65 @@ else:
         myfitter.set_resBkg_params( mb=library.ConstParam(0.5605), wb=library.ConstParam(1.850e-2) )
         myfitter.set_resBkg_norm(640.8, 0.2)
     
-#read signal parameters in from the txt file!
-sparamfname = "fit_results/sigMCParams_" + sigMod
-if new_wt:
-    sparamfname += "_newWt%s"%(str(new_wt) if new_wt > 1 else "")
-if req_elID != 2:
-    sparamfname += "_req%d"%req_elID
-if not do_pileup:
-    sparamfname += "_noPU"
-if year != 2022:
-    sparamfname += "_2023"
-if rebin != 5:
-    sparamfname += "_%dMeVbins"%rebin
-if fitsize != 0:
-    if fitsize < 0:
-        sparamfname += "_smallRange"
+if sigMod != '':
+    #read signal parameters in from the txt file!
+    sparamfname = "fit_results/sigMCParams_" + sigMod
+    if useLowPt:
+        sparamfname += "_lowPt"
+    if new_wt:
+        sparamfname += "_newWt%s"%(str(new_wt) if new_wt > 1 else "")
+    if "Modmu" in distname:
+        sparamfname += "_modmu%d"%(int(distname[-1])) 
+    elif "hMMod" in distname:
+        modnum = int(distname[-1]) 
+        sparamfname += "_mod"+str(modnum)
+    if req_muID != 2:
+        sparamfname += "_reqMuID"
+    if req_elID != 2:
+        sparamfname += "_req%d"%req_elID
+    if not do_pileup:
+        sparamfname += "_noPU"
+    if do_trigCor:
+        sparamfname += "_trigCor"
+    if year != 2022:
+        sparamfname += "_2023"
+    if rebin != 5:
+        sparamfname += "_%dMeVbins"%rebin
+    if fitsize != 0:
+        if fitsize < 0:
+            sparamfname += "_smallRange"
+        else:
+            sparamfname += "_bigRange"
+    sparamfname += ".txt"
+    if os.path.exists(sparamfname):
+        sparamf = open(sparamfname, "r")
+        comm = "myfitter.set_sig_params(" 
+        for i,line in enumerate(sparamf):
+            words = line.split()
+            pname = words[0].strip()
+            if pname == "nsig": continue
+            pval = float(words[1])
+            perr = float(words[2])
+            if i != 0:
+                comm += ", "
+            if rebin == 6:
+                comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-2*perr, pval+2*perr) 
+            else:
+                if sigMod == "CB_Gauss":
+                    comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-2*perr, pval+2*perr) 
+                else:
+                    comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-perr, pval+perr) 
+        comm += " )"
+        exec(comm)
     else:
-        sparamfname += "_bigRange"
-sparamfname += ".txt"
-if os.path.exists(sparamfname):
-    sparamf = open(sparamfname, "r")
-    comm = "myfitter.set_sig_params(" 
-    for i,line in enumerate(sparamf):
-        words = line.split()
-        pname = words[0].strip()
-        if pname == "nsig": continue
-        pval = float(words[1])
-        perr = float(words[2])
-        if i != 0:
-            comm += ", "
-        comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-perr, pval+perr) 
-    comm += " )"
-    exec(comm)
-else:
-    print("aaaaaaaaaaaaaaaaaaaaaaaaaaa %s doesn't exist aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"%sparamfname)
-
-    #CrystalBall function for signal model
-    #myfitter.set_sig_params( mcb=library.Param(.549, .5, .6), acb=library.Param(-4.5, -6, -0.5), ncb=library.Param(21, 15, 25), scb=library.Param(.0195, .01, .02) )
-    #Voigtian function
-    #myfitter.set_sig_params( mv=library.Param(.548, .543, .553), wv=library.Param(.005, .0001, .05), sv=library.Param(.005, .0001, .05) )
-    ##set constant those params found from the fit to signal MC
-    #myfitter.set_sig_params( mv=library.ConstParam(.5475), wv=library.ConstParam(.0141) ) #, sv=library.ConstParam(.00306)))
-    #including weight uncertainties in the error bars
-    #myfitter.set_sig_params( mv=library.Param(.5475, .5474, .5476), wv=library.Param(.0141, .0140, .0142), sv=library.Param(.00306, .00305, .00307))
-    #not including weight unctys in the error bars
-    #myfitter.set_sig_params( mv=library.Param(.5482, .5481, .5483), wv=library.Param(.0172, .01, .023), sv=library.Param(.0005, .0001, .005))
-    if req_elID == 2:
-        #myfitter.set_sig_params( mv=library.Param(.5472, .5470, .548), wv=library.Param(.0172, .01, .023), sv=library.Param(.00151, .001, .01))
-        ##BW
-        if sigMod == 'BreitWigner':
-            if rebin == 5:
-                ##signal fit .505 to .585 GeV
-                ##signal fit .45 to .65 GeV
-                #myfitter.set_sig_params( mb=library.Param(.5470, .5466, .5475), wb=library.Param(.01581, .01486, .01675) )
-                #signal fit .525 to .575 GeV
-                #myfitter.set_sig_params( mb=library.Param(.5474, .5469, .5478), wb=library.Param(.01491, .01383, .01599) )
-                if cut_mee:
-                    #cut .04 < M_ee < .09 (and range .505 to .585 GeV)
-                    myfitter.set_sig_params( mb=library.Param(.54693, .54693-.000465, .54693+.000465), wb=library.Param(.01478, .01478-.00102, .01478+.00102) )
-                else:
-                    #3837
-                    #myfitter.set_sig_params( mb=library.Param(.5472, .5468, .5477), wb=library.Param(.01520, .01421, .01619) )
-                    #3860
-                    myfitter.set_sig_params( mb=library.Param(.5468, .5468-.0006, .5468+.0006), wb=library.Param(.01525, .01525-.00131, .01525+.00131) )
-            elif rebin == 4:
-                myfitter.set_sig_params( mb=library.Param(.5473, .5468, .5477), wb=library.Param(.01500, .01403, .01596) )
-            elif rebin == 6:
-                myfitter.set_sig_params( mb=library.Param(.5474, .5469, .5478), wb=library.Param(.01504, .01405, .01602) )
-        ##TripleGauss function
-        #myfitter.set_sig_params( mg=library.ConstParam(0.5475), sg1=library.ConstParam(0.3875), sg2=library.ConstParam(0.01227), sg3=library.ConstParam(6.1425e-3), sig1frac=library.ConstParam(0.2638), sig2frac=library.ConstParam(0.1917) )
-        elif sigMod == 'DoubleGauss':
-            if rebin == 5:
-                #DoubleGauss function
-                #normal fit range
-                #myfitter.set_sig_params( mg=library.Param(0.5473, 0.5468, 0.5477), sg1=library.Param(0.03983, 0.021839, 0.05783), sg2=library.Param(0.006665, 0.006119, 0.007211), sig1frac=library.Param(0.3548, 0.2995, 0.4101) )
-                myfitter.set_sig_params( mg=library.Param(0.5473, 0.5468, 0.5477), sg1=library.Param(0.03983, 0.021839, 0.05783), sg2=library.Param(0.006665, 0.006119, 0.006665*1.2), sig1frac=library.Param(0.3548, 0.2995, 0.4101) )
-                #small fit range
-                #myfitter.set_sig_params( mg=library.Param(0.5473, 0.5468, 0.5477), sg1=library.Param(0.03983, 0.021839, 0.05783), sg2=library.Param(0.006665, 0.006119, 0.007211), sig1frac=library.Param(0.3548, 0.2995, 0.4101) )
-                #large fit range
-                #myfitter.set_sig_params( mg=library.Param(0.5473, 0.5468, 0.5477), sg1=library.Param(0.03983, 0.021839, 0.05783), sg2=library.Param(0.006665, 0.006119, 0.007211), sig1frac=library.Param(0.3548, 0.2995, 0.4101) )
-            elif rebin == 4:
-                #normal fit range
-                myfitter.set_sig_params( mg=library.Param(0.5470, 0.5470-.00047, 0.5470+.00047), sg1=library.Param(0.02674, 0.02674-.00563, 0.02674+.00563), sg2=library.Param(0.006452, 0.006452-.000537, 0.006452+.000537), sig1frac=library.Param(0.3570, 0.3570-.0591, 0.3570+.0591) )
-                #small fit range
-                #myfitter.set_sig_params( mg=library.Param(0.5470, 0.5470-.00047, 0.5470+.00047), sg1=library.Param(0.02674, 0.02674-.00563, 0.02674+.00563), sg2=library.Param(0.006452, 0.006452-.000537, 0.006452+.000537), sig1frac=library.Param(0.3570, 0.3570-.0591, 0.3570+.0591) )
-                #large fit range
-                #myfitter.set_sig_params( mg=library.Param(0.5470, 0.5470-.00047, 0.5470+.00047), sg1=library.Param(0.02674, 0.02674-.00563, 0.02674+.00563), sg2=library.Param(0.006452, 0.006452-.000537, 0.006452+.000537), sig1frac=library.Param(0.3570, 0.3570-.0591, 0.3570+.0591) )
-            elif rebin == 6: 
-                myfitter.set_sig_params( mg=library.Param(0.5473, 0.5468, 0.5477), sg1=library.Param(0.03983, 0.021839, 0.05783), sg2=library.Param(0.006665, 0.006119, 0.007211), sig1frac=library.Param(0.3548, 0.2995, 0.4101) )
-                #small fit range
-                #myfitter.set_sig_params( mg=library.Param(0.5473, 0.5468, 0.5477), sg1=library.Param(0.03983, 0.021839, 0.05783), sg2=library.Param(0.006665, 0.006119, 0.007211), sig1frac=library.Param(0.3548, 0.2995, 0.4101) )
-                #large fit range
-                #myfitter.set_sig_params( mg=library.Param(0.5473, 0.5468, 0.5477), sg1=library.Param(0.03983, 0.021839, 0.05783), sg2=library.Param(0.006665, 0.006119, 0.007211), sig1frac=library.Param(0.3548, 0.2995, 0.4101) )
-        elif sigMod == 'CB_Gauss':
-            if rebin == 5:
-                if do_pileup:
-                    #nominal
-                    myfitter.set_sig_params( mcb=library.Param(0.546818, 0.546818-.000512, 0.546818+.000512), sg=library.Param(0.0496175, 0.0496175-2.82085e-02, 0.0496175+2.82085e-02), scb=library.Param(.008, 0.008-1.88475e-04, 0.008+1.88475e-04), CB_frac=library.Param(7.55588e-01, 7.55588e-01-3.12598e-02, .755588+3.12598e-02), ncb=library.Param(200.0, 0, 400.0), acb=library.Param(-17.5966, -17.5966-4.03994, -17.5966+4.03994) )
-                    #small fit range .520-.575 GeV
-                    #myfitter.set_sig_params( mcb=library.Param(0.546994, 0.546994-.000470, 0.546994+.000470), sg=library.Param(0.0058236, 0.0058236-4.77159e-04, 0.0058236+4.77159e-04), scb=library.Param(.015, 0.015-1.89925e-03, 0.015+1.89925e-03), CB_frac=library.Param(4.80897e-01, 4.80897e-01-5.13603e-02, .480897+5.13603e-02), ncb=library.Param(200.0, 0, 400.0), acb=library.Param(-17.5966, -17.5966-11.6760, -17.5966+11.6760) )
-                    ##big fit range .50-.60 GeV
-                    #myfitter.set_sig_params( mcb=library.Param(0.546644, 0.546644-.000515, 0.546644+.000515), sg=library.Param(0.0278122, 0.0278122-3.48562e-03, 0.0278122+3.48562e-03), scb=library.Param(.008, 0.008-1.47847e-04, 0.008+1.47847e-04), CB_frac=library.Param(7.06373e-01, 7.06373e-01-3.40061e-02, .706373+3.40061e-02), ncb=library.Param(200.0, 0, 400.0), acb=library.Param(-17.5966, -17.5966-10.3446, -17.5966+10.3446) )
-                else:
-                    myfitter.set_sig_params( mcb=library.Param(0.547210, 0.547210-.000441, 0.547210+.000441), sg=library.Param(0.0296202, 0.0296202-5.53102e-03, 0.0296202+5.53102e-03), scb=library.Param(.00677627, 0.00677627-3.86352e-04, 0.00677627+3.86352e-04), CB_frac=library.Param(6.86321e-01, 6.86321e-01-3.23806e-02, .686321+3.23806e-02), ncb=library.Param(200.0, 0, 400.0), acb=library.Param(-17.5966, -17.5966-10.0322, -17.5966+10.0322) )
-            elif rebin == 4:
-                myfitter.set_sig_params( mcb=library.Param(0.546775, 0.546775-.000513, 0.546775+.000513), sg=library.Param(0.0413039, 0.0413039-1.49395e-02, 0.0413039+1.49395e-02), scb=library.Param(.008, 0.008-1.40496e-04, 0.008+1.40496e-04), CB_frac=library.Param(7.42950e-01, 7.42950e-01-3.14435e-02, .742950+3.14435e-02), ncb=library.Param(200.0, 0, 400.0), acb=library.Param(-17.5966, -17.5966-10.6984, -17.5966+10.6984) )
-            elif rebin == 6:
-                myfitter.set_sig_params( mcb=library.Param(0.546950, 0.546950-.000508, 0.546950+.000508), sg=library.Param(0.0993908, 0.0993908-5.81592e-02, 0.0993908+5.81592e-02), scb=library.Param(.008, 0.008-1.70183e-04, 0.008+1.70183e-04), CB_frac=library.Param(7.61558e-01, 7.61558e-01-2.93048e-02, .761558+2.93048e-02), ncb=library.Param(200.0, 0, 400.0), acb=library.Param(-17.5966, -17.5966-10.6984, -17.5966+10.6984) )
-        elif sigMod == "Voigtian":    
-            #Voigtian
-            myfitter.set_sig_params( mv=library.Param(.546794, .546794-.000486645, .546794+.000486645), wv=library.Param(.0132073, .0132073-.00155814, .0132073+.00155814), sv=library.Param(.00316799, .00316799-.00120605, .00316799+.00120605) )
-            
-    elif req_elID == 1:
-        #myfitter.set_sig_params( mv=library.Param(.5479, .5478, .5480), wv=library.Param(.0151, .01, .025), sv=library.Param(.00050, .00049, .00051))
-        #myfitter.set_sig_params( mv=library.ConstParam(.5479), wv=library.ConstParam(.0151), sv=library.Param(.00050, .00005, .05) )
-        #DoubleGauss !
-        #myfitter.set_sig_params( mg=library.Param(0.5479, 0.5475, 0.5483), sg1=library.Param(0.03232, 0.02096, 0.04368), sg2=library.Param(0.006889, 0.006260, 0.007518), sig1frac=library.Param(0.3290, 0.2633, 0.3946) )
-        #Breit-Wigner !
-        #myfitter.set_sig_params( mb=library.Param(0.5480, 0.5477, 0.5482), wb=library.Param(0.01420, 0.01359, 0.01480) )
-        #myfitter.set_sig_params( mb=library.Param(0.5480, 0.5480*.8, 0.5482*1.2), wb=library.Param(0.01420, 0.01359*.8, 0.01480*1.2) )
-        if sigMod == 'DoubleGauss':
-            #DoubleGauss !
-            myfitter.set_sig_params( mg=library.Param(0.54788, 0.54788-0.00028, 0.54788+0.00028), sg1=library.Param(0.025131, 0.025131-.003948, 0.025131+.003948), sg2=library.Param(0.0065755, 0.0065755-0.000445, 0.0065755+0.000445), sig1frac=library.Param(0.34232, 0.34232-0.04960, 0.34232+0.04960) )
-        else:
-            myfitter.set_sig_params( mb=library.Param(0.5480, 0.5477, 0.5482), wb=library.Param(0.01420, 0.01359, 0.01480) )
-    elif req_elID == 3:
-        #myfitter.set_sig_params( mb=library.Param(.5474, .5466, .5482), wb=library.Param(.01313, .01149, .01476) )
-        #myfitter.set_sig_params( mcb=library.Param(0.547614, 0.547614-.000820, 0.547614+.000820), sg=library.Param(0.0226395, 0.0226395-6.87034e-03, 0.0226395+6.87034e-03), scb=library.Param(.0072699, 0.0072699-7.20810e-04, 0.0072699+7.20810e-04), CB_frac=library.Param(8.00567e-01, 8.00567e-01-6.29937e-02, .800567+6.29937e-02), ncb=library.Param(200.0, 0, 400.0), acb=library.Param(-17.5966, -17.5966-9.56378, -17.5966+9.56378) )
-        #with PU corex
-        myfitter.set_sig_params( mcb=library.Param(0.547699, 0.547699-.000940, 0.547699+.000940), sg=library.Param(0.0233687, 0.0233687-8.43449e-03, 0.0233687+8.43449e-03), scb=library.Param(.0077860, 0.0077860+8.13066e-04, 0.0077860+8.13066e-04), CB_frac=library.Param(8.14232e-01, 8.14232e-01-6.91264e-02, .814232+6.91264e-02), ncb=library.Param(200.0, 0, 400.0), acb=library.Param(-17.5966, -17.5966-4.17276, -17.5966+4.17276) )
-    elif req_elID == 0:
-        if cut_mee:
-            # .04 < M_ee < .09 cut out
-            myfitter.set_sig_params( mg=library.Param(0.54804, 0.54804-0.000154, 0.54804+0.000154), sg1=library.Param(0.0044337, 0.0044337-.0003662, 0.0044337+.0003662), sg2=library.Param(0.158232, 0.00001, 0.158232+0.273563), sig1frac=library.Param(0.24467, 0.24467-0.03304, 0.24467+0.03304), sg3=library.Param(.00944865, .00944865-.00127967, .00944865+.00127967), sig2frac=library.Param(.197412, .197412-.144117, .197412+.144117) )
-        else:
-            #normal
-            #myfitter.set_sig_params( mg=library.Param(0.54808, 0.54808-0.000163, 0.54808+0.000163), sg1=library.Param(0.0094692, 0.0094692-.0021089, 0.0094692+.0021089), sg2=library.Param(0.136869, 0.00001, 0.136869+0.331523), sig1frac=library.Param(0.54273, 0.54273-0.05943, 0.54273+0.05943), sg3=library.Param(.00445948, .00445948-.00062462, .00445948+.00062462), sig2frac=library.Param(.196667, .196667-.124812, .196667+.124812) )
-            myfitter.set_sig_params( mg=library.Param(0.54805, 0.54805-0.000194, 0.54805+0.000194), sg1=library.Param(0.0042691, 0.0042691-.0010454, 0.0042691+.0010454), sg2=library.Param(0.065679, 0.00001, 0.065679+0.081127), sig1frac=library.Param(0.20996, 0.20996-0.12847, 0.20996+0.12847), sg3=library.Param(.00889600, .00889600-.00125931, .00889600+.00125931), sig2frac=library.Param(.221977, .221977-.049069, .221977+.049069) )
-    
-#DoubleGauss function
-#myfitter.set_sig_params( mg=library.Param(0.547612, 0.5475, 0.5477), sg1=library.Param(0.0234698, 0.0234, 0.0235), sg2=library.Param(0.00645498, 0.00645, 0.00646), sig1frac=library.Param(0.3826, 0.382, 0.383) )
-#myfitter.set_sig_params( mg=library.Param(0.547612, 0.5475, 0.5477), sg1=library.Param(0.0234698, 0.0234, 0.0235), sg2=library.Param(0.00645498, 0.0001, 0.05), sig1frac=library.Param(0.3826, 0.382, 0.383) )
-
-#new signal model: 2xGauss (NOT DoubleGauss)
-#myfitter.set_sig_params( mg1=library.Param(.549, .545, .552), sg1=library.Param(.01, .005, .03), mg2=library.Param(.555, .545, .58), sg2=library.Param(.01, .005, .03), sig1frac=library.Param(0.5, 0.1, 5.0) )
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaaa %s doesn't exist aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"%sparamfname)
+        exit()
 
 data = ROOT.RooDataHist("data", "data", rrv, ROOT.RooFit.Import(h))
 
 #do the fit
 fitres = myfitter.model.fitTo(data, ROOT.RooFit.Save())
-#print("fitres: " + str(fitres)) 
+print("fitres: " + str(fitres)) 
 
 
 #plot the fit
@@ -600,7 +565,11 @@ leg.Draw()
 if req_elID == 2:
     if year == 2022:
         if rebin == 5:
-            pav = ROOT.TPaveText(.46, 30, .54, 35)
+            if req_muID:
+                pav = ROOT.TPaveText(.46, 25, .54, 30)
+                #pav = ROOT.TPaveText(.455, 22, .54, 30)
+            else:
+                pav = ROOT.TPaveText(.46, 30, .54, 35)
         elif rebin == 4:
             pav = ROOT.TPaveText(.46, 25, .54, 30)
         elif rebin == 6:
@@ -613,58 +582,10 @@ elif req_elID == 1:
     pav = ROOT.TPaveText(.46, 150, .54, 180)
 elif req_elID == 0:
     pav = ROOT.TPaveText(.46, 450, .54, 520)
-pav.AddText("#chi^{2}/ndf = %.3f / %d = %.3f"%(chi2, ndf, chi2_SB)) 
+pav.AddText("#chi^{2}/ndf = %.3f / %d "%(chi2, ndf)) 
+pav.AddText("= %.3f"%(chi2_SB)) 
 pav.Draw("same")
 ####################################
-###CrystalBall starting params####
-#cgfit.SetParameter(0, 0.3) #const
-#cgfit.SetParameter(1, 8)  #norm
-#cgfit.SetParameter(2, 0.548) #mean
-##fix eta mass or nah??
-##cgfit.FixParameter(2, .5479)
-#cgfit.SetParameter(3, 0.018) #sigma
-#
-#cgfit.SetParameter(4, -2) #alph
-#cgfit.SetParameter(5, 2) #n
-#cgfit.SetParameter(6, .01) #slope
-#cgfit.SetParameter(7, .01) #quadratic coef
-
-#initiate histogram
-#h = TH1F("h", "mu mu gamma", nbins, xmin, xmax)
-
-#xax = h.GetXaxis()
-#xax.Print()
-#xax.SetTitle("4-lepton invariant mass (GeV)")
-##xax.SetTitle("dimu-gamma invariant mass (GeV)")
-#yax = h.GetYaxis()
-#binsize = (xmax - xmin) / nbins
-#yax.SetTitle("Events / %f GeV"%binsize)
-#
-#
-#draw = True # False
-#fitresult = h.Fit("cgfit", "LSB")
-#
-#c = TCanvas("c", "c")
-#c.cd()
-#h.Draw()
-#
-#params = fitresult.GetParams()
-#const = params[0]
-#slope = params[6]
-##slope = 0
-#mean = params[2]
-#sigma = params[3]
-#
-##area under the bkg only
-#hi = .63 # mean+3*sigma
-#lo = .51 #mean-3*sigma
-#bkgInt = (0.5*slope*(hi**2 - lo**2) + const*(hi - lo) + 1.0/3 * params[7]*(hi**3 - lo**3) ) / binsize
-#
-#sigInt = cgfit.Integral(lo, hi) / binsize - bkgInt
-#
-#print("About %f signal events and %f +/- %f background events under the peak."%(sigInt, bkgInt, sigmaB))
-#
-
 #use official CMS Style.
 import utils.CMSStyle as cmsstyle
 #cmsstyle.setCMSLumiStyle(c, 0, era='Run2')
@@ -695,29 +616,6 @@ mc_sig_int = -1
 mc_bkg_int = -1
 #draw MC first (if drawing it)
 if compare_sigMC:
-    #fMC = ROOT.TFile.Open("EtaTo2Mu2E_2018_0_skimmedMCtest.root")
-    #fMC = ROOT.TFile.Open("EtaTo2Mu2E_2018_0_ntuple_skimmedsignalMC.root")
-    #tMC = fMC.Get("Events")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest141.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest17.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest19.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest231.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest32.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest321.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest322.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest323.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest324.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest335.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest339.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest3310.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest3313.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest339.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest351.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest352.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest36.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest369.root")
-    #fMC = ROOT.TFile.Open("bparking_sigMCtest374.root")
-    #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3819.root")
     if req_elID == 2:
         #nMiss==0, vProb>.5
         #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3826.root")
@@ -736,9 +634,31 @@ if compare_sigMC:
             #updated weights
             if do_pileup:
                 if new_wt == 1:
-                    #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3876.root")
-                    #updated PU corrections
-                    fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3878.root")
+                    if req_muID:
+                        if do_trigCor:
+                            #nominal frfrfrfrfr
+                            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3888.root")
+                            #only one trigger path instead of 6
+                            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38110.root")
+                            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38130.root")
+                            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38136.root")
+                            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38145p4715.root")
+                            if useLowPt:
+                                fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38166p4734.root")
+                            else:
+                                #cut transition electrons, do additional corrections, nd stuff
+                                #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38164p4733.root")
+                                fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38174p4740.root")
+                        else:
+                            #medium ID
+                            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3883.root")
+                            #loose ID
+                            fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3884.root")
+                    else:
+                        #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3876.root")
+                        #updated PU corrections
+                        #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3878.root")
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3882.root")
                 elif new_wt == 2:
                     fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3879.root")
                 elif new_wt == 3:
@@ -755,7 +675,10 @@ if compare_sigMC:
         #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3871.root")
         #with PU corex
         if new_wt:
-            fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3875.root")
+            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3875.root")
+            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38122.root")
+            #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38138p479.root")
+            fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38147p4717.root")
         else:
             fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3872.root")
     elif req_elID == 0:
@@ -768,6 +691,7 @@ if compare_sigMC:
             fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3858.root")
     #tMC = fMC.Get("hMe")
     tMC = fMC.Get(distname)
+    #tMC = fMC.Get("hMModmu2")
     #tMC = fMC.Get("hMDnmmelel")
 
     if year == 2223:
@@ -784,7 +708,7 @@ if compare_sigMC:
 
     #MC_scales = [2.0, 1.0, 0.5]
     #MC_scales = [1.0]
-    MC_scales = [0.3]
+    MC_scales = [0.40] #4]
     if req_elID == 0:
         MC_scales = [0.7]
     hMC = [None for mcs in MC_scales]
@@ -792,6 +716,17 @@ if compare_sigMC:
     for i,scale in enumerate(MC_scales):
         #hMC[i] = ROOT.TH1F("hMC"+str(i), "#mu#muee", nbins, xmin, xmax)
         hMC[i] = tMC.Clone()
+        #if incEE:
+        #    hMC[i].SetName("hpostEE")
+        #    #fee = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest472.root")
+        #    #fee = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest474.root")
+        #    fee = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest477.root")
+        #    hee = fee.Get(distname)
+        #    #hee = fee.Get("hMModmu2")
+        #    #hee = fee.Get("hMModmu11")
+        #    #hee.Add(hMC[i], 28.25/38.01) 
+        #    hee.Add(hMC[i]) 
+        #    hMC[i] = hee
         hMC[i].SetLineWidth(2)
         color = 7+i
         #10 is just white \throwingUpEmoji
@@ -819,31 +754,11 @@ if compare_sigMC:
             mc_sig_int = hMC[i].Integral(hMC[i].FindBin(0.51), hMC[i].FindBin(0.60))
 #if compare_MC:
 #    for i,scale in enumerate(MC_scales):
-        leg.AddEntry(hMC[i],"#eta#rightarrow2#mu2e MC Sig * #bar{B} * %.1f: N = %.1f"%(scale, mc_sig_int), "l")
+        leg.AddEntry(hMC[i],"#eta#rightarrow2#mu2e MC Sig * #bar{B} * %.2f: N = %.1f"%(scale, mc_sig_int), "l")
     c.Update()
 
 if compare_bkgMC:
     #fBkg = ROOT.TFile.Open("EtaToMuMuGamma_2018_0_ntuple_skimmedBkgMC.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest17.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest19.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest231.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest32.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest321.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest322.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest323.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest324.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest335.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest339.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest3310.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest3313.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest339.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest352.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest36.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest369.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest374.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest382.root")
-    #fBkg = ROOT.TFile.Open("bparking_bkgMCtest3819.root")
-    #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3819.root")
     if req_elID == 2:
         #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3826.root")
         #vProb>.1, nMiss<=3
@@ -861,9 +776,30 @@ if compare_bkgMC:
             #updated weights
             if do_pileup:
                 if new_wt == 1:
-                    #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3876.root")
-                    #updated PU corrections
-                    fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3878.root")
+                    if req_muID:
+                        if do_trigCor:
+                            #nominal frfrfrfrfrfr
+                            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3888.root")
+                            #only one trigger path instead of 6
+                            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38110.root")
+                            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38129.root")
+                            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38146.root")
+                            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38145.root")
+                            if useLowPt:
+                                fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38167.root")
+                            else:
+                                #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38165.root")
+                                fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38175.root")
+                        else:
+                            #medium ID
+                            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3883.root")
+                            #loose ID
+                            fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3884.root")
+                    else:
+                        #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3876.root")
+                        #updated PU corrections
+                        #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3878.root")
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3882.root")
                 elif new_wt == 2:
                     fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3879.root")
                 elif new_wt == 3:
@@ -880,7 +816,10 @@ if compare_bkgMC:
         #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3871.root")
         #with PU corex
         if new_wt:
-            fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3875.root")
+            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3875.root")
+            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38122.root")
+            #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38140.root")
+            fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38148.root")
         else:
             fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3872.root")
     elif req_elID == 0:
@@ -897,9 +836,12 @@ if compare_bkgMC:
     #hBkg = ROOT.TH1F("hBkg", "#mu#mu#gamma", nbins, xmin, xmax)
     #hBkg = fBkg.Get("hMe")
     hBkg = fBkg.Get(distname)
+    #hBkg = fBkg.Get("hMModmu2")
     ##temporary fix: scale bkg to get back to just 2022 lumi instead of 2022-23
     #if (req_elID == 2 or req_elID == 1) and year != 2223 and not cut_mee:
     #    hBkg.Scale(38.48/(38.48+28.89)) 
+    if "38145" in fBkg:
+        hBkg.Scale((28.25+9.76)/28.25) 
     #rebin = hBkg.GetNbinsX() / nbins
     #print("bkg rebin: " + str(rebin))
     #irebin = int(rebin)
@@ -918,56 +860,58 @@ if compare_bkgMC:
     leg.AddEntry(hBkg, "#eta#rightarrow#mu#mu#gamma MC Bkg: N = %.1f +/- %.1f"%(mc_bkg_int, mc_bkg_err), "l")
 
 
-if mc_bkg_int > 0: 
-    sigInt -= mc_bkg_int
-    bkgInt = (mc_bkg_int**2 + bkgInt**2)**0.5
-if sigMod != '':
-    significance = (2*((sigInt + bkgInt)*log((sigInt+bkgInt)*(bkgInt+sigmaB**2)/(bkgInt**2 + (sigInt+bkgInt)*sigmaB**2)) - bkgInt**2/sigmaB**2 *log(1 + sigmaB**2*sigInt/(bkgInt*(bkgInt+sigmaB**2)))))**0.5 
-    print("Significance is about %f sigmas."%(significance))
+#if mc_bkg_int > 0: 
+#    sigInt -= mc_bkg_int
+#    bkgInt = (mc_bkg_int**2 + bkgInt**2)**0.5
+#if sigMod != '' and bkgInt > 0:
+#    significance = (2*((sigInt + bkgInt)*log((sigInt+bkgInt)*(bkgInt+sigmaB**2)/(bkgInt**2 + (sigInt+bkgInt)*sigmaB**2)) - bkgInt**2/sigmaB**2 *log(1 + sigmaB**2*sigInt/(bkgInt*(bkgInt+sigmaB**2)))))**0.5 
+#    print("Significance is about %f sigmas."%(significance))
 
 c.Update()
 
-#minX = .45
-#maxX = .8
+minX = .45
+maxX = .8
 ##trying to add pull frame underneath! #####
-#pullframe = rrv.frame(ROOT.RooFit.Name(f"pullframe"), ROOT.RooFit.Title(" "))
-##pullframe.GetYaxis().SetRangeUser(-3,7)
-#pullh = frame.pullHist("Data", "Bkg")
-##print("pullh: " + str(pullh)) 
-#residh = frame.residHist("Data", "Bkg")
-#binning = rrv.getBinning()
-#for i in range(1, h.GetNbinsX()+1):
-#    rrv.setRange("range_for_bin", binning.binLow(i), binning.binHigh(i))
-#    normset = ROOT.RooFit.NormSet(rrv)
-#    bkgPdfIntegral = myfitter.bkg().createIntegral(ROOT.RooArgSet(rrv), "range_for_bin")
-#    #print("bkgPdfIntegral: " + str(bkgPdfIntegral)) 
-#    pset = ROOT.RooArgList()
-#    pset.add(bkgPdfIntegral) 
-#    bkgYield = ROOT.RooProduct("bkgYield", "bkgYield", pset)
-#    fitError = bkgYield.getPropagatedError(fitres)
-#    old_sigma_i = residh.GetPointY(i)/pullh.GetPointY(i)
-#    new_sigma_i = (old_sigma_i**2 - fitError**2)**(1/2)
-#    residh.SetPointY(i, residh.GetPointY(i)/new_sigma_i)
-#    residh.SetPointEYhigh(i, residh.GetErrorYhigh(i)/new_sigma_i)
-#    residh.SetPointEYlow(i, residh.GetErrorYlow(i)/new_sigma_i)
-#pullframe.addPlotable(residh, 'P')
-##pullframe.GetYaxis().SetRangeUser(-5,8)
-#pullframe.GetXaxis().SetTitle("m_{#mu#muee} (GeV)")
-#pullframe.GetYaxis().SetTitle("Pull") 
-###pullframe.addPlotable(pullh, 'P')
-#line = ROOT.TLine(minX, 0, maxX, 0)
-#line.SetLineColor(ROOT.kGray)
-#pullframe.addObject(line)
-#c1 = cmsstyle.get_fit_canvas(frame, pullframe)
-#pad1 = c1.FindObject("pad1")
-#pad1.cd()
-#pullframe.Draw("same")
-#for i,scale in enumerate(MC_scales):
-#    hMC[i].Draw("hist same")
-#hBkg.Draw("hist same")
-#leg.Draw("same")
-#c1.Update()
-#############################3
+pullframe = rrv.frame(ROOT.RooFit.Name(f"pullframe"), ROOT.RooFit.Title(" "))
+pullh = frame.pullHist("Data", "Tot") #Bkg")
+#print("pullh: " + str(pullh)) 
+residh = frame.residHist("Data", "Tot") #Bkg")
+binning = rrv.getBinning()
+for i in range(1, h.GetNbinsX()+1):
+    rrv.setRange("range_for_bin", binning.binLow(i), binning.binHigh(i))
+    normset = ROOT.RooFit.NormSet(rrv)
+    bkgPdfIntegral = myfitter.bkg().createIntegral(ROOT.RooArgSet(rrv), "range_for_bin")
+    #print("bkgPdfIntegral: " + str(bkgPdfIntegral)) 
+    pset = ROOT.RooArgList()
+    pset.add(bkgPdfIntegral) 
+    bkgYield = ROOT.RooProduct("bkgYield", "bkgYield", pset)
+    fitError = bkgYield.getPropagatedError(fitres)
+    if pullh.GetPointY(i) == 0:
+        old_sigma_i = 1.0
+    else:
+        old_sigma_i = residh.GetPointY(i)/pullh.GetPointY(i)
+    new_sigma_i = (old_sigma_i**2 - fitError**2)**(1/2)
+    residh.SetPointY(i, residh.GetPointY(i)/new_sigma_i)
+    residh.SetPointEYhigh(i, residh.GetErrorYhigh(i)/new_sigma_i)
+    residh.SetPointEYlow(i, residh.GetErrorYlow(i)/new_sigma_i)
+pullframe.addPlotable(residh, 'P')
+pullframe.GetXaxis().SetTitle("m_{#mu#muee} (GeV)")
+pullframe.GetYaxis().SetTitle("Pull") 
+line = ROOT.TLine(minX, 0, maxX, 0)
+line.SetLineColor(ROOT.kGray)
+pullframe.addObject(line)
+c1 = cmsstyle.get_fit_canvas(frame, pullframe)
+pad1 = c1.FindObject("pad1")
+pad1.cd()
+if compare_sigMC:
+    for i,scale in enumerate(MC_scales):
+        hMC[i].Draw("hist same")
+if compare_bkgMC:
+    hBkg.Draw("hist same")
+leg.Draw("same")
+pav.Draw("same")
+c1.Update()
+############################3
 
 if compare_sigMC and compare_bkgMC:
     print("MC integrals:\nSignal: %f\nBackground: %f"%(mc_sig_int, mc_bkg_int)) 
@@ -976,12 +920,24 @@ input("h")
 
 #save the canvas!
 canfname = "twoMu2EDataFit"
+if useLowPt:
+    canfname += "_lowPt"
 if new_wt:
     canfname += "_newWt%s"%(str(new_wt) if new_wt > 1 else "")
+if "Modmu" in distname:
+    canfname += "_modmu%d"%(int(distname[-1])) 
+elif "hMMod" in distname:
+    canfname += "_mod%d"%(int(distname[-1])) 
+if req_muID:
+    canfname += "_muID"
 if req_elID == 3:
     canfname += "_tightID"
 elif req_elID == 0:
     canfname += "_NoElID"
+if not do_pileup:
+    canfname += "_NoPU"
+if do_trigCor:
+    canfname += "_trigCor"
 if fitsize < 0:
     canfname += "_smallRange"
 elif fitsize > 0:
@@ -989,11 +945,14 @@ elif fitsize > 0:
 if rebin != 5:
     canfname += "_%dMeVbins"%rebin
 canfname += "_%s_%s%sBkg"%(sigMod, comBkgMod, resBkgMod)
-c.SaveAs("AN_Figures/" + canfname + ".pdf") 
+#c.SaveAs("AN_Figures/" + canfname + ".pdf") 
+c1.SaveAs("AN_Figures/" + canfname + ".pdf") 
 
+print("opening outf.")
 #now write the results to a txt file so can look at it later
 outf = open("fit_results/" + canfname + ".txt", "w") 
 params = fitres.floatParsFinal()
+print("params: " + str(params)) 
 for i in range(len(params)):
     par = params.at(i).getVal()
     err = params.at(i).getError()
@@ -1003,6 +962,7 @@ outf.write("***chi2/ndf of the fit: %f***\n"%chi2_SB)
 outf.write("ndf = %d (nfitbins=%d, nparam=%d) --> total chi2 = %f\n"%(ndf, nfitbins, nparam, chi2))
 if sigMod != '':
     outf.write("***Fitted signal events: %f +/- %f (stat.)***\n"%(nsig_full, nsigErr_full))
+outf.close()
 
 ##now do the fit again, but this time without the signal model.
 ## so make the sig_model a Pol1, but then make it 0.

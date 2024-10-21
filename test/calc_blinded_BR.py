@@ -4,9 +4,6 @@ from array import array
 sys.path.insert(1, "tm_analysis/analysis/python/utils")
 import blinding
 
-#calc relative BR (B2mu2e/B2mu) instead of absolute? (uncertainties cancel then)
-relative = False
-
 year = 2022
 
 if year == 2022:
@@ -15,6 +12,7 @@ elif year == 2023:
     lumi = 28.89 #fb^-1 (all 2023)
 
 selection = "nominal"
+#selection = "lowPt"
 #selection = "nomuID"
 #selection = "loose"
 #selection = "tight"
@@ -22,12 +20,15 @@ selection = "nominal"
 
 #2mu sig model (nominal: DG, Cheb4)
 refMod = "DG" 
-refBkg = "Cheb4"
-
 #refMod = "Voigtian"
-#refBkg = "Cheb3"
+
+#refBkg = "Cheb2"
+refBkg = "Cheb3"
+#refBkg = "Cheb4"
 
 new_wt = 1 #True
+
+B2mu = 5.8e-6
 
 if year == 2022:
     #Get 2mu2e acceptance!
@@ -65,9 +66,41 @@ if year == 2022:
         #Err2mu2e = 14.05
         #WITH triggercorrections: 136.664236 +/- 14.085243 (stat.)
         #Nominal frfrfrfrfrfrfr
-        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3888.root")
-        N2mu2e = 136.66
-        Err2mu2e = 14.09 
+        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3888.root")
+        #N2mu2e = 136.66
+        #Err2mu2e = 14.09 
+        #one trigger path only 135.832195 +/- 14.135855
+        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38110.root")
+        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38110.root")
+        #N2mu2e = 135.83
+        #Err2mu2e = 14.14
+        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38130p474.root")
+        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38130p474.root")
+        #N2mu2e = 130.78
+        #Err2mu2e = 13.62
+        #124.148028 +/- 13.380399
+        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38137p478.root")
+        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
+        #N2mu2e = 123.64
+        #Err2mu2e = 13.39
+        #N2mu2e = 128.36
+        #Err2mu2e = 13.54
+        #129.032638 +/- 13.570899
+        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38164p4733.root")
+        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
+        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38169p4735.root")
+        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38169p4735.root")
+        #N2mu2e = 129.03
+        #Err2mu2e = 13.57
+        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38174p4740.root")
+        f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38171p4737.root")
+        N2mu2e = 124.23
+        Err2mu2e = 13.38
+    elif selection == "lowPt":
+        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38166p4734.root")
+        f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
+        N2mu2e = 789.45
+        Err2mu2e = 61.26
     elif selection == "loose":
         f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3838.root")
         N2mu2e = 766.5
@@ -76,10 +109,21 @@ if year == 2022:
         #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3871.root")
         #PU corex
         if new_wt:
-            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3875.root")
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3875.root")
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38122.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38122.root")
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38138p479.root")
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38147p4717.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38138p479.root")
+            f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38139p4710.root")
             #38.227636 +/- 12.546614
-            N2mu2e = 38.23
-            Err2mu2e = 12.55
+            #N2mu2e = 38.23
+            #Err2mu2e = 12.55
+            #N2mu2e = 26.30
+            #Err2mu2e = 5.75
+            #25.546802 +/- 5.865937
+            N2mu2e = 25.45
+            Err2mu2e = 5.88
         else:
             f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3872.root")
             #N2mu2e = 36.05
@@ -97,8 +141,16 @@ elif year == 2023:
     Err2mu2e = 0
 
 ptGen2mu2e1 = f2mu2e.Get("hpTGenAll")
+ptGen2mu2e1.SetName("ptGen2mu2e")
 #ptGen2mu2e.Rebin(5)
-ptAcc2mu2e1 = f2mu2e.Get("hpTGenAccmmelel")
+#ptAcc2mu2e1 = f2mu2e.Get("hpTGenAccmmelel")
+if selection == "lowPt":
+    ptAcc2mu2e1 = f2mu2e.Get("hpTGenAccdRmmlplp")
+else:
+    ptAcc2mu2e1 = f2mu2e.Get("hpTGenAccdRmmelel")
+ptGen2mu1 = f2mu.Get("hpTGenAll")
+#ptAcc2mu1 = f2mu.Get("hpTGenAccmumu") 
+ptAcc2mu1 = f2mu.Get("hpTGenAccdRmumu") 
 #ptAcc2mu2e = f2mu2e.Get("hpTGenAccmmlplp")
 #bins should be 1 GeV wide!!!
 #ptAcc2mu2e.Rebin(5)
@@ -116,11 +168,17 @@ print("new pT bins: " + str(newbins))
 newnptbins = len(newbins)-1
 ptGen2mu2e = ROOT.TH1F("ptGen2mu2e", "ptGen2mu2e", newnptbins, array('d', newbins)) 
 ptAcc2mu2e = ROOT.TH1F("ptAcc2mu2e", "ptAcc2mu2e", newnptbins, array('d', newbins)) 
+ptGen2mu = ROOT.TH1F("ptGen2mu", "ptGen2mu", newnptbins, array('d', newbins)) 
+ptAcc2mu = ROOT.TH1F("ptAcc2mu", "ptAcc2mu", newnptbins, array('d', newbins)) 
 for i in range(ptAcc2mu2e1.GetNbinsX()):
     ptGen2mu2e.Fill(ptGen2mu2e1.GetBinCenter(i), ptGen2mu2e1.GetBinContent(i)) 
     ptAcc2mu2e.Fill(ptAcc2mu2e1.GetBinCenter(i), ptAcc2mu2e1.GetBinContent(i)) 
+    ptGen2mu.Fill(ptGen2mu1.GetBinCenter(i), ptGen2mu1.GetBinContent(i)) 
+    ptAcc2mu.Fill(ptAcc2mu1.GetBinCenter(i), ptAcc2mu1.GetBinContent(i)) 
 ptAcc2mu2e.Sumw2()
 ptAcc2mu2e.Divide(ptGen2mu2e)
+ptAcc2mu.Sumw2()
+ptAcc2mu.Divide(ptGen2mu)
 ##if selection == "nominal" :
 #if True:
 #    if refMod == "Voigtian" and refBkg == "Cheb3":
@@ -131,28 +189,34 @@ ptAcc2mu2e.Divide(ptGen2mu2e)
 #    xsfname = "xsec2022.root"
 if selection == "nomuID":
     xsfname = "xsec2022_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
-elif selection == "nominal":
+elif selection == "nominal" or selection == "lowPt":
     xsfname = "xsec2022_muID_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
+    #xsfname = "xsec2022.root"
+elif selection == "tight":
+    xsfname = "xsec2022_tightMuID_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
 xsecf = ROOT.TFile.Open(xsfname)
 xsec = xsecf.Get("hXsecCor") 
 
 #use the acceptance from the sigMC file, NOT from the xsec
 acc2mu2e = ptAcc2mu2e
+acc2mu = ptAcc2mu
 
 c1,c2 = blinding.get_blind_coeffs()
+
+#get N2mu from the raw yields
+hN2mu = xsecf.Get("hRawYields")
 
 #denominator is a sum over all pT bins
 denom = 0.0
 for i in range(1, xsec.GetNbinsX()):
-    if relative:
-        denom += (c1*c2*acc2mu2e.GetBinContent(i)/acc2mu.GetBinContent(i))
-    else:
-        denom += (c1*xsec.GetBinContent(i)*lumi*c2*acc2mu2e.GetBinContent(i))
+    if acc2mu.GetBinContent(i) == 0:
+        continue
+    denom += (c1*c2*hN2mu.GetBinContent(i)*acc2mu2e.GetBinContent(i)/acc2mu.GetBinContent(i)) 
 
 #multiply by 1e-6 to make the number more meaningful
-br = N2mu2e / (denom*10**-6)
+br = N2mu2e / (denom*10**-6) * B2mu
 #just statistical uncertainty for now!!
 #unct = N2mu2e**0.5 / (denom*10**-6) 
-unct = Err2mu2e / (denom*10**-6) 
+unct = Err2mu2e / (denom*10**-6) * B2mu
 
 print("%s %s (2mu fit: %s, %s) Blinded BR: (%f +/- %f (stat))e-6"%(selection, "with new weights" if new_wt else "", refMod, refBkg, br, unct)) 
