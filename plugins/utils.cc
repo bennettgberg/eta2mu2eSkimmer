@@ -156,23 +156,30 @@ NtupleContainer addMuon(NtupleContainer nt, pat::Muon iMuon1, reco::Vertex pv) {
 }
 
 void computeVertex(pat::Muon & coll_1, pat::Muon & coll_2, std::string type, edm::ESHandle<TransientTrackBuilder> theB, KalmanVertexFitter kvf, NtupleContainer & nt) {
-  reco::Track part_1, part_2;
-  part_1 = *(coll_1.bestTrack());
-  part_2 = *(coll_2.bestTrack());
-  //first build the transient vertex and transient tracks.
-  float dr = -9999;
-  TransientVertex tv;
+    reco::Track part_1, part_2;
+    part_1 = *(coll_1.bestTrack());
+    part_2 = *(coll_2.bestTrack());
+    //first build the transient vertex and transient tracks.
+    float dr = -9999;
+    TransientVertex tv;
 
-  vector<reco::TransientTrack> transient_tracks{};
-  transient_tracks.push_back(theB->build(fix_track(&part_1)));
-  transient_tracks.push_back(theB->build(fix_track(&part_2)));
-  tv = kvf.vertex(transient_tracks);
-  float probVtx = calcVertices(transient_tracks, tv, type, nt);
-  //if ( probVtx > 0.1 ) {
-  if ( probVtx > 0.0 ) {
-    dr = reco::deltaR(part_1, part_2);
-    nt.mumuVtxDr_.push_back(dr);
-  }
+    vector<reco::TransientTrack> transient_tracks{};
+    transient_tracks.push_back(theB->build(fix_track(&part_1)));
+    transient_tracks.push_back(theB->build(fix_track(&part_2)));
+    float probVtx;
+    try {
+        tv = kvf.vertex(transient_tracks);
+        probVtx = calcVertices(transient_tracks, tv, type, nt);
+    }
+    catch( VertexException & ex) {
+        std::cout << "VertexException caught" << std::endl;
+        probVtx = 0.0;
+    }
+    //if ( probVtx > 0.1 ) {
+    if ( probVtx > 0.0 ) {
+      dr = reco::deltaR(part_1, part_2);
+      nt.mumuVtxDr_.push_back(dr);
+    }
 }
 
 
@@ -204,7 +211,13 @@ VertexTracks computeVertices(vector<pat::Muon> & coll_1, vector<pat::Muon> & col
             vector<reco::TransientTrack> transient_tracks{};
             transient_tracks.push_back(theB->build(fix_track(&part_i)));
             transient_tracks.push_back(theB->build(fix_track(&part_j)));
-            tv = kvf.vertex(transient_tracks);
+            try {
+                tv = kvf.vertex(transient_tracks);
+            }
+            catch( VertexException& ex) {
+                std::cout << "VertexException caught" << std::endl;
+                continue;
+            }
             float probVtx = calcVertices(transient_tracks, tv, type, nt);
             //only fill the ntuple if the (chi2) prob is > .1
             // the rest of the ntuple info is filled in the calcVertices function (above)
@@ -276,7 +289,13 @@ void computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> & coll_2,
             vector<reco::TransientTrack> transient_tracks{};
             transient_tracks.push_back(theB->build(fix_track(&part_i)));
             transient_tracks.push_back(theB->build(fix_track(&part_j)));
-            tv = kvf.vertex(transient_tracks);
+            try {
+                tv = kvf.vertex(transient_tracks);
+            } 
+            catch( VertexException& ex) {
+                std::cout << "VertexException caught" << std::endl;
+                continue;
+            }
             float probVtx = calcVertices(transient_tracks, tv, type, nt);
             //only fill the ntuple if the (chi2) prob is > .1
             // the rest of the ntuple info is filled in the calcVertices function (above)
@@ -331,7 +350,13 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                 vector<reco::TransientTrack> transient_tracks{};
                 transient_tracks.push_back(theB->build(part_i));
                 transient_tracks.push_back(theB->build(part_j));
-                tv = kvf.vertex(transient_tracks);
+                try {
+                    tv = kvf.vertex(transient_tracks);
+                }
+                catch( VertexException& ex) {
+                    std::cout << "VertexException caught" << std::endl;
+                    continue;
+                }
                 float probVtx = calcVertices(transient_tracks, tv, type, nt);
                 if ( probVtx > 0.0 ) {
                 //if ( probVtx > 0.1 ) {
@@ -664,7 +689,13 @@ VertexTracks computeVertices(vector<reco::Track> & coll_1, vector<reco::Track> &
                     transient_tracks.push_back(theB->build(fix_track(&part_k)));
                     transient_tracks.push_back(theB->build(fix_track(&part_l)));
 
-                    tv = kvf.vertex(transient_tracks);
+                    try {
+                        tv = kvf.vertex(transient_tracks);
+                    }
+                    catch( VertexException & ex) {
+                        std::cout << "VertexException caught" << std::endl;
+                        continue;
+                    }
                     float probVtx = calcVertices(transient_tracks, tv, type, nt);
                     //choose arbitrary very loose cutoff of prob .1
                     //if ( probVtx > 0.1 ) {
@@ -866,7 +897,13 @@ void computeVertices(vector<reco::GsfTrackRef> & coll_1, vector<reco::GsfTrackRe
                         transient_tracks.push_back(theB->build(fix_track(&part_k)));
                         transient_tracks.push_back(theB->build(fix_track(&part_l)));
 
-                        tv = kvf.vertex(transient_tracks);
+                        try {
+                            tv = kvf.vertex(transient_tracks);
+                        }
+                        catch( VertexException & ex) {
+                            std::cout << "VertexException caught" << std::endl;
+                            continue;
+                        }
                         float probVtx = calcVertices(transient_tracks, tv, type, nt);
                         //choose arbitrary very loose cutoff of prob .1
                         //if ( probVtx > 0.1 ) {

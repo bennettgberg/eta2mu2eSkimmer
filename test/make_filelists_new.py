@@ -20,7 +20,7 @@ for let in lets:
         if not os.path.exists(dpath):
             continue
         while True:
-            fpath = "%s/ParkingDoubleMuonLowMass%d%s_%s.jdl"%(dpath, num, let, str(nfiles+1).zfill(3))
+            fpath = "%s/ParkingDoubleMuonLowMass%d%s_%s.jdl"%(dpath, num, let if not (let == 'Dv2' and num == 0) else 'D', str(nfiles+1).zfill(3))
             if not os.path.exists(fpath):
                 break
 
