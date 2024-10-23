@@ -27,12 +27,14 @@ def beginBatchScriptTcsh(baseFileName) :
     outLines = ['#!/bin/tcsh\n']
     outLines.append("source /cvmfs/cms.cern.ch/cmsset_default.csh\n")
     outLines.append("setenv SCRAM_ARCH slc7_amd64_gcc10\n")
-    cmssw_release = "CMSSW_12_4_13"
+    cmssw_release = "CMSSW_13_3_0"
     outLines.append("scramv1 project CMSSW %s\n"%(cmssw_release))
     outLines.append("cd %s/src\n"%(cmssw_release))
     outLines.append("eval `scramv1 runtime -csh`\n")
     #outLines.append("git clone https://github.com/cms-tau-pog/TauIDSFs TauPOG/TauIDSFs\n")
     outLines.append("git clone https://github.com/bennettgberg/eta2mu2eSkimmer eta2mu2e/eta2mu2eSkimmer\n")
+    outLines.append("git cms-init\n") 
+    outLines.append("git cms-addpkg RecoEgamma/ElectronIdentification\n") 
     outLines.append("cd ${_CONDOR_SCRATCH_DIR}/%s/src/eta2mu2e/eta2mu2eSkimmer/plugins\n"%(cmssw_release))
     outLines.append("cp ${_CONDOR_SCRATCH_DIR}/* .\n")
     outLines.append("scram b -j 4\n")
@@ -178,8 +180,8 @@ for nFile in range(0, len(dataset),mjobs) :
     outLines.append("hadd -f -k all_{0:s}_{1:03d}.root {0:s}*root *weights\n".format(args.nickName,nFile+1))
     #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/eta_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
     if grpeos:
-        outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
-        #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}_L1/{0:s}\n".format(args.nickName, nFile+1, era))
+        #outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
+        outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/lpcdisptau/eta2mu2e/BParking_{2:s}_newEMVA/{0:s}\n".format(args.nickName, nFile+1, era))
     else:
         outLines.append("xrdcp -f all_{0:s}_{1:03d}.root root://cmseos.fnal.gov//store/user/bgreenbe/BParking_{2:s}/{0:s}\n".format(args.nickName, nFile+1, era))
     outLines.append("rm *.pyc\nrm *.so\nrm *.pcm\nrm *cc.d\n")

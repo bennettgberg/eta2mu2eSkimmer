@@ -1,4 +1,4 @@
-#python 2 idk where it's at
+#python 3 idk where it's at
 
 #this script will take in the sample names from the file "bpgSamples.csv", and set up a different directory for each of them.
 #  (by calling makeCondorsam.py for each sample name/location).
@@ -30,7 +30,8 @@ def main():
     doSyst = False
 
     #name for parent directory for all the new directories
-    parent = "BParking_{}".format(year)
+    #parent = "BParking_{}".format(year)
+    parent = "BParking_{}_newEMVA".format(year)
         
     inname = "bpgSamples.csv"
     infile = open(inname, "r")
@@ -63,8 +64,8 @@ def main():
         #also make a directory on eos for it.
         if not lxplus:
             if grpeos:
-                eosp = "/store/group/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name)
-                #eosp = "/store/group/lpcdisptau/eta2mu2e/BParking_%d_L1/%s"%(year, samp_name)
+                #eosp = "/store/group/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name)
+                eosp = "/store/group/lpcdisptau/eta2mu2e/BParking_%d_newEMVA/%s"%(year, samp_name)
                 eos_path = "/eos/uscms%s"%(eosp)
             else:
                 eosp = "/store/user/bgreenbe/BParking_%d"%(year)
@@ -88,7 +89,8 @@ def main():
             #is lxplus
             #can't really tell if the directory exists easily, so just make it again (even if it's an 'already exists' error, doesn't hurt anyone)
             if grpeos:
-                os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
+                #os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d/%s"%(year, samp_name))
+                os.system("eos root://cmseos.fnal.gov mkdir /store/user/lpcdisptau/eta2mu2e/BParking_%d_newEMVA/%s"%(year, samp_name))
             else:
                 os.system("eos root://cmseos.fnal.gov mkdir /store/user/bgreenbe/BParking_%d/%s"%(year, samp_name))
             

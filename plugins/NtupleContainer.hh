@@ -15,7 +15,8 @@ public:
     //list of photonID names to save
     vector<std::string> photonIDs = {"mvaPhoID-RunIIFall17-v2-wp80", "mvaPhoID-RunIIFall17-v2-wp90" };
     //list of electron ID names to save
-    vector<std::string> electronIDs = {"mvaEleID-Fall17-noIso-V2-wp80", "mvaEleID-Fall17-noIso-V2-wp90", "mvaEleID-Fall17-noIso-V2-wpLoose" };
+    //vector<std::string> electronIDs = {"mvaEleID-Fall17-noIso-V2-wp80", "mvaEleID-Fall17-noIso-V2-wp90", "mvaEleID-Fall17-noIso-V2-wpLoose" };
+    vector<std::string> electronIDs = {"mvaEleID-RunIIIWinter22-noIso-V1-wp80", "mvaEleID-RunIIIWinter22-noIso-V1-wp90"};
     //separate list for low pT electrons
     vector<std::string> lowPtElectronIDs = {"ID", "ptbiased", "unbiased" };
     //remove from consideration for vertexing purposes any electron matched to an Onia converted photon? or nah?

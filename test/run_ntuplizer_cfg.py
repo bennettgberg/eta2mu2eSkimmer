@@ -1,5 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import FWCore.ParameterSet.VarParsing as VarParsing
+#from EgammaPostRecoTools.EgammaPostRecoTools import setupEgammaPostRecoSeq
+from EgammaPostRecoTools import *
 
 # setup 'analysis' options
 options = VarParsing.VarParsing('analysis')
@@ -124,6 +126,16 @@ dataFormat = DataFormat.MiniAOD
 switchOnVIDElectronIdProducer(process, dataFormat)
 switchOnVIDPhotonIdProducer(process, dataFormat)
 
+#NEW electron MVA variables
+setupEgammaPostRecoSeq(process,
+    runEnergyCorrections=False, #Just needed if you want to pick up the latest Scale&Smearing corrections. Otherwise, set to False
+    runVID=True,
+    era='2022-Prompt',
+    eleIDModules=[ 'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_RunIIIWinter22_iso_V1_cff',
+                   'RecoEgamma.ElectronIdentification.Identification.mvaElectronID_RunIIIWinter22_noIso_V1_cff',
+                   'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Winter22_122X_V1_cff']
+    )
+
 from eta2mu2e.eta2mu2eSkimmer.eta2mu2eAnalyzer_cfi import eta2mu2eAnalyzer
 process.ntuples = eta2mu2eAnalyzer.clone(
     isData = cms.bool(data),
@@ -134,7 +146,7 @@ process.ntuples = eta2mu2eAnalyzer.clone(
 )
 
 process.commonSequence = cms.Sequence(
-    process.ntuples
+    process.egammaPostRecoSeq * process.ntuples
     )
 
 process.p = cms.Path(
