@@ -118,6 +118,8 @@ private:
 
     bool isData;
     bool useElTrig;
+    //true to save only events with at least one dimuon vertex
+    bool saveOnlyDimu;
     const std::string triggerProcessName_;
     const std::string l1triggerProcessName_;
 
@@ -184,6 +186,7 @@ private:
 eta2mu2eAnalyzer::eta2mu2eAnalyzer(const edm::ParameterSet& ps):
     isData(ps.getParameter<bool>("isData")),
     useElTrig(ps.getParameter<bool>("useElTrig")),
+    saveOnlyDimu(ps.getParameter<bool>("saveOnlyDimu")),
     triggerProcessName_(ps.getParameter<std::string>("triggerProcessName")),
     //l1Seeds_(consumes<std::vector<std::string>>(ps.getParameter<std::vector<std::string> >("l1Seeds"))),
     l1triggerProcessName_(ps.getParameter<std::string>("l1triggerProcessName")),
@@ -227,6 +230,7 @@ void eta2mu2eAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descript
     edm::ParameterSetDescription desc;
     desc.add<bool>("isData", 0);
     desc.add<bool>("useElTrig", 0);
+    desc.add<bool>("saveOnlyDimu", 0);
     desc.add<std::string>("triggerProcessName", "HLT");
     desc.add<std::string>("l1triggerProcessName", "RECO");
     desc.add<edm::InputTag>("muon_collection", edm::InputTag("slimmedMuons"));
@@ -524,7 +528,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
     //for Double-Electron trigger, save ONLY events with exactly 2 OS muons of invar mass .45 - .65 GeV
     //if(useElTrig && recoMuonHandle_->size() != 2) {
-    if(useElTrig && recoMuonHandle_->size() < 2) {
+    if(saveOnlyDimu && recoMuonHandle_->size() < 2) {
         return;
     }
     // Clear branches before filling
@@ -758,7 +762,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     for (size_t i = 0; i < recoMuonHandle_->size(); i++) {
         pat::MuonRef muonRef(recoMuonHandle_, i);
         //For DoubleMuon triggers, muon info will be added later, once we're sure this is a useful muon
-        if(useElTrig) {
+        if(saveOnlyDimu) {
             int8_t muID = muonRef->isLooseMuon() + 2*muonRef->isMediumMuon() + 4*muonRef->isTightMuon(pv);
             //std::cout << "i=" << (int)i << ", muID=" << (int)muID << std::endl;
             if(muID > 0) {
@@ -1231,7 +1235,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //computeKinematicVertices(elLowPtTracksP, elLowPtTracksN, "lplp", theB, kvf, nt);
 
     // MU-MU 
-    VertexTracks primVertTrx = computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt, pv, useElTrig);
+    VertexTracks primVertTrx = computeVertices(muonsP, muonsN, "mumu", theB, kvf, nt, pv, saveOnlyDimu);
     //save ONLY the muons that form good muon-muon vertices (otherwise will be too many)
     muonsN = primVertTrx.muonsN;
     muonsP = primVertTrx.muonsP;
@@ -1260,10 +1264,10 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //if( nt.recoNGoodMuon_ > 1 ) {
     //if( (!useElTrig && nt.recoNGoodMuon_ > 1) || (useElTrig && muonsP.size() >= 1 && muonsN.size() >= 1) ) {
     //TODO: uncomment the ABOVE and comment the BELOW to process bkgMC and make it faster-- but not good for calculating efficiencies!
-    if( (!useElTrig) || (useElTrig && muonsP.size() >= 1 && muonsN.size() >= 1) ) {
+    if( (!saveOnlyDimu) || (saveOnlyDimu && muonsP.size() >= 1 && muonsN.size() >= 1) ) {
         //for electron triggers, invar mass needs to be .45 to .65 GeV
         float m2mu = .55;
-        if(useElTrig) {
+        if(saveOnlyDimu) {
             TLorentzVector mu0;
             TLorentzVector mu1;
             //mu0.SetPtEtaPhiM(nt.recoMuonPt_[0], nt.recoMuonEta_[0], nt.recoMuonPhi_[0], mu_mass); 
@@ -1295,7 +1299,7 @@ void eta2mu2eAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& 
             if(mu0.Pt() > 20 && mu1.Pt() > 20 && m2mu > .45 && m2mu < .65) {
                 std::cout << "run " << nt.runNum_ << " event " << nt.eventNum_ << " muon pts: " << nt.recoMuonPt_[0] << ", " << nt.recoMuonPt_[1] << std::endl;
             }
-        } //end useElTrig block
+        } //end saveOnlyDimu block
         //this is always true for DoubleMuon trigger
         //if(m2mu > .45 && m2mu < .65) {
         //if(m2mu < 2.0) {
