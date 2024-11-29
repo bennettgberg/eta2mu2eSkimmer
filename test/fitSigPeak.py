@@ -13,17 +13,20 @@ incWtUnct = False
 #how many electrons to require elID: 0, 1, or 2 (both)? or 3 (meaning tightID WP80 req'd on both)
 req_elID = 2 
 
+#medium muID instead of just loose
+tightMu = False
+
 #require muon ID or nah?
 req_muID = True
 
 #include pileup corrections, or nah?
-do_pileup = True
+do_pileup = True 
 
 #include trigger corrections, or nah?
 do_trigCor = True
 
 #use LowPt electrons instead of regular??
-useLowPt = False #True
+useLowPt = False
 
 #include distinction b/t pre/post-EE?
 #incEE = True
@@ -38,7 +41,7 @@ useLowPt = False #True
 toyTrig = 0
 
 #use new weights found with DG/Cheb4 2mu fits?
-new_wt = 1 #True
+new_wt = 4 #4
 
 #use the modified muons instead of electrons?
 modmu = False
@@ -113,7 +116,7 @@ if year == 2022:
             sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38101.root"
         elif toyTrig == -2:
             sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38102.root"
-    elif req_elID == 2:
+    elif 1 == 1: # req_elID == 2:
         #nMiss==0, vProb>.5
         #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3826.root"
         #nMiss<=3, vProb>.1
@@ -130,7 +133,7 @@ if year == 2022:
         #muon pt,eta cuts too, and pileup corrections
         #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3860.root"
         #updated weights, nd stuff
-        if do_pileup:
+        if 0 == 0: #do_pileup:
             if new_wt == 1:
                 if req_muID:
                     if do_trigCor:
@@ -138,7 +141,6 @@ if year == 2022:
                             sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38106.root"
                         else:
                             if toyTrig == 0:
-                                #nominal frfrfrfrfr
                                 #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3888.root"
                                 #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38103.root"
                                 #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38110.root"
@@ -149,12 +151,19 @@ if year == 2022:
                                 #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38145p4715.root"
                                 if useLowPt:
                                     sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38166p4734.root"
+                                elif tightMu:
+                                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38176p4741.root"
                                 else:
                                     #cut electrons from transition b/t ECAL barrel and EC
                                     #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38164p4733.root"
                                     #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38172p4738.root"
                                     #with SFs
-                                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38174p4740.root"
+                                    #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38174p4740.root"
+                                    #with muon ID SFs too
+                                    #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38179p4743.root"
+                                    #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38216p4777.root"
+                                    #testing
+                                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38219p4779.root"
                                 #if incEE:
                                 #    #sigEEfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest472.root"
                                 #    #sigEEfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38131.root"
@@ -208,9 +217,30 @@ if year == 2022:
                     #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3878.root"
                     sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3882.root"
             elif new_wt == 2:
-                sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3879.root"
+                if req_muID and do_trigCor:
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38188p4750.root"
+                else:
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3879.root"
             elif new_wt == 3:
-                sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3880.root"
+                #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3880.root"
+                if do_pileup:
+                    #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38195p4757.root"
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38203p4763.root"
+                else:
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38193p4756.root"
+            elif new_wt == 4:
+                if useLowPt and req_elID == 0:
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38210p4772.root"
+                elif useLowPt and req_elID == 2:
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38212p4774.root"
+                elif req_elID == 0:
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38214p4776.root"
+                elif req_elID == 3:
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38223p4784.root"
+                else:
+                    #nominal frfrfrfrfrfrfrfrfrfrfrfrfrfrfrfrfr
+                    #sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38208p4769.root"
+                    sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38221p4782.root"
             else:
                 sigfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3866.root"
         else:
@@ -291,12 +321,14 @@ h.Draw()
 c = ROOT.TCanvas("cnew","cnew")
 c.cd()
 
-fitmin = .505 #.50  #.520 #
-fitmax = .585 #.60  #.575 #
+fitmin = .505 #.50 #.520 #
+fitmax = .585 #.60 #.575 #
 
 if mumu:
     #smod = "TripleGauss"
     smod = "DoubleGauss"
+elif req_elID == 0:
+    smod = "TripleGauss"
 else:
     smod = "DoubleGauss"
     #smod = "Voigtian"
@@ -344,7 +376,8 @@ elif req_elID == 2 or req_elID == 3:
     #sigModel = library.get_fit_function('CB_Gauss', rrv)
     elif smod == "CB_Gauss":
         nparam = 7
-        sigModel.set_params( mcb=library.Param(.548, .543, .553), acb=library.Param(-13.7, -20.0, -1.0), ncb=library.Param(200, 10, 500), scb=library.Param(.010, .005, .025), sg=library.Param(0.01, 0.001, 0.1), CB_frac=library.Param(0.5, 0.01, 0.99) )
+        #sigModel.set_params( mcb=library.Param(.548, .543, .553), acb=library.Param(-13.7, -20.0, -1.0), ncb=library.Param(200, 10, 500), scb=library.Param(.010, .005, .025), sg=library.Param(0.01, 0.001, 0.1), CB_frac=library.Param(0.5, 0.01, 0.99) )
+        sigModel.set_params( mcb=library.Param(.548, .543, .553), acb=library.Param(-4.7, -20.0, -1.0), ncb=library.ConstParam(10), scb=library.Param(.010, .002, .05), sg=library.Param(0.01, 0.001, 0.05), CB_frac=library.Param(0.7, 0.05, 0.95) )
     #if do_pileup:
     #    if rebin == 5 or rebin == 4:
     #        sigModel.set_params( mcb=library.Param(.548, .543, .553), acb=library.Param(-13.7, -20.0, -1.0), ncb=library.Param(200, 10, 500), scb=library.Param(.010, .005, .015), sg=library.Param(0.01, 0.001, 0.1), CB_frac=library.Param(0.5, 0.01, 0.99) )
@@ -375,10 +408,15 @@ elif req_elID == 1:
     nparam = 5
     sigModel.set_params( mg=library.Param(.548, .543, .553), sg1=library.Param(.01, .001, .1), sg2=library.Param(.005, .001, .05), sig1frac=library.Param(0.8, 0.1, 0.9) )
 elif req_elID == 0:
-    #TripleGaussian??
-    sigModel = library.get_fit_function('TripleGauss', rrv)
-    nparam = 7
-    sigModel.set_params( mg=library.Param(.548, .543, .553), sg1=library.Param(.03, .001, .8), sg2=library.Param(.007, .001, .7), sg3=library.Param(.001, .00001, .5), sig1frac=library.Param(0.8, 0.1, 0.9), sig2frac=library.Param(0.2, 0.01, 0.95) )
+    if smod == 'TripleGauss':
+        #TripleGaussian??
+        sigModel = library.get_fit_function('TripleGauss', rrv)
+        nparam = 7
+        sigModel.set_params( mg=library.Param(.548, .543, .553), sg1=library.Param(.03, .001, .8), sg2=library.Param(.007, .001, .7), sg3=library.Param(.001, .00001, .5), sig1frac=library.Param(0.8, 0.1, 0.9), sig2frac=library.Param(0.2, 0.01, 0.95) )
+    else:
+        sigModel = library.get_fit_function(smod, rrv)
+        nparam = 5
+        sigModel.set_params( mg=library.Param(.548, .543, .553), sg1=library.Param(.03, .001, .18), sg2=library.Param(.007, .001, .2), sig1frac=library.Param(0.8, 0.05, 0.95) )
 
 ##sigModel.set_params( mcb=library.Param(.548, .543, .553), acb=library.Param(-4.5, -6, -0.1), ncb=library.Param(40, .1, 400), scb=library.Param(.0195, .01, .05) )
 ##Voigtian?
@@ -468,6 +506,8 @@ if req_muID:
     outfname += "_reqMuID"
 if req_elID != 2:
     outfname += "_req%d"%req_elID
+if tightMu:
+    outfname += "_tightMu"
 if not do_pileup:
     outfname += "_noPU"
 if do_trigCor:
@@ -488,6 +528,7 @@ for i in range(len(params)):
     err = params.at(i).getError()
     nam = params.at(i).GetName()
     outf.write("%s\t%f\t%f\n"%(nam, par, err)) 
+    print("%s\t%f\t%f\n"%(nam, par, err)) 
 print("%s written."%outfname) 
 outf.close()
 
@@ -505,6 +546,8 @@ if req_muID:
     cname += "muID_"
 if req_elID == 3:
     cname += "tightId_"
+if tightMu :
+    cname += "tightMu_"
 elif req_elID == 0:
     cname += "NoElID_"
 if not do_pileup:

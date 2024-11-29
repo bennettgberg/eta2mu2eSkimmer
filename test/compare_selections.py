@@ -63,6 +63,7 @@ hNoCuts.GetYaxis().SetTitle("Events / %s GeV"%binsize)
 
 c = ROOT.TCanvas()
 c.cd()
+hNoCuts.SetStats(ROOT.kFALSE)
 if sig:
     hNoCuts.Draw("hist")
     hBasicCuts.Draw("hist same")

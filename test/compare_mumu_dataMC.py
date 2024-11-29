@@ -4,9 +4,9 @@ import ROOT
 #incEE = True
 
 #compare pt instead of invariant mass?
-compt = False
+compt = False 
 #subtract the sidebands instead of showing everything added together?
-subtract = False
+subtract = False      
 
 #use signal MC instead of mumu
 sig = False
@@ -25,7 +25,8 @@ sig = False
 #fdata = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38126_ALL.root")
 #NOMINAL
 #fdata = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38130_ALL.root")
-fdata = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4733_ALL.root")
+#fdata = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4733_ALL.root")
+fdata = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4753_ALL.root")
 #TIGHTTTTTTTTTTTT
 #fdata = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38139_ALL.root")
 #fdata = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38130_ALL.root")
@@ -70,8 +71,14 @@ if sig:
 else:
     #tighttt
     #fmc = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38139p4710.root")
+    #no shift?
+    #fmc = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
     #nominal
-    fmc = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38145p4715.root")
+    #fmc = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38145p4715.root")
+    #w all corrections incl PU
+    fmc = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38195p4757.root")
+    #muon SFs, incl trigger corrections...
+    #fmc = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38183p4745.root")
     #toy trig 0
     #fmc = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38149p4719.root")
     #toy trig -5
@@ -98,7 +105,8 @@ else:
 #miny = 460000
 #miny = 340000
 #miny = 337000
-miny = 321000
+#miny = 321000
+miny = 434000
 #miny = 600
 
 c1 = ROOT.TCanvas()
@@ -138,7 +146,9 @@ if compt:
     hmc.Print()
 else:
     hmc = fmc.Get("hMmumu")
+    #hmc = fmc.Get("hMTTOCUpmumu")
     #hmc = fmc.Get("hMModmu3")
+    #hmc.Scale(1.0/0.943) #shouldn't apply trigger correction twice!
 hmc.SetName("hmc")
 #if incEE:
 #    if compt:

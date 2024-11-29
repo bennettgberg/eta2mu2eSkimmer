@@ -9,17 +9,20 @@ req_elID = 2
 #require muon ID or nah?
 req_muID = True
 
+#medium muID instead of just loose?
+tightMu = False
+
 #cut out .04 < M_ee < .09, or nah?
 cut_mee = False
 
 #include pileup corrections or nah?
-do_pileup = True
+do_pileup = True  
 
 #include trigger efficiency corrections or nah?
 do_trigCor = True
 
 #use new weights found with DG/Cheb4 2mu fits?
-new_wt = 1 #True
+new_wt = 4
 
 #use LowPtElectrons instead of regular??
 useLowPt = False
@@ -42,7 +45,7 @@ if incWtUnct:
     distnameUp = "hMUpmmelel"
     distnameDn = "hMDnmmelel"
 
-if req_elID == 2:
+if 1 == 1: #req_elID == 2:
     #bkgfile = "bparking_bkgMCtest31.root"
     #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3826.root"
     #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3827.root"
@@ -57,11 +60,10 @@ if req_elID == 2:
     #muon pt, eta cuts, and pileup corrections
     #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3860.root"
     #new weights
-    if do_pileup:
+    if 0 == 0: #do_pileup:
         if new_wt == 1:
             if req_muID:
                 if do_trigCor:
-                    #nominal frfrfrfrfrfr
                     #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3888.root"
                     #only one trigger bit instead of 6; also include trigger eff correction
                     #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38110.root"
@@ -72,11 +74,16 @@ if req_elID == 2:
                     #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38145.root"
                     if useLowPt:
                         bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38167.root"
+                    elif tightMu:
+                        bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38177.root"
                     else:
                         #cut transition electrons, ID+reco SFs
                         #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38165.root"
                         #new SFs
-                        bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38175.root"
+                        #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38175.root"
+                        #muon ID SFs too
+                        #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38180.root"
+                        bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38216.root"
                 else:
                     #medium ID
                     #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3883.root"
@@ -90,9 +97,30 @@ if req_elID == 2:
                 #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3878.root"
                 bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3882.root"
         elif new_wt == 2:
-            bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3879.root"
+            if req_muID and do_trigCor:
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38189.root"
+            else:
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3879.root"
         elif new_wt == 3:
-            bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3880.root"
+            #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3880.root"
+            if do_pileup:
+                #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38196.root"
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38204.root"
+            else:
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38194.root"
+        elif new_wt == 4:
+            if useLowPt and req_elID == 0:
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38210.root"
+            elif useLowPt and req_elID == 2:
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38212.root"
+            elif req_elID == 0:
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38214.root"
+            elif req_elID == 3:
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38223.root"
+            else:
+                #nominal frfrfrfrfrfrfrfrfrfrfrfrfrfr
+                #bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38208.root"
+                bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38221.root"
         else:
             bkgfile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3866.root"
     else:
@@ -130,7 +158,7 @@ print("bkgfile: %s"%bkgfile)
 f = ROOT.TFile.Open(bkgfile)
 h = f.Get(distname)
 
-rebin = 5 #4 #6
+rebin = 5 #4 #6 #
 
 h.Rebin(rebin)
 
@@ -158,8 +186,10 @@ if incWtUnct:
 
 ##temporary fix for 2022 lumi only
 ##if req_elID == 2 or req_elID == 1:
-if "38145" in bkgfile:
+#if "38145" in bkgfile:
 ##    h.Scale(38.48/(38.48+28.89)) 
+#scale the bkgMC for the whole year 2022 rather than just postEE
+if new_wt > 3:
     h.Scale((28.25+9.76)/28.25)
 
 h.Draw()
@@ -272,6 +302,8 @@ if req_muID:
     outfname += "_reqMuID"
 if req_elID != 2:
     outfname += "_req%d"%req_elID
+if tightMu:
+    outfname += "_tightMu"
 if not do_pileup:
     outfname += "_noPU"
 if do_trigCor:
@@ -309,6 +341,8 @@ if req_elID == 3:
     cname += "tightId_"
 elif req_elID == 0:
     cname += "NoElID_"
+if tightMu:
+    cname += "tightMu_"
 if not do_pileup:
     cname += "NoPU_"
 if do_trigCor:

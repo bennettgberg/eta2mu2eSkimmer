@@ -21,9 +21,11 @@ hsigTrig.SetName("hsigTrig")
 
 #denominator, numerator come from different files for data
 #fdataall = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/trigEff/trigEff_ALL2022.root") 
-fdataall = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/trigEff_2GeVmaxFR/trigEffD_All2022.root") 
+#fdataall = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/trigEff_2GeVmaxFR/trigEffD_All2022.root") 
+fdataall = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/trigEff/trigEffD_All2022.root") 
 #fdataone = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/trigEff/trigEff0_ALL2022.root") 
-fdataone = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/trigEff_2GeVmaxFR/trigEff0D_0_2022.root") 
+#fdataone = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/trigEff_2GeVmaxFR/trigEff0D_0_2022.root") 
+fdataone = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/trigEff/trigEff0D_0_2022.root") 
 #hdataAll = fdataone.Get("hsubVdRAll") 
 if region == 0 or region == 1:
     hdataAll = fdataone.Get("hsubVdRAllCenter") 

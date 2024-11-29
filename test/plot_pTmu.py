@@ -2,8 +2,10 @@ import ROOT
 
 inc_el = True
 
-fsig = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3876.root")
-fref = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3875.root")
+#fsig = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3876.root")
+#fref = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3875.root")
+fsig = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38137p478.root")
+fref = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
 
 c = ROOT.TCanvas()
 
@@ -15,7 +17,7 @@ hsig.Rebin(5)
 hsig.SetLineColor(ROOT.kBlack)
 hsig.SetLineWidth(2)
 hsig.GetXaxis().SetTitle("Reconstructed p_{T} (GeV)")
-hsig.GetYaxis().SetTitle("Weighted events / GeV")
+hsig.GetYaxis().SetTitle("Normalized events")
 hsig.SetStats(ROOT.kFALSE)
 
 dist = "hpTMumumu"

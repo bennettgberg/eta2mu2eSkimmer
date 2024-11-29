@@ -20,11 +20,13 @@ reject_etamumu = False
 #set this to true to reject any event that has a valid eta->mumugamma (.52 to .58 GeV invar. mass)
 reject_mmg = False
 #require the conversion veto and nMissingHits <= 3 on electrons?
-basic_cuts = True
+basic_cuts = False #True
 #require electron_ID?
-require_elID = True 
+require_elID = False
+#require that the electron DOESN'T pass elID? (for a study)
+invert_elID = True
 #require muon ID to be greater than 0?
-require_muID = True 
+require_muID = True
 #cut on electron pT? -1 for no cut
 elpTcut = 2
 #cut on electron |pseudoRapidity|
@@ -40,20 +42,26 @@ muEtacut = 2.4
 cut_mee = False
 #include pileup corrections?
 do_pileup = True
-#include trigger efficiency correction?
-do_trigCor = True #False #True
+#include trigger efficiency correction from the D0 meson analysis (flat plateau correction)?
+do_trigCor = False #True
+#do the trigger turn on correction (L1 from BPH-24-005, HLT derived ourselves)?
+do_TTOC = True 
 #use the new event weights (calculated from DG/Cheb4 2mu fits)?
-new_wt = 1
+new_wt = 4 #2
 #-1: preEE, +1: postEE, 0: all together
-EEperiod = 0
-#use WP80 elID and medium muID instead of WP90, loose?
-tight = False
+EEperiod = -1
+#use WP80 elID instead of WP90?
+tightEl = False
+#use medium muID instead of loose?
+tightMu = False
 #fractional shift (scale factor) to apply to all muon pT values, for MC ONLY 
 musf = -0.0014
 elsf = 0.001
 #add in the (vertical) electron sf (from the json file)
-do_ElIDsf = True
-do_ElRecsf = True
+do_ElIDsf = False
+do_ElRecsf = False
+#add in (vertical) muon sf?
+do_MuIDsf = True
 
 peakmin = .52
 peakmax = .58
@@ -62,7 +70,7 @@ peakmax = .58
 golden = True
 
 #what test number to label the output files with
-testnum = 38175
+testnum = 4787
 
 isMC = False
 #use the central MC just to test the triggers (not really useful anymore)
@@ -168,11 +176,19 @@ if not isMC:
     elsf = 0
     do_ElIDsf = False
     do_ElRecsf = False
+    do_MuIDsf = False
+    do_TTOC = False
 
-if do_ElIDsf or do_ElRecsf:
+if do_ElIDsf or do_ElRecsf or do_MuIDsf:
     #open the json file
     from correctionlib import _core
+if do_ElIDsf or do_ElRecsf:
     evaluator = _core.CorrectionSet.from_file('electron.json.gz')
+if do_MuIDsf:
+    if EEperiod == -1:
+        mvaluator = _core.CorrectionSet.from_file('muon_preEE.json.gz')
+    else:
+        mvaluator = _core.CorrectionSet.from_file('muon_postEE.json.gz')
 
 #if true, add only the vertex with the highest chi2 prob to the histogram
 singleVert = False #True #not syncTest
@@ -181,7 +197,7 @@ singleVert = False #True #not syncTest
 #-1 for no cut
 vProbCut = 0.1
 #use low pt electrons too?
-useLowPt = False #not syncTest
+useLowPt = True #not syncTest
 
 #if True, genmatch the Onia photon tracks to the LowPt electrons and discard any that are a match
 useOnia = False
@@ -270,6 +286,7 @@ hpTElIDPass2 = ROOT.TH1F("hpTElIDPass2", "0.0025 < electron #Delta R < 0.005", 1
 hpTElIDPass3 = ROOT.TH1F("hpTElIDPass3", "electron #Delta R > 0.005", 100, 0.0, 50.0) 
 #deltaR between reco'd electrons of mmelel vertices
 hdREl = {}  
+hdRvPtEl = {}  
 #invar mass, pT dists (dictionary for ease of adding new vertex types)
 hM = {}
 #invar mass with INVERTED electron charge requirement (ie same-sign electrons req'd instead of oppo-sign) 
@@ -295,6 +312,12 @@ hnPVgood = {}
 hMComb = ROOT.TH1F("hMComb", "Invar. mass of event N's dimuon, event N-1's dielectron", 2000, 0.0, 10.0) 
 #control of hMComb, filled exactly the same way except with all this event.
 hMReal = ROOT.TH1F("hMReal", "Control plot for hMComb: event N's dimuon+dielectron", 2000, 0.0, 10.0) 
+#subleading pt for events passing L1
+hL1TC = ROOT.TH1F("hL1TC", "|#eta| < 1.2", 200, 0.0, 20.0)
+hL1TF = ROOT.TH1F("hL1TF", "|#eta| > 1.2", 200, 0.0, 20.0)
+#subleading pt for events passing HLT (and therefore ofc also L1)
+hHLTC = ROOT.TH1F("hHLTC", "|#eta| < 1.2", 200, 0.0, 20.0)
+hHLTF = ROOT.TH1F("hHLTF", "|#eta| > 1.2", 200, 0.0, 20.0)
 #pT histogram 
 hpT = {}
 #pT of events IN eta mass window (.52-.58 GeV) ONLY
@@ -340,6 +363,9 @@ hsubVdR = {}
 hL1all = {}
 #L1 seeds passed
 hL1pass = {}
+
+#hsubpTL1 = ROOT.TH2F("hsubpTL1", "sublead p_{T} for events passing L1", 200, 0.0, 50.0) 
+#hsubpTHLT = ROOT.TH2F("hsubpTL1", "sublead p_{T} for events passing L1", 200, 0.0, 50.0) 
 #2-d hist of ee invar mass vs mmee
 hMeeVsMmmee = ROOT.TH2F("hMeeVsMmmee", "", 200, 0.0, 1.0, 200, 0.0, 1.0) 
 if isMC and not isSig:
@@ -380,6 +406,7 @@ for vtype in vtypes:
         hM[vtype] = ROOT.TH1F("hM"+vtype, "Invar. mass with "+vtype+" vertices", nbins, xmin, xmax) 
     hM[vtype].Sumw2()
     hdREl[vtype] = ROOT.TH1F("hdREl"+vtype, "", 1000, 0.0, 0.1)
+    hdRvPtEl[vtype] = ROOT.TH2F("hdRvPtEl"+vtype, "#DeltaR vs. p_{T} for electrons in "+vtype+" vertices", 1000, 0.0, 0.1, 1000, 0., 100.)
     hL1all[vtype] = ROOT.TH1D("hL1all"+vtype, "Events surviving all cuts for "+vtype+" vertices that have L1 seed info", 1, 0, 1)
     hL1pass[vtype] = ROOT.TH1D("hL1pass"+vtype, "L1 pass rates for each seed, amongst events surviving all cuts for "+vtype+" vertices", 8, 0, 8)
     hRchi2[vtype] = ROOT.TH1F("hRchi2"+vtype, "Reduced #chi^{2} with "+vtype+" vertices", 500, 0.0, 5.0)
@@ -395,7 +422,7 @@ for vtype in vtypes:
     hpT[vtype].Sumw2()
     hpTEl[vtype] = ROOT.TH1F("hpTEl"+vtype, "Weighted pT of electrons in "+vtype+" vertices", 500, 0., 100.) 
     hpTElNoWt[vtype] = ROOT.TH1F("hpTElNoWt"+vtype, "Unweighted pT of electrons in "+vtype+" vertices", 500, 0., 100.) 
-    hpTMu[vtype] = ROOT.TH1F("hpTMu"+vtype, "WeightedpT of muons in "+vtype+" vertices", 500, 0., 100.) 
+    hpTMu[vtype] = ROOT.TH1F("hpTMu"+vtype, "Weighted p_{T} of muons in "+vtype+" vertices", 500, 0., 100.) 
     hpTMuF[vtype] = ROOT.TH1F("hpTMu"+vtype+"F", "WeightedpT of muons in "+vtype+" vertices with |#eta|>1.5", 500, 0., 100.) 
     hpTMuNoWt[vtype] = ROOT.TH1F("hpTMuNoWt"+vtype, "Unweighted pT of muons in "+vtype+" vertices", 500, 0., 100.) 
     hEtaMu[vtype] = ROOT.TH1F("hEtaMu"+vtype, "Pseudorapidity of muons in "+vtype+" vertices", 2000, -10., 10.) 
@@ -482,6 +509,10 @@ if isMC:
     hMRecDn = {}
     hMIDUp = {}
     hMIDDn = {}
+    hMTTOCUp = {}
+    hMTTOCDn = {}
+    hMMuUp = {}
+    hMMuDn = {}
     #number of modified electron efficiency points
     nMod = 12
     hMMod = {}
@@ -503,11 +534,19 @@ if isMC:
             hMRecDn[vtype] = ROOT.TH1F("hMRecDn"+vtype, "Invar. mass with "+vtype+" vertices, electron reco SF varied down", 1000, 0.0, 1.0) 
             hMIDUp[vtype] = ROOT.TH1F("hMIDUp"+vtype, "Invar. mass with "+vtype+" vertices, electron ID SF varied up", 1000, 0.0, 1.0) 
             hMIDDn[vtype] = ROOT.TH1F("hMIDDn"+vtype, "Invar. mass with "+vtype+" vertices, electron ID SF varied down", 1000, 0.0, 1.0) 
+            hMTTOCUp[vtype] = ROOT.TH1F("hMTTOCUp"+vtype, "Invar. mass with "+vtype+" vertices, trigger turn-on SF varied up", 1000, 0.0, 1.0) 
+            hMTTOCDn[vtype] = ROOT.TH1F("hMTTOCDn"+vtype, "Invar. mass with "+vtype+" vertices, trigger turn-on SF varied down", 1000, 0.0, 1.0) 
+            hMMuUp[vtype] = ROOT.TH1F("hMMuUp"+vtype, "Invar. mass with "+vtype+" vertices, muon ID SF varied up", 1000, 0.0, 1.0) 
+            hMMuDn[vtype] = ROOT.TH1F("hMMuDn"+vtype, "Invar. mass with "+vtype+" vertices, muon ID SF varied down", 1000, 0.0, 1.0) 
         else:
             hMRecUp[vtype] = ROOT.TH1F("hMRecUp"+vtype, "Invar. mass with "+vtype+" vertices, electron reco SF varied up", nbins, xmin, xmax) 
             hMRecDn[vtype] = ROOT.TH1F("hMRecDn"+vtype, "Invar. mass with "+vtype+" vertices, electron reco SF varied down", nbins, xmin, xmax) 
             hMIDUp[vtype] = ROOT.TH1F("hMIDUp"+vtype, "Invar. mass with "+vtype+" vertices, electron ID SF varied up", nbins, xmin, xmax) 
             hMIDDn[vtype] = ROOT.TH1F("hMIDDn"+vtype, "Invar. mass with "+vtype+" vertices, electron ID SF varied down", nbins, xmin, xmax) 
+            hMTTOCUp[vtype] = ROOT.TH1F("hMTTOCUp"+vtype, "Invar. mass with "+vtype+" vertices, trigger turn-on SF varied up", nbins, xmin, xmax) 
+            hMTTOCDn[vtype] = ROOT.TH1F("hMTTOCDn"+vtype, "Invar. mass with "+vtype+" vertices, trigger turn-on SF varied down", nbins, xmin, xmax) 
+            hMMuUp[vtype] = ROOT.TH1F("hMMuUp"+vtype, "Invar. mass with "+vtype+" vertices, muon ID SF varied up", nbins, xmin, xmax) 
+            hMMuDn[vtype] = ROOT.TH1F("hMMuDn"+vtype, "Invar. mass with "+vtype+" vertices, muon ID SF varied down", nbins, xmin, xmax) 
         #histogram of surviving event weights
         hEventWeight[vtype] = ROOT.TH1F("hEventWeight"+vtype, "Event weights surviving all cuts", 1000, 0.0, 100.0)
         hEventWeight[vtype].Sumw2()
@@ -578,6 +617,13 @@ if isMC:
     #    trigfile = ROOT.TFile.Open("trigger_corrections_%sMC2022.root"%("mumu" if isMuMu else "sig")) 
     #    #2d hist
     #    trigCor = trigfile.Get("%sMCcorrection"%("mumu" if isMuMu else "sig"))
+    if do_TTOC:
+        trigfileF = ROOT.TFile.Open("trigger_correctionsF.root")
+        trigfileC = ROOT.TFile.Open("trigger_correctionsC.root")
+        triggerCorrectionF = trigfileF.Get("trigger_correctionsF")     
+        triggerCorrectionC = trigfileC.Get("trigger_correctionsC")     
+        print("Opened triggerCorrectionF: %s"%triggerCorrectionF.Print())
+        print("Opened triggerCorrectionC: %s"%triggerCorrectionC.Print())
     
     #total weight of all MC events
     all_weight = 0.
@@ -1072,7 +1118,14 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                     hpTElIDPass.Fill(e.Electron_pt[elN]*(1+elsf), evt_weight)
             if (require_elID and "lplp" not in vtype) and (WP90ID_p == 0 or WP90ID_n == 0):
                 continue
-            if (tight or "lplp" in vtype) and require_elID and (WP80ID_p == 0 or WP80ID_n == 0):
+            if (invert_elID and "elel" in vtype):
+                vetoP = ord(e.Electron_convVeto[elP]) != 0
+                vetoN = ord(e.Electron_convVeto[elN]) != 0
+                if not vetoP and not vetoN: 
+                    continue
+            if (tightEl or "lplp" in vtype) and require_elID and (WP80ID_p == 0 or WP80ID_n == 0):
+                continue
+            if invert_elID and "lplp" in vtype and (WP80ID_p != 0 or WP80ID_n != 0):
                 continue
             try:
                 vxy = (vtx_vvx[j]**2 + vtx_vvy[j]**2)**0.5
@@ -1131,6 +1184,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 #        acc_weight[vtype] += xsec
         nvertMu = len(vtx_vmuP)
         bestjj = -1
+        trig_filled = False
         for jj in range(nvertMu):
             #for 4-lepton vertices MUST use the muons corresponding to these electrons!
             if vstr in ["mmelel", "mmlplp", "mmee", "mumu"] and jj != j: continue
@@ -1151,12 +1205,12 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             mm = ord(vtx_vmuN[jj]) 
             # < 4 for requiring tight muID
             try:
-                if tight:
+                if tightMu:
                     failed_muID = require_muID and (ord(e.Muon_id[mp]) < 4 or ord(e.Muon_id[mm]) < 4)
                 else:
                     failed_muID = require_muID and (ord(e.Muon_id[mp]) == 0 or ord(e.Muon_id[mm]) == 0)
             except TypeError:
-                if tight:
+                if tightMu:
                     failed_muID = require_muID and (e.Muon_id[mp] < 4 or e.Muon_id[mm] < 4)
                 else:
                     failed_muID = require_muID and (e.Muon_id[mp] == 0 or e.Muon_id[mm] == 0)
@@ -1173,125 +1227,147 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
             #make the 4-vector, fill the hists
             vec_muN = ROOT.TLorentzVector()
             vec_muN.SetPtEtaPhiM(e.Muon_pt[mm]*(1+musf), e.Muon_eta[mm], e.Muon_phi[mm], mu_mass)
-            #adjust the event weight (slightly) according to the scaled muon efficiency!
-            Rmusf = (muEff(e.Muon_pt[mm]*(1+musf)) / muEff(e.Muon_pt[mm]) * muEff(e.Muon_pt[mp]*(1+musf))/muEff(e.Muon_pt[mp]))
-            my_evt_weight = Rmusf*evt_weight 
-            if vtype not in ["mumu", "mmg", "mmlplp"]:
-                try:
-                    Relsf = (elEff(e.Electron_pt[elP]*(1+elsf)) / elEff(e.Electron_pt[elN]) * elEff(e.Electron_pt[elP]*(1+elsf))/elEff(e.Electron_pt[elP]))
-                except ZeroDivisionError:
-                    Relsf = 0
-                my_evt_weight *= Relsf
-                if do_ElRecsf:
-                    recoNameP = "RecoBelow20"
-                    recoNameN = "RecoBelow20"
-                    ptp = e.Electron_pt[elP]*(1+elsf)
-                    if ptp > 20 and ptp < 75:
-                        recoNameP = "Reco20to75"
-                    elif ptp > 75:
-                        recoNameP = "RecoAbove75"
-                    ptn = e.Electron_pt[elN]*(1+elsf)
-                    if ptn > 20 and ptn < 75:
-                        recoNameN = "Reco20to75"
-                    elif ptn > 75:
-                        recoNameN = "RecoAbove75"
-                    valsfPRec = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
-                    valsfNRec = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
-                    valsfPRecUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
-                    valsfNRecUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
-                    valsfPRecDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
-                    valsfNRecDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
-                    #valsfPRec = 0.98
-                    #valsfPRecUp = 1.01
-                    #valsfPRecDn = 0.95
-                    #if (abs(e.Electron_eta[elP]) > 1.5 and abs(e.Electron_eta[elP]) < 2) or abs(e.Electron_eta[elP]) < 1:
-                    #    valsfPRec = 0.99
-                    #    valsfPRecUp = 1.02
-                    #    valsfPRecDn = 0.96
-                    #valsfNRec = 0.98
-                    #valsfNRecUp = 1.01
-                    #valsfNRecDn = 0.95
-                    #if (abs(e.Electron_eta[elN]) > 1.5 and abs(e.Electron_eta[elN]) < 2) or abs(e.Electron_eta[elN]) < 1:
-                    #    valsfNRec = 0.99
-                    #    valsfNRecUp = 1.02
-                    #    valsfNRecDn = 0.96
-                    my_evt_weight *= (valsfPRec*valsfNRec)
-                    evt_weightRecUp = my_evt_weight * (valsfPRecUp/valsfPRec) * (valsfNRecUp/valsfNRec)
-                    evt_weightRecDn = my_evt_weight * (valsfPRecDn/valsfPRec) * (valsfNRecDn/valsfNRec)
-                    if recoNameP == "RecoBelow20":
-                        print("valsfPRec: " + str(valsfPRec)) 
-                        hElRecsf[vtype].SetBinContent(hElRecsf[vtype].FindBin(e.Electron_eta[elP]), valsfPRec)
-                        hElRecsfUp[vtype].SetBinContent(hElRecsfUp[vtype].FindBin(e.Electron_eta[elP]), valsfPRecUp)
-                        hElRecsfDn[vtype].SetBinContent(hElRecsfDn[vtype].FindBin(e.Electron_eta[elP]), valsfPRecDn)
-                    if recoNameN == "RecoBelow20":
-                        hElRecsf[vtype].SetBinContent(hElRecsf[vtype].FindBin(e.Electron_eta[elN]), valsfNRec)
-                        hElRecsfUp[vtype].SetBinContent(hElRecsfUp[vtype].FindBin(e.Electron_eta[elN]), valsfNRecUp)
-                        hElRecsfDn[vtype].SetBinContent(hElRecsfDn[vtype].FindBin(e.Electron_eta[elN]), valsfNRecDn)
-                if do_ElIDsf:
-                    valsfPID = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", "wp90noiso", e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
-                    valsfNID = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", "wp90noiso", e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
-                    valsfPIDUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", "wp90noiso", e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
-                    valsfNIDUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", "wp90noiso", e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
-                    valsfPIDDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", "wp90noiso", e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
-                    valsfNIDDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", "wp90noiso", e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
-                    ##I double the uncertainties shown in the Run2 paper to be extra conservative!!
-                    #if abs(e.Electron_eta[elP]) < 0.80:
-                    #    valsfPID = 0.98
-                    #    valsfPIDUp = 1.02
-                    #    valsfPIDDn = 0.94
-                    #elif abs(e.Electron_eta[elP]) < 1.44:
-                    #    valsfPID = 0.99
-                    #    valsfPIDUp = 1.01
-                    #    valsfPIDDn = 0.97
-                    #elif abs(e.Electron_eta[elP]) > 1.57 and abs(e.Electron_eta[elP]) < 2.00:
-                    #    valsfPID = 0.96
-                    #    valsfPIDUp = 1.02
-                    #    valsfPIDDn = 0.90
-                    #elif abs(e.Electron_eta[elP]) > 2.00 and abs(e.Electron_eta[elP]) < 2.50:
-                    #    valsfPID = 1.00
-                    #    valsfPIDUp = 1.04
-                    #    valsfPIDDn = 0.96
-                    #else:
-                    #    print("Warning: Run %d evt %d electron eta value %f, not correcting."%(e.run, e.evt, e.Electron_eta[elP])) 
-                    #    valsfPID = 1.00
-                    #    valsfPIDUp = 1.00
-                    #    valsfPIDDn = 1.00
-                    #if abs(e.Electron_eta[elN]) < 0.80:
-                    #    valsfNID = 0.98
-                    #    valsfNIDUp = 1.02
-                    #    valsfNIDDn = 0.94
-                    #elif abs(e.Electron_eta[elN]) < 1.44:
-                    #    valsfNID = 0.99
-                    #    valsfNIDUp = 1.01
-                    #    valsfNIDDn = 0.97
-                    #elif abs(e.Electron_eta[elN]) > 1.57 and abs(e.Electron_eta[elN]) < 2.00:
-                    #    valsfNID = 0.96
-                    #    valsfNIDUp = 1.02
-                    #    valsfNIDDn = 0.90
-                    #elif abs(e.Electron_eta[elN]) > 2.00 and abs(e.Electron_eta[elN]) < 2.50:
-                    #    valsfNID = 1.00
-                    #    valsfNIDUp = 1.04
-                    #    valsfNIDDn = 0.96
-                    #else:
-                    #    print("Warning: Run %d evt %d electron eta value %f, not correcting."%(e.run, e.evt, e.Electron_eta[elN])) 
-                    #    valsfNID = 1.00
-                    #    valsfNIDUp = 1.00
-                    #    valsfNIDDn = 1.00
-                    my_evt_weight *= (valsfPID*valsfNID)
-                    evt_weightRecUp *= (valsfPID*valsfNID)
-                    evt_weightRecDn *= (valsfPID*valsfNID)
-                    evt_weightIDUp = my_evt_weight * (valsfPIDUp/valsfPID) * (valsfNIDUp/valsfNID)
-                    evt_weightIDDn = my_evt_weight * (valsfPIDDn/valsfPID) * (valsfNIDDn/valsfNID)
-                    if e.Electron_pt[elP]*(1+elsf) < 10:
-                        hElIDsf[vtype].SetBinContent(hElIDsf[vtype].FindBin(e.Electron_eta[elP]), valsfPID)
-                        hElIDsfUp[vtype].SetBinContent(hElIDsfUp[vtype].FindBin(e.Electron_eta[elP]), valsfPIDUp)
-                        hElIDsfDn[vtype].SetBinContent(hElIDsfDn[vtype].FindBin(e.Electron_eta[elP]), valsfPIDDn)
-                    if e.Electron_pt[elN]*(1+elsf) < 10:
-                        hElIDsf[vtype].SetBinContent(hElIDsf[vtype].FindBin(e.Electron_eta[elN]), valsfNID)
-                        hElIDsfUp[vtype].SetBinContent(hElIDsfUp[vtype].FindBin(e.Electron_eta[elN]), valsfNIDUp)
-                        hElIDsfDn[vtype].SetBinContent(hElIDsfDn[vtype].FindBin(e.Electron_eta[elN]), valsfNIDDn)
-                    hEletapt[vtype].Fill(e.Electron_eta[elP], e.Electron_pt[elP]*(1+elsf), my_evt_weight)
-                    hEletapt[vtype].Fill(e.Electron_eta[elN], e.Electron_pt[elN]*(1+elsf), my_evt_weight)
+            if isMC:
+                #adjust the event weight (slightly) according to the scaled muon efficiency!
+                Rmusf = (muEff(e.Muon_pt[mm]*(1+musf)) / muEff(e.Muon_pt[mm]) * muEff(e.Muon_pt[mp]*(1+musf))/muEff(e.Muon_pt[mp]))
+                my_evt_weight = Rmusf*evt_weight 
+                if vtype not in ["mumu", "mmg", "mmlplp"]:
+                    try:
+                        Relsf = (elEff(e.Electron_pt[elP]*(1+elsf)) / elEff(e.Electron_pt[elN]) * elEff(e.Electron_pt[elP]*(1+elsf))/elEff(e.Electron_pt[elP]))
+                    except ZeroDivisionError:
+                        Relsf = 0
+                    my_evt_weight *= Relsf
+                    if do_ElRecsf:
+                        recoNameP = "RecoBelow20"
+                        recoNameN = "RecoBelow20"
+                        ptp = e.Electron_pt[elP]*(1+elsf)
+                        if ptp > 20 and ptp < 75:
+                            recoNameP = "Reco20to75"
+                        elif ptp > 75:
+                            recoNameP = "RecoAbove75"
+                        ptn = e.Electron_pt[elN]*(1+elsf)
+                        if ptn > 20 and ptn < 75:
+                            recoNameN = "Reco20to75"
+                        elif ptn > 75:
+                            recoNameN = "RecoAbove75"
+                        valsfPRec = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                        valsfNRec = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                        valsfPRecUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                        valsfNRecUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                        valsfPRecDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", recoNameP, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                        valsfNRecDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", recoNameN, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                        #valsfPRec = 0.98
+                        #valsfPRecUp = 1.01
+                        #valsfPRecDn = 0.95
+                        #if (abs(e.Electron_eta[elP]) > 1.5 and abs(e.Electron_eta[elP]) < 2) or abs(e.Electron_eta[elP]) < 1:
+                        #    valsfPRec = 0.99
+                        #    valsfPRecUp = 1.02
+                        #    valsfPRecDn = 0.96
+                        #valsfNRec = 0.98
+                        #valsfNRecUp = 1.01
+                        #valsfNRecDn = 0.95
+                        #if (abs(e.Electron_eta[elN]) > 1.5 and abs(e.Electron_eta[elN]) < 2) or abs(e.Electron_eta[elN]) < 1:
+                        #    valsfNRec = 0.99
+                        #    valsfNRecUp = 1.02
+                        #    valsfNRecDn = 0.96
+                        my_evt_weight *= (valsfPRec*valsfNRec)
+                        evt_weightRecUp = my_evt_weight * (valsfPRecUp/valsfPRec) * (valsfNRecUp/valsfNRec)
+                        evt_weightRecDn = my_evt_weight * (valsfPRecDn/valsfPRec) * (valsfNRecDn/valsfNRec)
+                        if recoNameP == "RecoBelow20":
+                            #print("valsfPRec: " + str(valsfPRec)) 
+                            hElRecsf[vtype].SetBinContent(hElRecsf[vtype].FindBin(e.Electron_eta[elP]), valsfPRec)
+                            hElRecsfUp[vtype].SetBinContent(hElRecsfUp[vtype].FindBin(e.Electron_eta[elP]), valsfPRecUp)
+                            hElRecsfDn[vtype].SetBinContent(hElRecsfDn[vtype].FindBin(e.Electron_eta[elP]), valsfPRecDn)
+                        if recoNameN == "RecoBelow20":
+                            hElRecsf[vtype].SetBinContent(hElRecsf[vtype].FindBin(e.Electron_eta[elN]), valsfNRec)
+                            hElRecsfUp[vtype].SetBinContent(hElRecsfUp[vtype].FindBin(e.Electron_eta[elN]), valsfNRecUp)
+                            hElRecsfDn[vtype].SetBinContent(hElRecsfDn[vtype].FindBin(e.Electron_eta[elN]), valsfNRecDn)
+                    if do_ElIDsf:
+                        wptxt = "wp90noiso"
+                        if tightEl:
+                            wptxt = "wp80noiso"
+                        valsfPID = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", wptxt, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                        valsfNID = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sf", wptxt, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                        valsfPIDUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", wptxt, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                        valsfNIDUp = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfup", wptxt, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                        valsfPIDDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", wptxt, e.Electron_eta[elP], max(e.Electron_pt[elP]*(1+elsf), 10.0))
+                        valsfNIDDn = evaluator["Electron-ID-SF"].evaluate("2022Re-recoE+PromptFG", "sfdown", wptxt, e.Electron_eta[elN], max(e.Electron_pt[elN]*(1+elsf), 10.0))
+                        ##I double the uncertainties shown in the Run2 paper to be extra conservative!!
+                        #if abs(e.Electron_eta[elP]) < 0.80:
+                        #    valsfPID = 0.98
+                        #    valsfPIDUp = 1.02
+                        #    valsfPIDDn = 0.94
+                        #elif abs(e.Electron_eta[elP]) < 1.44:
+                        #    valsfPID = 0.99
+                        #    valsfPIDUp = 1.01
+                        #    valsfPIDDn = 0.97
+                        #elif abs(e.Electron_eta[elP]) > 1.57 and abs(e.Electron_eta[elP]) < 2.00:
+                        #    valsfPID = 0.96
+                        #    valsfPIDUp = 1.02
+                        #    valsfPIDDn = 0.90
+                        #elif abs(e.Electron_eta[elP]) > 2.00 and abs(e.Electron_eta[elP]) < 2.50:
+                        #    valsfPID = 1.00
+                        #    valsfPIDUp = 1.04
+                        #    valsfPIDDn = 0.96
+                        #else:
+                        #    print("Warning: Run %d evt %d electron eta value %f, not correcting."%(e.run, e.evt, e.Electron_eta[elP])) 
+                        #    valsfPID = 1.00
+                        #    valsfPIDUp = 1.00
+                        #    valsfPIDDn = 1.00
+                        #if abs(e.Electron_eta[elN]) < 0.80:
+                        #    valsfNID = 0.98
+                        #    valsfNIDUp = 1.02
+                        #    valsfNIDDn = 0.94
+                        #elif abs(e.Electron_eta[elN]) < 1.44:
+                        #    valsfNID = 0.99
+                        #    valsfNIDUp = 1.01
+                        #    valsfNIDDn = 0.97
+                        #elif abs(e.Electron_eta[elN]) > 1.57 and abs(e.Electron_eta[elN]) < 2.00:
+                        #    valsfNID = 0.96
+                        #    valsfNIDUp = 1.02
+                        #    valsfNIDDn = 0.90
+                        #elif abs(e.Electron_eta[elN]) > 2.00 and abs(e.Electron_eta[elN]) < 2.50:
+                        #    valsfNID = 1.00
+                        #    valsfNIDUp = 1.04
+                        #    valsfNIDDn = 0.96
+                        #else:
+                        #    print("Warning: Run %d evt %d electron eta value %f, not correcting."%(e.run, e.evt, e.Electron_eta[elN])) 
+                        #    valsfNID = 1.00
+                        #    valsfNIDUp = 1.00
+                        #    valsfNIDDn = 1.00
+                        my_evt_weight *= (valsfPID*valsfNID)
+                        evt_weightRecUp *= (valsfPID*valsfNID)
+                        evt_weightRecDn *= (valsfPID*valsfNID)
+                        evt_weightIDUp = my_evt_weight * (valsfPIDUp/valsfPID) * (valsfNIDUp/valsfNID)
+                        evt_weightIDDn = my_evt_weight * (valsfPIDDn/valsfPID) * (valsfNIDDn/valsfNID)
+                        if e.Electron_pt[elP]*(1+elsf) < 10:
+                            hElIDsf[vtype].SetBinContent(hElIDsf[vtype].FindBin(e.Electron_eta[elP]), valsfPID)
+                            hElIDsfUp[vtype].SetBinContent(hElIDsfUp[vtype].FindBin(e.Electron_eta[elP]), valsfPIDUp)
+                            hElIDsfDn[vtype].SetBinContent(hElIDsfDn[vtype].FindBin(e.Electron_eta[elP]), valsfPIDDn)
+                        if e.Electron_pt[elN]*(1+elsf) < 10:
+                            hElIDsf[vtype].SetBinContent(hElIDsf[vtype].FindBin(e.Electron_eta[elN]), valsfNID)
+                            hElIDsfUp[vtype].SetBinContent(hElIDsfUp[vtype].FindBin(e.Electron_eta[elN]), valsfNIDUp)
+                            hElIDsfDn[vtype].SetBinContent(hElIDsfDn[vtype].FindBin(e.Electron_eta[elN]), valsfNIDDn)
+                        hEletapt[vtype].Fill(e.Electron_eta[elP], e.Electron_pt[elP]*(1+elsf), my_evt_weight)
+                        hEletapt[vtype].Fill(e.Electron_eta[elN], e.Electron_pt[elN]*(1+elsf), my_evt_weight)
+                    
+                if do_MuIDsf:
+                    valsfPMu = mvaluator["NUM_LooseID_DEN_TrackerMuons"].evaluate(e.Muon_eta[mp], max(e.Muon_pt[mp]*(1+musf), 3.0), "nominal")
+                    valsfNMu = mvaluator["NUM_LooseID_DEN_TrackerMuons"].evaluate(e.Muon_eta[mm], max(e.Muon_pt[mm]*(1+musf), 3.0), "nominal")
+                    valsfPUpMu = mvaluator["NUM_LooseID_DEN_TrackerMuons"].evaluate(e.Muon_eta[mp], max(e.Muon_pt[mp]*(1+musf), 3.0), "systup")
+                    valsfNUpMu = mvaluator["NUM_LooseID_DEN_TrackerMuons"].evaluate(e.Muon_eta[mm], max(e.Muon_pt[mm]*(1+musf), 3.0), "systup")
+                    valsfPDnMu = mvaluator["NUM_LooseID_DEN_TrackerMuons"].evaluate(e.Muon_eta[mp], max(e.Muon_pt[mp]*(1+musf), 3.0), "systdown")
+                    valsfNDnMu = mvaluator["NUM_LooseID_DEN_TrackerMuons"].evaluate(e.Muon_eta[mm], max(e.Muon_pt[mm]*(1+musf), 3.0), "systdown")
+                    my_evt_weight *= (valsfPMu*valsfNMu) 
+                    evt_weightMuUp = my_evt_weight * (valsfPUpMu/valsfPMu) * (valsfNUpMu/valsfNMu)
+                    evt_weightMuDn = my_evt_weight * (valsfPDnMu/valsfPMu) * (valsfNDnMu/valsfNMu)
+                    #print("valsfPMu: %f, valsfNMu: %f"%(valsfPMu, valsfNMu)) 
+                if do_pileup:
+                    #pileup correction
+                    puCor = PUCor.GetBinContent(PUCor.FindBin(e.nPV))
+                    my_evt_weight *= puCor
+            else:
+                my_evt_weight = 1
             if vtype == "elel":
                 hMReal.Fill((diel+dimu).M(), my_evt_weight)
             if vtype == "mmg":
@@ -1332,9 +1408,145 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                     #    #print("continuing!!!! evt=%d, mee=%f"%(e.evt, mee))
                         continue
             pt = vec_eta.Pt() 
-            subpt = min(vec_muP.Pt(), vec_muN.Pt()) 
+            if vec_muP.Pt() < vec_muN.Pt():
+                subpt = e.Muon_pt[mp] #vec_muP.Pt()
+                subeta = vec_muP.PseudoRapidity()
+            else:
+                subpt = e.Muon_pt[mm] #vec_muN.Pt()
+                subeta = vec_muN.PseudoRapidity()
             m = vec_eta.M()
             mudR = vec_muP.DeltaR(vec_muN)
+
+            #make sure you're only filling if this is the true 2nd highest pT muon!
+            himupt = max(e.Muon_pt)
+            #find the second highest muon pt
+            hi2mupt = 0.0
+            for mpt in e.Muon_pt:
+                if mpt < himupt and mpt > hi2mupt:
+                    hi2mupt = mpt
+            #be sure to avoid rounding errors...
+            if vtype == "mumu" and mudR < 0.1 and not trig_filled and abs(hi2mupt-subpt) < 0.01:
+                trig_filled = True
+                if int(str(testnum)[:2]) > 38: 
+                    trig = e.Triggers_fired1
+                else:
+                    trig = e.Triggers_fired0
+                l1pass = (trig & (1<<25)) != 0
+                hlpass = (trig & (1<<11) != 0)
+                if l1pass:
+                    if abs(subeta) < 1.2:
+                        hL1TC.Fill(subpt, my_evt_weight)
+                    else:
+                        hL1TF.Fill(subpt, my_evt_weight)
+                if hlpass:
+                    if subpt < 2.5:
+                        print("aaaa werid event!! subpt: %f, himupt: %f"%(subpt, himupt)) 
+                        printEvent.printEvent(e, isMC, g if isMC else None)
+                    if abs(subeta) < 1.2:
+                        hHLTC.Fill(subpt, my_evt_weight)
+                    else:
+                        hHLTF.Fill(subpt, my_evt_weight)
+            
+            #L1 PART of these SFs from https://indico.cern.ch/event/1398079/contributions/5876242/attachments/2826267/4937141/DoubleMu4_3_LowMass_Trigger_SFs_v1.pdf
+            #HLT part derived ourselves!
+            if do_TTOC:   
+                if vec_muP.Pt() > vec_muN.Pt() :
+                    etaProbe = vec_muN.PseudoRapidity()
+                else:
+                    etaProbe = vec_muP.PseudoRapidity()
+                #L1 part, then HLT part
+                if abs(etaProbe) < 0.9:
+                    if subpt < 6.5:
+                        my_evt_weight *= 0.940464
+                        #my_evt_weight *= 0.636192
+                        ttocL1 = 0.00513163
+                        #ttocHLT = 0.0824157 
+                    elif subpt < 10:
+                        my_evt_weight *= 0.995195
+                        #my_evt_weight *= 0.595192
+                        ttocL1 = 0.0175254
+                        #ttocHLT = 0.0420128 
+                    elif subpt < 15:
+                        my_evt_weight *= 0.936098
+                        #my_evt_weight *= 0.934145
+                        ttocL1 = 0.0147551 
+                        #ttocHLT = 0.042563  
+                    elif subpt < 20:
+                        my_evt_weight *= 0.869899
+                        #my_evt_weight *= 0.963782
+                        ttocL1 = 0.00579038
+                        #ttocHLT = 0.00625994
+                    else:
+                        my_evt_weight *= 0.844248
+                        #my_evt_weight *= 0.953331
+                        ttocL1 = 0.00607634
+                        #ttocHLT = 0.00583198
+                elif abs(etaProbe) < 1.2:
+                    #0.9 < probe eta < 1.2
+                    if subpt < 6.5:
+                        my_evt_weight *= 0.974163
+                        #my_evt_weight *= 0.932408
+                        ttocL1 = 0.112774  
+                        #ttocHLT = 0.28918   
+                    elif subpt < 10:
+                        my_evt_weight *= 0.983871
+                        #my_evt_weight *= 0.732941
+                        ttocL1 = 0.0106754 
+                        #ttocHLT = 0.0907367 
+                    elif subpt < 15:
+                        my_evt_weight *= 0.946724
+                        #my_evt_weight *= 0.929410
+                        ttocL1 = 0.0814474 
+                        #ttocHLT = 0.0475792 
+                    elif subpt < 20:
+                        my_evt_weight *= 0.854219
+                        #my_evt_weight *= 0.936802
+                        ttocL1 = 0.0135183 
+                        #ttocHLT = 0.0109483 
+                    else:
+                        my_evt_weight *= 0.725096
+                        #my_evt_weight *= 0.957847
+                        ttocL1 = 0.0606656 
+                        #ttocHLT = 0.0500664 
+                else:
+                    #probe eta > 1.2
+                    if subpt < 6.5:
+                        my_evt_weight *= 0.890303
+                        #my_evt_weight *= 0.730769
+                        ttocL1 = 0.0562114 
+                        #ttocHLT = 0.205952  
+                    elif subpt < 10:
+                        my_evt_weight *= 0.968846
+                        #my_evt_weight *= 0.70067
+                        ttocL1 = 0.0553319 
+                        #ttocHLT = 0.0825737 
+                    elif subpt < 15:
+                        my_evt_weight *= 0.829491
+                        #my_evt_weight *= 0.905507
+                        ttocL1 = 0.058834  
+                        #ttocHLT = 0.0222346 
+                    elif subpt < 20:
+                        my_evt_weight *= 0.785405
+                        #my_evt_weight *= 0.934546
+                        ttocL1 = 0.0220265 
+                        #ttocHLT = 0.031868  
+                    else:
+                        my_evt_weight *= 0.760657
+                        #my_evt_weight *= 0.974615
+                        ttocL1 = 0.0133128 
+                        #ttocHLT = 0.051794  
+                if abs(etaProbe) < 1.2:
+                    tcbin = triggerCorrectionC.FindBin(min(subpt, triggerCorrectionC.GetXaxis().GetXmax()))
+                    my_evt_weight *= triggerCorrectionC.GetBinContent(tcbin)
+                    ttocHLT = triggerCorrectionC.GetBinError(tcbin)
+                else:
+                    tcbin = triggerCorrectionF.FindBin(min(subpt, triggerCorrectionF.GetXaxis().GetXmax()))
+                    my_evt_weight *= triggerCorrectionF.GetBinContent(tcbin)
+                    ttocHLT = triggerCorrectionF.GetBinError(tcbin)
+                evt_weightTTOCUp = my_evt_weight * ( 1 + ttocHLT)
+                evt_weightTTOCUp *= ( 1 + ttocL1)
+                evt_weightTTOCDn = my_evt_weight * ( 1 - ttocHLT)
+                evt_weightTTOCDn *= ( 1 - ttocL1)
 
             if vtype == "mmelel":
                 hMeeVsMmmee.Fill(mee, m, my_evt_weight) 
@@ -1366,7 +1578,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                     #rec_weight[vtype] += evt_weight
                     if passedTrig and not acc_filled[1]:
                         #hpTGenAcc[vtype].Fill(genEtaPt)
-                        hpTGenAcc[vtype].Fill(gen_eta.Pt())
+                        hpTGenAcc[vtype].Fill(gen_eta.Pt(), evt_weight)
                         if gen_eta.Pt() > 25:
                             hEtaGenAcc[vtype].Fill(gen_eta.PseudoRapidity(), my_evt_weight)
                         acc_weight[vtype][1] += my_evt_weight
@@ -1413,9 +1625,10 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
 
                         if vtype in ["mumu", "mmg"] or ("elel" in vtype and e.Electron_pt[elP]*(1+elsf) > elpTcut and e.Electron_pt[elN]*(1+elsf) > elpTcut and \
                             (elEtacut < 0 or (abs(e.Electron_eta[elP]) < elEtacut and abs(e.Electron_eta[elN]) < elEtacut)) and \
-                            WP90ID_p > 0 and WP90ID_n > 0) or "lplp" in vtype :
+                            ((not require_elID) or (WP90ID_p > 0 and WP90ID_n > 0))) or "lplp" in vtype :
 
-                            hpTGenAccdR[vtype].Fill(gen_eta.Pt()) 
+                            #fill hpTGenAccdR with my_evt_weight to properly correct the acceptance for all the corrections!
+                            hpTGenAccdR[vtype].Fill(gen_eta.Pt(), my_evt_weight) 
                             accdR_weight[vtype] += my_evt_weight
                             accdR_filled = True
             #danEvent = False
@@ -1440,10 +1653,13 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 el_fail = ("elel" in vtype and elpTcut > -1 and (e.Electron_pt[elP]*(1+elsf) < elpTcut or e.Electron_pt[elN]*(1+elsf) < elpTcut)) 
                 if vtype == "mumu" and m > 0.45 and m < 0.65:
                     #see if can fill hpTGoodL1Pass, hpTGoodHLTPass
-                    if vec_muP.Pt() > 5 and vec_muN.Pt() > 5 and (e.Triggers_fired0 & (1 << 25)):
+                    #if vec_muP.Pt() > 5 and vec_muN.Pt() > 5 and (e.Triggers_fired0 & (1 << 25)):
+                    thistrig = e.Triggers_fired0 if int(str(testnum)[:2]) <= 38 else e.Triggers_fired1
+                    if thistrig & (1 << 25):
                         musubpt = min(vec_muP.Pt(), vec_muN.Pt())
                         hpTGoodL1Pass.Fill(musubpt, my_evt_weight ) 
-                        if (e.Triggers_fired0 & (1 << 11)) :
+                        #if (e.Triggers_fired0 & (1 << 11)) :
+                        if thistrig & (1 << 11) :
                             hpTGoodHLTPass.Fill(musubpt, my_evt_weight)
                 if vstr != "mumu":
                     elptP = vec_elP.Pt()
@@ -1484,6 +1700,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                                 if mmodmu > peakmin and mmodmu < peakmax:
                                     hpTModmu[s].Fill(ptmodmu, evt_weightModmu)
                 if not (el_fail or mu_fail):
+                    if my_evt_weight != 1 and not isMC:
+                        print("*****ERROR: SOMEONE IS F***ING WITH EVENT WEIGHTS IN DATA*****")
+                        sys.exit()
                     hpT[vtype].Fill(pt, my_evt_weight)
                     if m > peakmin and m < peakmax:
                         hpTSig[vtype].Fill(pt, my_evt_weight)
@@ -1492,48 +1711,50 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                     elif m > (peakmax+.03) and m < 0.80:
                         hpTSide[vtype].Fill(pt, my_evt_weight)
                     if vstr != "mumu":
-                        hpTEl[vtype].Fill(elptP, my_evt_weight)
-                        hpTEl[vtype].Fill(elptN, my_evt_weight)
-                        hpTElNoWt[vtype].Fill(elptP)
-                        hpTElNoWt[vtype].Fill(elptN)
+                        hpTEl[vtype].Fill(elptP*(1+elsf), my_evt_weight)
+                        hpTEl[vtype].Fill(elptN*(1+elsf), my_evt_weight)
+                        hpTElNoWt[vtype].Fill(elptP*(1+elsf))
+                        hpTElNoWt[vtype].Fill(elptN*(1+elsf))
                         eldR = vec_elP.DeltaR(vec_elN)
                         hdREl[vtype].Fill(eldR, my_evt_weight)
+                        hdRvPtEl[vtype].Fill(eldR, elptP*(1+elsf), my_evt_weight)
+                        hdRvPtEl[vtype].Fill(eldR, elptN*(1+elsf), my_evt_weight)
                         if eldR > 0.005:
-                            hpTElAll3.Fill(elptP, my_evt_weight)
-                            hpTElAll3.Fill(elptN, my_evt_weight)
+                            hpTElAll3.Fill(elptP*(1+elsf), my_evt_weight)
+                            hpTElAll3.Fill(elptN*(1+elsf), my_evt_weight)
                             if WP90ID_p != 0:
-                                hpTElIDPass3.Fill(elptP, my_evt_weight)
+                                hpTElIDPass3.Fill(elptP*(1+elsf), my_evt_weight)
                             if WP90ID_n != 0:
-                                hpTElIDPass3.Fill(elptN, my_evt_weight)
+                                hpTElIDPass3.Fill(elptN*(1+elsf), my_evt_weight)
                         elif eldR > 0.0025:
-                            hpTElAll2.Fill(elptP, my_evt_weight)
-                            hpTElAll2.Fill(elptN, my_evt_weight)
+                            hpTElAll2.Fill(elptP*(1+elsf), my_evt_weight)
+                            hpTElAll2.Fill(elptN*(1+elsf), my_evt_weight)
                             if WP90ID_p != 0:
-                                hpTElIDPass2.Fill(elptP, my_evt_weight)
+                                hpTElIDPass2.Fill(elptP*(1+elsf), my_evt_weight)
                             if WP90ID_n != 0:
-                                hpTElIDPass2.Fill(elptN, my_evt_weight)
+                                hpTElIDPass2.Fill(elptN*(1+elsf), my_evt_weight)
                         elif eldR > 0.0005:
-                            hpTElAll1.Fill(elptP, my_evt_weight)
-                            hpTElAll1.Fill(elptN, my_evt_weight)
+                            hpTElAll1.Fill(elptP*(1+elsf), my_evt_weight)
+                            hpTElAll1.Fill(elptN*(1+elsf), my_evt_weight)
                             if WP90ID_p != 0:
-                                hpTElIDPass1.Fill(elptP, my_evt_weight)
+                                hpTElIDPass1.Fill(elptP*(1+elsf), my_evt_weight)
                             if WP90ID_n != 0:
-                                hpTElIDPass1.Fill(elptN, my_evt_weight)
+                                hpTElIDPass1.Fill(elptN*(1+elsf), my_evt_weight)
                         else:
-                            hpTElAll0.Fill(elptP, my_evt_weight)
-                            hpTElAll0.Fill(elptN, my_evt_weight)
+                            hpTElAll0.Fill(elptP*(1+elsf), my_evt_weight)
+                            hpTElAll0.Fill(elptN*(1+elsf), my_evt_weight)
                             if WP90ID_p != 0:
-                                hpTElIDPass0.Fill(elptP, my_evt_weight)
+                                hpTElIDPass0.Fill(elptP*(1+elsf), my_evt_weight)
                             if WP90ID_n != 0:
-                                hpTElIDPass0.Fill(elptN, my_evt_weight)
-                    hpTMu[vtype].Fill(muptP, my_evt_weight)
-                    hpTMu[vtype].Fill(muptN, my_evt_weight)
+                                hpTElIDPass0.Fill(elptN*(1+elsf), my_evt_weight)
+                    hpTMu[vtype].Fill(muptP*(1+musf), my_evt_weight)
+                    hpTMu[vtype].Fill(muptN*(1+musf), my_evt_weight)
                     if abs(vec_muP.PseudoRapidity()) > 1.5:
-                        hpTMuF[vtype].Fill(muptP, my_evt_weight)
+                        hpTMuF[vtype].Fill(muptP*(1+musf), my_evt_weight)
                     if abs(vec_muN.PseudoRapidity()) > 1.5:
-                        hpTMuF[vtype].Fill(muptN, my_evt_weight)
-                    hpTMuNoWt[vtype].Fill(muptP)
-                    hpTMuNoWt[vtype].Fill(muptN)
+                        hpTMuF[vtype].Fill(muptN*(1+musf), my_evt_weight)
+                    hpTMuNoWt[vtype].Fill(muptP*(1+musf))
+                    hpTMuNoWt[vtype].Fill(muptN*(1+musf))
                     hEtaMu[vtype].Fill(vec_muP.PseudoRapidity())
                     hEtaMu[vtype].Fill(vec_muN.PseudoRapidity())
                     hEta[vtype].Fill(vec_eta.PseudoRapidity(), my_evt_weight)
@@ -1562,6 +1783,12 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         if do_ElIDsf:
                             hMIDUp[vtype].Fill(m, evt_weightIDUp)
                             hMIDDn[vtype].Fill(m, evt_weightIDDn)
+                    if isMC and do_TTOC:
+                        hMTTOCUp[vtype].Fill(m, evt_weightTTOCUp)
+                        hMTTOCDn[vtype].Fill(m, evt_weightTTOCDn)
+                    if isMC and do_MuIDsf:
+                        hMMuUp[vtype].Fill(m, evt_weightMuUp)
+                        hMMuDn[vtype].Fill(m, evt_weightMuDn)
                     if not passedTrig:
                         hMFailedTrig[vtype].Fill(m, my_evt_weight) 
                     hMNoWt[vtype].Fill(m)
@@ -1587,7 +1814,7 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                         hMNoMuSide.Fill( (vec_elP+vec_elN).M(), my_evt_weight)
                         
                     #if vtype == "elel":
-                    if ((isSig or not isMuMu) and vtype == "mmelel") or (isMuMu and vtype == "mumu"):
+                    if isMC and (((isSig or not isMuMu) and vtype == "mmelel") or (isMuMu and vtype == "mumu")):
                         if not isMuMu:
                             mee = (vec_elP+vec_elN).M()
                             hMee.Fill(mee, my_evt_weight)
@@ -1712,6 +1939,9 @@ def process_vertices(e, vtype, singleVert, useOnia, xsec, evt_weight, g=None, ge
                 if do_ElIDsf:
                     hMIDUp[vtype].Fill(bestm, evt_weightIDUp)
                     hMIDDn[vtype].Fill(bestm, evt_weightIDDn)
+            if isMC and do_MuIDsf:
+                hMMuUp[vtype].Fill(bestm, evt_weightMuUp)
+                hMMuDn[vtype].Fill(bestm, evt_weightMuDn)
             if not passedTrig:
                 print("filling failedTrig!!!! mass %f, weight %f"%(bestm, evt_weight))
                 hMFailedTrig[vtype].Fill(bestm, evt_weight) 
@@ -2110,9 +2340,6 @@ def process_file(fname, singleVert, useOnia, hWeights):
                 passedTrig = toyTrig(gensubpt)
             #if genEtaPt > 65:
             #    print("genEtaPt: %f; nGenPart:%d"%(genEtaPt, g.nGenPart)) 
-            if year != 2023:
-                hpTGenAll.Fill(genEtaPt)
-                hMGenAll.Fill(gen_eta.M()) 
             #xbin = h_xsec.FindBin( genEtaPt )
             #xsec0 = h_xsec.GetBinContent( xbin ) * h_xsec.GetBinWidth( xbin )
             #testing this new xsec measurement???
@@ -2136,24 +2363,31 @@ def process_file(fname, singleVert, useOnia, hWeights):
             xsec_unc1 = 0.226186
             #xsec_unc1 = 0.250471 
             #now using new weights!! from DG/Cheb4 2mu fits
-            if require_muID:
+            #if require_muID:
+            if new_wt == 1:
                 #medium ID
                 #xsec_p0 = 1.6093980e+15
                 #xsec_p1 = 5.2268649
                 #loose ID
                 xsec_p0 = 7.22777e+14
                 xsec_p1 = 5.01568
-            elif new_wt == 1:
-                xsec_p0 = 1.34311e+15
-                xsec_unc0 = 8.30077e+14
-                xsec_p1 = 5.22827
-                xsec_unc1 = 1.80061e-01 
+            #elif new_wt == 1:
+            #    xsec_p0 = 1.34311e+15
+            #    xsec_unc0 = 8.30077e+14
+            #    xsec_p1 = 5.22827
+            #    xsec_unc1 = 1.80061e-01 
             elif new_wt == 2:
-                xsec_p0 = 9.4012018e+14
-                xsec_p1 = 5.1077085
+                #DG, Cheb3!
+                #xsec_p0 = 9.4012018e+14
+                #xsec_p1 = 5.1077085
+                xsec_p0 = 9.31211e+14
+                xsec_p1 = 5.1051
             elif new_wt == 3:
-                xsec_p0 = 8.4903893e+14
-                xsec_p1 = 5.0395503
+                #xsec_p0 = 8.4903893e+14
+                #xsec_p1 = 5.0395503
+                #corrected for 2mu!!
+                xsec_p0 = 9.82423e+14
+                xsec_p1 = 5.03434
             xsec1 = xsec_p0 / genEtaPt**xsec_p1
             xsecUp = (xsec_p0 + xsec_unc0) / genEtaPt**(xsec_p1 - xsec_unc1) 
             xsecDn = (xsec_p0 - xsec_unc0) / genEtaPt**(xsec_p1 + xsec_unc1) 
@@ -2170,11 +2404,15 @@ def process_file(fname, singleVert, useOnia, hWeights):
                 print("bratio = 0!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             
             evt_weight *= (xsec * bratio * lumi / ptWeight)
-            #Add corrections!
-            if do_pileup:
-                #pileup correction
-                puCor = PUCor.GetBinContent(PUCor.FindBin(e.nPV))
-                evt_weight *= puCor
+            ##Add corrections!
+            #if do_pileup:
+            #    #pileup correction
+            #    puCor = PUCor.GetBinContent(PUCor.FindBin(e.nPV))
+            #    evt_weight *= puCor
+
+            if year != 2023:
+                hpTGenAll.Fill(genEtaPt, evt_weight)
+                hMGenAll.Fill(gen_eta.M(), evt_weight) 
 
             if genEtaPt > 0: #25:
                 hEtaGenAll.Fill(genEtaEta, evt_weight)
@@ -2192,7 +2430,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
             #    print("dsigma/dpT: %f, binwidth: %f"%(h_xsec.GetBinContent( xbin ), h_xsec.GetBinWidth( xbin ))) 
             all_weight += evt_weight
             if passedTrig and year != 2023:
-                hpTGenTrig.Fill(genEtaPt)
+                hpTGenTrig.Fill(genEtaPt, evt_weight)
                 trg_weight += evt_weight
             if passedTrig:
                 if genEtaPt > 0: #25:
@@ -2246,6 +2484,7 @@ def process_file(fname, singleVert, useOnia, hWeights):
                 hpTL1Pass.Fill(mu_subpt, evt_weight)
             if hlpass:
                 hpTHLTPass.Fill(mu_subpt, evt_weight)
+                
         else:
             #see if passed the L1 one
             #if (year == 2022 and (trig0 & (1<<25))) or (year == 2023 and (trig0 & (1<<26))):
@@ -2308,10 +2547,10 @@ def process_file(fname, singleVert, useOnia, hWeights):
                         hEtaGenReco[vtype].Fill(gen_eta.PseudoRapidity(), evt_weight)
                     #if year != 2023:
                     #reco def is just enough particles now; doesn't need to be in right mass range
-                    hpTGenReco[vtype].Fill(gen_eta.Pt())
+                    hpTGenReco[vtype].Fill(gen_eta.Pt(), evt_weight)
                     rec_weight[vtype] += evt_weight
                 else:
-                    hpTGenNotReco[vtype].Fill(gen_eta.Pt())
+                    hpTGenNotReco[vtype].Fill(gen_eta.Pt(), evt_weight)
                 #else:
                 #    continue
 
@@ -2371,6 +2610,10 @@ def finish_processing(foutname):
     hMeePeak.Write()
     hMComb.Write()
     hMReal.Write()
+    hL1TC.Write()
+    hL1TF.Write()
+    hHLTC.Write()
+    hHLTF.Write()
     if isMC: #and not isMuMu:
         if not isMuMu:
             hMeedR.Write()
@@ -2401,6 +2644,7 @@ def finish_processing(foutname):
         hMNoWt[vtype].Write()
         hMFailedTrig[vtype].Write()
         hdREl[vtype].Write()
+        hdRvPtEl[vtype].Write()
         hL1all[vtype].Write()
         hL1pass[vtype].Write()
         hnPVgood[vtype].Write()
@@ -2467,6 +2711,10 @@ def finish_processing(foutname):
             hMRecDn[vtype].Write()
             hMIDUp[vtype].Write()
             hMIDDn[vtype].Write()
+            hMTTOCUp[vtype].Write()
+            hMTTOCDn[vtype].Write()
+            hMMuUp[vtype].Write()
+            hMMuDn[vtype].Write()
             hEventWeight[vtype].Write()
             hEvtWtVsPt[vtype].Write()
             hpTGenReco[vtype].Write()
@@ -2576,9 +2824,9 @@ if isMC:
             if arg > -1:
                 flist2name = flistname
         else:
-            flistname = "bkgMCList.txt"
+            flistname = "%sbkgMCList.txt"%("bkgMCReducedLPTLists/" if useLowPt else "")
             if arg > -1:
-                flist2name = "bkgMCList%d.txt"%arg
+                flist2name = "%sbkgMCList%d.txt"%("bkgMCReducedLPTLists/" if useLowPt else "", arg)
 elif syncTest and singleFile:
     flistname = "syncList.txt"
 elif year == 2023 and not isMC:

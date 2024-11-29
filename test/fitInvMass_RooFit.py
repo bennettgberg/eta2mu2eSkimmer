@@ -18,17 +18,20 @@ req_elID = 2
 #require muon ID or nah?
 req_muID = True
 
+#medium muID instead of just loose
+tightMu = False
+
 #True if want to use the selection where events with .04 < M_ee < .09 GeV are cut
 cut_mee = False
 
 #include pileup corrections or nah
-do_pileup = True
+do_pileup = True  
 
 #include trigger efficiency corrections or nah?
 do_trigCor = True
 
 #use new event weights from DG/Cheb4 2mu fits?
-new_wt = 1 #True
+new_wt = 4
 
 #use lowPt electrons instead of regular ones?
 useLowPt = False
@@ -61,7 +64,7 @@ if len(sys.argv) > 1:
 #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest36_ALL.root"
 #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest369_ALL.root" #elID req'd
 #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest374_ALL.root" #elID req'd
-if req_elID == 2:
+if 1 == 1: #req_elID == 2:
     #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3819_ALL.root" #elID req'd
     #vProb>.1, nMiss<=3
     #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3818_ALL.root" #elID req'd
@@ -79,16 +82,27 @@ if req_elID == 2:
             #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3883_ALL.root"
             #loose ID
             #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3884_ALL.root"
-            #nominal!!
             #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38107_ALL.root"
             #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38126_ALL.root"
             #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38130_ALL.root"
             #reprocessed, nd stuff
             #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4715_ALL.root"
-            if useLowPt:
-                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4734_ALL.root"
+            if useLowPt and req_elID == 0:
+                #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4734_ALL.root"
+                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4764_ALL.root"
+            elif useLowPt and req_elID == 2:
+                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4766_ALL.root"
+            elif tightMu:
+                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4741_ALL.root"
+            elif req_elID == 0:
+                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4765_ALL.root"
+            elif req_elID == 3:
+                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4771_ALL.root"
             else:
-                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4733_ALL.root"
+                #nominal frfrfr!!
+                #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4733_ALL.root"
+                #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4753_ALL.root"
+                infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4763_ALL.root"
         else:
             #infile = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3837_ALL.root"
             #including cuts on muon pt, eta, etc
@@ -134,7 +148,7 @@ else:
     #distname = "hMMod6"
 #accidentally used the wrong name!
 #distname = "Ptmmee"
-compare_sigMC = False
+compare_sigMC = True
 compare_bkgMC = True
 
 f = ROOT.TFile.Open(infile)
@@ -157,7 +171,7 @@ h.Print()
 #h = f.Get("hMlpe")
 
 #factor by which to rebin the histograms
-rebin = 5 #4 #6
+rebin = 5 #4 #6 #
 
 h.Rebin(rebin) #5) #15
 h.Print()
@@ -213,18 +227,20 @@ rrv.setRange("full", fitmin, fitmax)
 #set this to -1 for a smaller fit range (.52-.575 GeV) or +1 for a big fit range (.50-.60 GeV)
 fitsize = 0
 nresparam = 1 #only normalization allowed to float for resonant background
-if req_elID == 2 or req_elID == 3:
+if 1 == 1: #req_elID == 2 or req_elID == 3:
     #sigMod = 'BreitWigner'
     #nsigparam = 3
     #sigMod = 'Voigtian'
     #nsigparam = 4
-    sigMod = ''
-    nsigparam = 0
+    #sigMod = ''
+    #nsigparam = 0
     #sigMod = 'DoubleGauss' #nominal!!!
     #nsigparam = 5 
-    #CB_Gauss
-    #sigMod = 'CB_Gauss'
-    #nsigparam = 7
+    #sigMod = 'TripleGauss' 
+    #nsigparam = 7 
+    #CB_Gauss -- now only 6 params bc n set to constant of 10
+    sigMod = 'CB_Gauss'
+    nsigparam = 6 #7
     #comBkgMod = 'Cheb0'
     #ncomparam = 1
     comBkgMod = 'Threshold2mu2e' #new nominal!
@@ -261,7 +277,7 @@ import utils.fit_function_library as library
 #myfitter.set_bkg_params( alpha=library.Param(1, 0.5, 5), x0=library.ConstParam(.2122) ) #for Threshold
 #myfitter.set_bkg_params( a1=library.Param(0.5, -1, 1), a2=library.Param(0.2, -1, 1) ) #for Cheb2
 #myfitter.set_bkg_params( a1=library.Param(0.5, -1, 1) ) #for Cheb1
-if req_elID == 2 or req_elID == 3:
+if 1 == 1: #req_elID == 2 or req_elID == 3:
     if comBkgMod == 'Cheb0':
         myfitter.set_bkg_params( ) #a1=library.Param(0.5, .1, 1) ) 
     elif comBkgMod == 'Threshold2mu2e':
@@ -290,6 +306,8 @@ if req_muID:
     bparamfname += "_reqMuID"
 if req_elID != 2:
     bparamfname += "_req%d"%req_elID
+if tightMu:
+    bparamfname += "_tightMu"
 if not do_pileup:
     bparamfname += "_noPU"
 if do_trigCor:
@@ -322,72 +340,76 @@ if os.path.exists(bparamfname):
             comm += "%s=library.ConstParam(%f)"%(pname, pval) 
     comm += " )"
     exec(comm)
-    myfitter.set_resBkg_norm(nbkgMC, 0.2) 
+    if useLowPt or req_elID == 0:
+        myfitter.set_resBkg_norm(nbkgMC, 0.4) 
+    else:
+        myfitter.set_resBkg_norm(nbkgMC, 0.2) 
 else:
     print("aaaaaaaaaaaaaaaaaaaaaaaaaaa %s doesn't exist aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"%bparamfname)
+    sys.exit()
 
-    #myfitter.set_resBkg_params( mg=library.Param(.545, .544, .549), sg=library.Param(2.64e-2, 2.63e-2, 2.65e-2) )
-    if req_elID == 2:
-        #myfitter.set_resBkg_params( mg=library.ConstParam(.555, .554, .556), sg=library.Param(1.82e-2, 1.80e-2, 1.84e-2) )
-        #myfitter.set_resBkg_params( mb=library.ConstParam(.552), wb=library.ConstParam(1.87e-2) )
-        if rebin == 5:
-            if cut_mee:
-                #cut .04 < M_ee < .09 (kills almost all the resBkg)
-                myfitter.set_resBkg_params( mb=library.ConstParam(.5750), wb=library.ConstParam(8.469e-3) )
-                myfitter.set_resBkg_norm(1.061, 0.2)
-            else:
-                #normal
-                #myfitter.set_resBkg_params( mb=library.ConstParam(.5537), wb=library.ConstParam(1.807e-2) )
-                #myfitter.set_resBkg_norm(17.63, 0.2)
-                #adding muon pt, eta cuts, updated event weight, pileup corex, etc
-                #myfitter.set_resBkg_params( mb=library.ConstParam(.5549), wb=library.ConstParam(1.652e-2) )
-                #myfitter.set_resBkg_norm(5.24, 0.2)
-                if do_pileup:
-                    #3866
-                    if resBkgMod == 'BreitWigner':
-                        myfitter.set_resBkg_params( mb=library.ConstParam(.5548), wb=library.ConstParam(1.626e-2) )
-                        myfitter.set_resBkg_norm(13.35, 0.2)
-                    elif resBkgMod == 'SingleGauss':
-                        myfitter.set_resBkg_params( mg=library.ConstParam(.5580), sg=library.ConstParam(1.339e-02) )
-                        myfitter.set_resBkg_norm(13.35, 0.2)
-                    elif resBkgMod == 'Voigtian':
-                        myfitter.set_resBkg_params( mv=library.ConstParam(.5588), wv=library.ConstParam(4.543e-03), sv=library.ConstParam(1.045e-02) )
-                        myfitter.set_resBkg_norm(13.35, 0.2)
-                else:
-                    #3867
-                    myfitter.set_resBkg_params( mb=library.ConstParam(.5549), wb=library.ConstParam(1.774e-2) )
-                    myfitter.set_resBkg_norm(9.04, 0.2)
-        elif rebin == 4:
-            myfitter.set_resBkg_params( mb=library.ConstParam(.5539), wb=library.ConstParam(1.433e-2) ) 
-            myfitter.set_resBkg_norm(13.37, 0.2)
-        elif rebin == 6:
-            myfitter.set_resBkg_params( mb=library.ConstParam(.5558), wb=library.ConstParam(1.872e-2) ) 
-            myfitter.set_resBkg_norm(14.00, 0.2)
-        #myfitter.set_resBkg_norm(19.82)
-    elif req_elID == 1:
-        #myfitter.set_resBkg_params( mv=library.ConstParam(.557), sv=library.ConstParam(1.01e-3), wv=library.ConstParam(2.99e-2) )
-        #myfitter.set_resBkg_norm(199.4)
-        myfitter.set_resBkg_params( mb=library.ConstParam(.5595), wb=library.ConstParam(2.346e-2) )
-        #myfitter.set_resBkg_norm(199.3)
-        myfitter.set_resBkg_norm(163.2, 0.2)
-    elif req_elID == 3:
-        #myfitter.set_resBkg_params( mb=library.ConstParam(.5540), wb=library.ConstParam(1.309e-2) )
-        #myfitter.set_resBkg_norm(6.0, 0.2)
-        #3871
-        #myfitter.set_resBkg_params( mb=library.ConstParam(.5541), wb=library.ConstParam(1.310e-2) )
-        #myfitter.set_resBkg_norm(5.91, 0.2)
-        #3872--with PU corex
-        myfitter.set_resBkg_params( mb=library.ConstParam(.5545), wb=library.ConstParam(1.426e-2) )
-        myfitter.set_resBkg_norm(6.09, 0.2)
-    elif req_elID == 0:
-        ##normal
-        #myfitter.set_resBkg_params( mb=library.ConstParam(0.5606), wb=library.ConstParam(1.912e-2) )
-        #myfitter.set_resBkg_norm(1002.4, 0.2)
-        ## .04 < M_ee < .09 cut
-        #myfitter.set_resBkg_params( mb=library.ConstParam(0.5750), wb=library.ConstParam(4.897e-2) )
-        #myfitter.set_resBkg_norm(131.4, 0.2)
-        myfitter.set_resBkg_params( mb=library.ConstParam(0.5605), wb=library.ConstParam(1.850e-2) )
-        myfitter.set_resBkg_norm(640.8, 0.2)
+    ##myfitter.set_resBkg_params( mg=library.Param(.545, .544, .549), sg=library.Param(2.64e-2, 2.63e-2, 2.65e-2) )
+    #if req_elID == 2:
+    #    #myfitter.set_resBkg_params( mg=library.ConstParam(.555, .554, .556), sg=library.Param(1.82e-2, 1.80e-2, 1.84e-2) )
+    #    #myfitter.set_resBkg_params( mb=library.ConstParam(.552), wb=library.ConstParam(1.87e-2) )
+    #    if rebin == 5:
+    #        if cut_mee:
+    #            #cut .04 < M_ee < .09 (kills almost all the resBkg)
+    #            myfitter.set_resBkg_params( mb=library.ConstParam(.5750), wb=library.ConstParam(8.469e-3) )
+    #            myfitter.set_resBkg_norm(1.061, 0.2)
+    #        else:
+    #            #normal
+    #            #myfitter.set_resBkg_params( mb=library.ConstParam(.5537), wb=library.ConstParam(1.807e-2) )
+    #            #myfitter.set_resBkg_norm(17.63, 0.2)
+    #            #adding muon pt, eta cuts, updated event weight, pileup corex, etc
+    #            #myfitter.set_resBkg_params( mb=library.ConstParam(.5549), wb=library.ConstParam(1.652e-2) )
+    #            #myfitter.set_resBkg_norm(5.24, 0.2)
+    #            if do_pileup:
+    #                #3866
+    #                if resBkgMod == 'BreitWigner':
+    #                    myfitter.set_resBkg_params( mb=library.ConstParam(.5548), wb=library.ConstParam(1.626e-2) )
+    #                    myfitter.set_resBkg_norm(13.35, 0.2)
+    #                elif resBkgMod == 'SingleGauss':
+    #                    myfitter.set_resBkg_params( mg=library.ConstParam(.5580), sg=library.ConstParam(1.339e-02) )
+    #                    myfitter.set_resBkg_norm(13.35, 0.2)
+    #                elif resBkgMod == 'Voigtian':
+    #                    myfitter.set_resBkg_params( mv=library.ConstParam(.5588), wv=library.ConstParam(4.543e-03), sv=library.ConstParam(1.045e-02) )
+    #                    myfitter.set_resBkg_norm(13.35, 0.2)
+    #            else:
+    #                #3867
+    #                myfitter.set_resBkg_params( mb=library.ConstParam(.5549), wb=library.ConstParam(1.774e-2) )
+    #                myfitter.set_resBkg_norm(9.04, 0.2)
+    #    elif rebin == 4:
+    #        myfitter.set_resBkg_params( mb=library.ConstParam(.5539), wb=library.ConstParam(1.433e-2) ) 
+    #        myfitter.set_resBkg_norm(13.37, 0.2)
+    #    elif rebin == 6:
+    #        myfitter.set_resBkg_params( mb=library.ConstParam(.5558), wb=library.ConstParam(1.872e-2) ) 
+    #        myfitter.set_resBkg_norm(14.00, 0.2)
+    #    #myfitter.set_resBkg_norm(19.82)
+    #elif req_elID == 1:
+    #    #myfitter.set_resBkg_params( mv=library.ConstParam(.557), sv=library.ConstParam(1.01e-3), wv=library.ConstParam(2.99e-2) )
+    #    #myfitter.set_resBkg_norm(199.4)
+    #    myfitter.set_resBkg_params( mb=library.ConstParam(.5595), wb=library.ConstParam(2.346e-2) )
+    #    #myfitter.set_resBkg_norm(199.3)
+    #    myfitter.set_resBkg_norm(163.2, 0.2)
+    #elif req_elID == 3:
+    #    #myfitter.set_resBkg_params( mb=library.ConstParam(.5540), wb=library.ConstParam(1.309e-2) )
+    #    #myfitter.set_resBkg_norm(6.0, 0.2)
+    #    #3871
+    #    #myfitter.set_resBkg_params( mb=library.ConstParam(.5541), wb=library.ConstParam(1.310e-2) )
+    #    #myfitter.set_resBkg_norm(5.91, 0.2)
+    #    #3872--with PU corex
+    #    myfitter.set_resBkg_params( mb=library.ConstParam(.5545), wb=library.ConstParam(1.426e-2) )
+    #    myfitter.set_resBkg_norm(6.09, 0.2)
+    #elif req_elID == 0:
+    #    ##normal
+    #    #myfitter.set_resBkg_params( mb=library.ConstParam(0.5606), wb=library.ConstParam(1.912e-2) )
+    #    #myfitter.set_resBkg_norm(1002.4, 0.2)
+    #    ## .04 < M_ee < .09 cut
+    #    #myfitter.set_resBkg_params( mb=library.ConstParam(0.5750), wb=library.ConstParam(4.897e-2) )
+    #    #myfitter.set_resBkg_norm(131.4, 0.2)
+    #    myfitter.set_resBkg_params( mb=library.ConstParam(0.5605), wb=library.ConstParam(1.850e-2) )
+    #    myfitter.set_resBkg_norm(640.8, 0.2)
     
 if sigMod != '':
     #read signal parameters in from the txt file!
@@ -405,6 +427,8 @@ if sigMod != '':
         sparamfname += "_reqMuID"
     if req_elID != 2:
         sparamfname += "_req%d"%req_elID
+    if tightMu:
+        sparamfname += "_tightMu"
     if not do_pileup:
         sparamfname += "_noPU"
     if do_trigCor:
@@ -430,11 +454,13 @@ if sigMod != '':
             perr = float(words[2])
             if i != 0:
                 comm += ", "
-            if rebin == 6:
-                comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-2*perr, pval+2*perr) 
+            if rebin == 6: # and 0 == 1:
+                comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-0.5*perr, pval+0.5*perr) 
             else:
                 if sigMod == "CB_Gauss":
                     comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-2*perr, pval+2*perr) 
+                #elif sigMod == "DoubleGauss":
+                #    comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-0.8*perr, pval+0.8*perr) 
                 else:
                     comm += "%s=library.Param(%f, %f, %f)"%(pname, pval, pval-perr, pval+perr) 
         comm += " )"
@@ -563,7 +589,7 @@ leg.AddEntry("Tot", f"Sum: N = {ntot:.1f}", "l")
 leg.AddEntry("Data", f"Data, N = {ndata:n}", "lep")
 leg.Draw()
 if req_elID == 2:
-    if year == 2022:
+    if year == 2022 and not useLowPt:
         if rebin == 5:
             if req_muID:
                 pav = ROOT.TPaveText(.46, 25, .54, 30)
@@ -576,6 +602,8 @@ if req_elID == 2:
             pav = ROOT.TPaveText(.46, 35, .54, 40)
     elif year == 2223:
         pav = ROOT.TPaveText(.46, 40, .54, 48)
+    elif useLowPt:
+        pav = ROOT.TPaveText(.46, 150, .54, 250)
 elif req_elID == 3:
     pav = ROOT.TPaveText(.46, 10, .54, 12)
 elif req_elID == 1:
@@ -616,7 +644,7 @@ mc_sig_int = -1
 mc_bkg_int = -1
 #draw MC first (if drawing it)
 if compare_sigMC:
-    if req_elID == 2:
+    if  0 == 0: #req_elID == 2:
         #nMiss==0, vProb>.5
         #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3826.root")
         #nMiss<=3, vProb>.1
@@ -632,11 +660,10 @@ if compare_sigMC:
             #pileup corrections added, etc (2022 only)
             #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3860.root")
             #updated weights
-            if do_pileup:
+            if 0 == 0: #do_pileup:
                 if new_wt == 1:
                     if req_muID:
                         if do_trigCor:
-                            #nominal frfrfrfrfr
                             #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3888.root")
                             #only one trigger path instead of 6
                             #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38110.root")
@@ -645,10 +672,15 @@ if compare_sigMC:
                             #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38145p4715.root")
                             if useLowPt:
                                 fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38166p4734.root")
+                            elif tightMu:
+                                fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38176p4741.root")
                             else:
                                 #cut transition electrons, do additional corrections, nd stuff
                                 #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38164p4733.root")
-                                fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38174p4740.root")
+                                #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38174p4740.root")
+                                #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38216p4777.root")
+                                #test
+                                fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38219p4779.root")
                         else:
                             #medium ID
                             #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3883.root")
@@ -660,9 +692,30 @@ if compare_sigMC:
                         #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3878.root")
                         fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3882.root")
                 elif new_wt == 2:
-                    fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3879.root")
+                    if req_muID and do_trigCor:
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38188p4750.root")
+                    else:
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3879.root")
                 elif new_wt == 3:
-                    fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3880.root")
+                    #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3880.root")
+                    if do_pileup:
+                        #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38195p4757.root")
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38203p4763.root")
+                    else:
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38193p4756.root")
+                elif new_wt == 4:
+                    if useLowPt and req_elID == 0:
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38210p4772.root")
+                    elif useLowPt and req_elID == 2:
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38212p4774.root")
+                    elif req_elID == 0:
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38214p4776.root")
+                    elif req_elID == 3:
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38223p4784.root")
+                    else:
+                        #nominal frfrfrfrfrfrfrfrfrfrfrfrfrfrfrfrfrfrfrfrfrfr
+                        #fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38208p4769.root")
+                        fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38221p4782.root")
                 else:
                     fMC = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3866.root")
             else:
@@ -710,7 +763,7 @@ if compare_sigMC:
     #MC_scales = [1.0]
     MC_scales = [0.40] #4]
     if req_elID == 0:
-        MC_scales = [0.7]
+        MC_scales = [0.40]
     hMC = [None for mcs in MC_scales]
     #draw the blinded MC scaled by a few different values
     for i,scale in enumerate(MC_scales):
@@ -759,7 +812,7 @@ if compare_sigMC:
 
 if compare_bkgMC:
     #fBkg = ROOT.TFile.Open("EtaToMuMuGamma_2018_0_ntuple_skimmedBkgMC.root")
-    if req_elID == 2:
+    if 1 == 1: #req_elID == 2:
         #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3826.root")
         #vProb>.1, nMiss<=3
         #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3827.root")
@@ -774,11 +827,10 @@ if compare_bkgMC:
             #nominal, 2022 only, pileup corex, etc
             #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3860.root")
             #updated weights
-            if do_pileup:
+            if 0 == 0: #do_pileup:
                 if new_wt == 1:
                     if req_muID:
                         if do_trigCor:
-                            #nominal frfrfrfrfrfr
                             #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3888.root")
                             #only one trigger path instead of 6
                             #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38110.root")
@@ -787,9 +839,12 @@ if compare_bkgMC:
                             #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38145.root")
                             if useLowPt:
                                 fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38167.root")
+                            elif tightMu:
+                                fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38177.root")
                             else:
                                 #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38165.root")
-                                fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38175.root")
+                                #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38175.root")
+                                fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38216.root")
                         else:
                             #medium ID
                             #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3883.root")
@@ -801,9 +856,29 @@ if compare_bkgMC:
                         #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3878.root")
                         fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3882.root")
                 elif new_wt == 2:
-                    fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3879.root")
+                    if req_muID and do_trigCor:
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38189.root")
+                    else:
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3879.root")
                 elif new_wt == 3:
-                    fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3880.root")
+                    #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3880.root")
+                    if do_pileup:
+                        #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38196.root")
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38204.root")
+                    else:
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38194.root")
+                elif new_wt == 4:
+                    if useLowPt and req_elID == 0:
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38210.root")
+                    elif useLowPt and req_elID == 2:
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38212.root")
+                    elif req_elID == 0:
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38214.root")
+                    elif req_elID == 3:
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38223.root")
+                    else:
+                        #fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38208.root")
+                        fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest38221.root")
                 else:
                     fBkg = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_bkgMCtest3866.root")
             else:
@@ -840,7 +915,8 @@ if compare_bkgMC:
     ##temporary fix: scale bkg to get back to just 2022 lumi instead of 2022-23
     #if (req_elID == 2 or req_elID == 1) and year != 2223 and not cut_mee:
     #    hBkg.Scale(38.48/(38.48+28.89)) 
-    if "38145" in fBkg:
+    #if "38145" in fBkg:
+    if new_wt > 3 or 0 == 0:
         hBkg.Scale((28.25+9.76)/28.25) 
     #rebin = hBkg.GetNbinsX() / nbins
     #print("bkg rebin: " + str(rebin))
@@ -934,6 +1010,8 @@ if req_elID == 3:
     canfname += "_tightID"
 elif req_elID == 0:
     canfname += "_NoElID"
+if tightMu:
+    canfname += "_tightMu"
 if not do_pileup:
     canfname += "_NoPU"
 if do_trigCor:

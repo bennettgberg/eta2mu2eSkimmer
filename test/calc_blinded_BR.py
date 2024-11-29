@@ -11,12 +11,16 @@ if year == 2022:
 elif year == 2023:
     lumi = 28.89 #fb^-1 (all 2023)
 
-selection = "nominal"
+#selection = "nominal"
+#selection = "tightMu"
 #selection = "lowPt"
+#selection = "lowPtLoose"
 #selection = "nomuID"
 #selection = "loose"
 #selection = "tight"
-#selection = "vloose"
+selection = "vloose"
+#selection = "elLoose"
+#selection = "elwp80"
 
 #2mu sig model (nominal: DG, Cheb4)
 refMod = "DG" 
@@ -25,8 +29,10 @@ refMod = "DG"
 #refBkg = "Cheb2"
 refBkg = "Cheb3"
 #refBkg = "Cheb4"
+#refBkg = "ExpCheb2"
+#refBkg = "ExpCheb3"
 
-new_wt = 1 #True
+new_wt = 4 
 
 B2mu = 5.8e-6
 
@@ -61,49 +67,108 @@ if year == 2022:
         N2mu2e = 154.42
         Err2mu2e = 24.09
     elif selection == "nominal":
-        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3884.root")
-        #N2mu2e = 135.17
-        #Err2mu2e = 14.05
-        #WITH triggercorrections: 136.664236 +/- 14.085243 (stat.)
-        #Nominal frfrfrfrfrfrfr
-        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3888.root")
-        #N2mu2e = 136.66
-        #Err2mu2e = 14.09 
-        #one trigger path only 135.832195 +/- 14.135855
-        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38110.root")
-        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38110.root")
-        #N2mu2e = 135.83
-        #Err2mu2e = 14.14
-        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38130p474.root")
-        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38130p474.root")
-        #N2mu2e = 130.78
-        #Err2mu2e = 13.62
-        #124.148028 +/- 13.380399
-        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38137p478.root")
-        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
-        #N2mu2e = 123.64
-        #Err2mu2e = 13.39
-        #N2mu2e = 128.36
-        #Err2mu2e = 13.54
-        #129.032638 +/- 13.570899
-        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38164p4733.root")
-        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
-        #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38169p4735.root")
-        #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38169p4735.root")
-        #N2mu2e = 129.03
-        #Err2mu2e = 13.57
-        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38174p4740.root")
-        f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38171p4737.root")
-        N2mu2e = 124.23
-        Err2mu2e = 13.38
+        if new_wt == 1:
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3884.root")
+            #N2mu2e = 135.17
+            #Err2mu2e = 14.05
+            #WITH triggercorrections: 136.664236 +/- 14.085243 (stat.)
+            #Nominal frfrfrfrfrfrfr
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3888.root")
+            #N2mu2e = 136.66
+            #Err2mu2e = 14.09 
+            #one trigger path only 135.832195 +/- 14.135855
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38110.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38110.root")
+            #N2mu2e = 135.83
+            #Err2mu2e = 14.14
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38130p474.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38130p474.root")
+            #N2mu2e = 130.78
+            #Err2mu2e = 13.62
+            #124.148028 +/- 13.380399
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38137p478.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
+            #N2mu2e = 123.64
+            #Err2mu2e = 13.39
+            #N2mu2e = 128.36
+            #Err2mu2e = 13.54
+            #129.032638 +/- 13.570899
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38164p4733.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38169p4735.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38169p4735.root")
+            #N2mu2e = 129.03
+            #Err2mu2e = 13.57
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38174p4740.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38171p4737.root")
+            #N2mu2e = 124.23
+            #Err2mu2e = 13.38
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38217p4778.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38217p4778.root")
+            #N2mu2e = 122.597560
+            #Err2mu2e = 13.121417
+            #test
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38220p4780.root")
+            f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38219p4779.root")
+            N2mu2e = 122.9
+            Err2mu2e = 13.121417
+        elif new_wt == 2:
+            #N2mu2e = 127.682520 
+            #Err2mu2e = 13.431121
+            N2mu2e = 140.041015 
+            Err2mu2e = 15.917198
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38188p4750.root")
+            f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38188p4750.root")
+        elif new_wt == 3:
+            N2mu2e = 134.003579
+            Err2mu2e = 16.391796
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38193p4756.root")
+            f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38192p4755.root")
+        elif new_wt == 4:
+            #N2mu2e = 115.908681
+            #Err2mu2e = 13.007158
+            N2mu2e = 121.787663
+            Err2mu2e = 13.155257
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38209p4770.root")
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38222p4783.root")
+            f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38209p4770.root")
     elif selection == "lowPt":
-        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38166p4734.root")
-        f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
-        N2mu2e = 789.45
-        Err2mu2e = 61.26
+        if new_wt == 4:
+            N2mu2e = 887.966459
+            Err2mu2e = 52.257225
+            #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38213p4775.root")
+            #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38213p4775.root")
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38212p4774.root")
+            f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38214p4776.root")
+        else:
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38166p4734.root")
+            f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38137p478.root")
+            N2mu2e = 789.45
+            Err2mu2e = 61.26
+    elif selection == "lowPtLoose":
+        #LowPtElectrons with NO electron ID
+        N2mu2e = 4418.275216
+        Err2mu2e = 108.060419
+        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38211p4773.root")
+        f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38211p4773.root")
+    elif selection == "elLoose":
+        N2mu2e = 1736.947501
+        Err2mu2e = 58.157724
+        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38211p4773.root")
+        f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38211p4773.root")
+    elif selection == "elwp80":
+        N2mu2e = 26.781858 
+        Err2mu2e = 6.194978
+        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38224p4785.root")
+        f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38209p4770.root")
     elif selection == "loose":
         f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3838.root")
         N2mu2e = 766.5
+    elif selection == "tightMu":
+        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38176p4741.root")
+        f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38139p4710.root") 
+        N2mu2e = 78.552598 
+        Err2mu2e = 13.334445
     elif selection == "tight":
         #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3839.root")
         #f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3871.root")
@@ -132,9 +197,15 @@ if year == 2022:
             N2mu2e = 38.75
             Err2mu2e = 7.80
     elif selection == "vloose":
-        f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3858.root")
-        N2mu2e = 2260.1
-        Err2mu2e = 72.9
+        if new_wt == 4:
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest38225p4786.root")
+            f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38209p4770.root")
+            N2mu2e = 1736.947501
+            Err2mu2e = 58.157724
+        else:
+            f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_sigMCtest3858.root")
+            N2mu2e = 2260.1
+            Err2mu2e = 72.9
 elif year == 2023:
     f2mu2e = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2023/ultraskimmed/bparking_2023sigMCtest430.root")
     N2mu2e = 0
@@ -144,7 +215,7 @@ ptGen2mu2e1 = f2mu2e.Get("hpTGenAll")
 ptGen2mu2e1.SetName("ptGen2mu2e")
 #ptGen2mu2e.Rebin(5)
 #ptAcc2mu2e1 = f2mu2e.Get("hpTGenAccmmelel")
-if selection == "lowPt":
+if "lowPt" in selection:
     ptAcc2mu2e1 = f2mu2e.Get("hpTGenAccdRmmlplp")
 else:
     ptAcc2mu2e1 = f2mu2e.Get("hpTGenAccdRmmelel")
@@ -189,11 +260,12 @@ ptAcc2mu.Divide(ptGen2mu)
 #    xsfname = "xsec2022.root"
 if selection == "nomuID":
     xsfname = "xsec2022_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
-elif selection == "nominal" or selection == "lowPt":
+elif "tight" in selection:
+    xsfname = "xsec2022_tightMuID_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
+#elif selection == "nominal" or "lowPt" in selection or "el" in selection:
+else:
     xsfname = "xsec2022_muID_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
     #xsfname = "xsec2022.root"
-elif selection == "tight":
-    xsfname = "xsec2022_tightMuID_%s%s.root"%("Voigt" if refMod == "Voigtian" else refMod, refBkg)
 xsecf = ROOT.TFile.Open(xsfname)
 xsec = xsecf.Get("hXsecCor") 
 

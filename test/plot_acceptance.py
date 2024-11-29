@@ -27,9 +27,9 @@ year = 2022
 tight = False
 #what factor to rebin by
 rebin = 5 #20
-sig = False
+sig = True
 mumu = False
-eff = False
+eff = True 
 #trig = True
 gsf = True
 #type of vertex to use
@@ -67,7 +67,8 @@ if mumu: vtype = "mumu"
 #fname = "rootfiles/bparking_%s%sMCtest%s.root"%(str(year) if year != 2022 else "", "sig" if sig else ("mumu" if mumu else "bkg"), "38130p474") 
 #fname = "rootfiles/bparking_%s%sMCtest%s.root"%(str(year) if year != 2022 else "", "sig" if sig else ("mumu" if mumu else "bkg"), "38133") 
 #fname = "rootfiles/bparking_%s%sMCtest%s.root"%(str(year) if year != 2022 else "", "sig" if sig else ("mumu" if mumu else "bkg"), "38134") 
-fname = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_%s%sMCtest%s.root"%(str(year) if year != 2022 else "", "sig" if sig else ("mumu" if mumu else "bkg"), "38137p478" if mumu else ("38164p4733" if sig else "38165") )
+#fname = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_%s%sMCtest%s.root"%(str(year) if year != 2022 else "", "sig" if sig else ("mumu" if mumu else "bkg"), "38137p478" if mumu else ("38164p4733" if sig else "38165") )
+fname = "root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_%s%sMCtest%s.root"%(str(year) if year != 2022 else "", "sig" if sig else ("mumu" if mumu else "bkg"), "38192p4755" if mumu else ("38193p4756" if sig else "38194") )
 #if year == 2023:
 #    #fname = "bparking_2023%sMCtest400.root"%("sig" if sig else ("mumu" if mumu else "bkg")) 
 #    fname = "bparking_2023%sMCtest430.root"%("sig" if sig else ("mumu" if mumu else "bkg")) 
@@ -88,7 +89,7 @@ if gsf:
         #fAcc = ROOT.TFile.Open("rootfiles/bparking_%sMCtest%d.root"%("sig" if sig else ("mumu" if mumu else "bkg"), 3865 if mumu else 3871)) 
         fAcc = f
     #hpTGenAcc = f.Get("h%sGenAcc%s"%("Eta" if eta else "pT", vtype))
-    hpTGenAcc = fAcc.Get("h%sGenAcc%s"%("Eta" if eta else "pT", vtype))
+    hpTGenAcc = fAcc.Get("h%sGenAccdR%s"%("Eta" if eta else "pT", vtype))
 else:
     hpTGenReco = f.Get("h%sGenReco"%("Eta" if eta else "pT")) 
     hpTGenAcc = f.Get("h%sGenAcc"%("Eta" if eta else "pT"))

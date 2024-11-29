@@ -9,16 +9,24 @@ from decimal import Decimal
 #if only testing, use smaller input file and do NOT overwrite output files
 test = False #True
 #set to true if want to remake all the plots for the individual pT bins
-remake = True
+remake = False
 
 #rewrite the xsec2022.root file or nah?
 rewrite = True
 
 #include the Run2 Scouting result on the same plot for comparison? or nah
-inc_run2 = True #False
+inc_run2 = True 
 
-#include the corrections, or JUST show the uncorrected xsec ?
+#include the acceptance correction, or JUST show the uncorrected xsec ?
 inc_corr = True
+
+#add the pulls to the figures (more time consuming to make the figures) ?
+add_pulls = False
+
+year = 2022
+
+#use medium muID instead of loose?
+tight = False
 
 #make plot of xsec as a function of pT for eta->2mu!
 if test:
@@ -39,7 +47,22 @@ else:
     #med muon ID
     #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3883_ALL.root", "read")
     #require loose muon ID!
-    f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3884_ALL.root", "read")
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest3884_ALL.root", "read")
+    #one trigger path only
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38105_ALL.root", "read")
+    #4_3 trigger path only
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38107_ALL.root", "read") 
+    #tight selection (tight electron ID, medium muon ID)
+    #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38122_ALL.root", "read") 
+    if tight:
+        f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38138_ALL.root", "read") 
+    else:
+        #golden json, etc
+        #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest38130_ALL.root", "read") 
+        #reran over errything
+        #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4715_ALL.root", "read") 
+        #f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4753_ALL.root", "read") 
+        f = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_datatest4763_ALL.root", "read") 
 
 h2d = f.Get("hMvsPtmumu")
 
@@ -53,6 +76,9 @@ nptbins = h2d.GetXaxis().GetNbins()
 mmin = h2d.GetYaxis().GetXmin()
 mmax = h2d.GetYaxis().GetXmax()
 nMbins = h2d.GetYaxis().GetNbins()
+
+mlo = 0.45 #.5
+mhi = 0.65 #.6
 
 etaMlo = .52
 etaMhi = .58
@@ -111,12 +137,22 @@ hRawYields = ROOT.TH1F("hRawYields", "hRawYields", newnptbins, array('d', newbin
 #medium (?) muon ID required
 #f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3883.root")
 #loose muon ID required
-f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3884.root")
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest3884.root")
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38106.root")
+#4_3 trigger path only
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38107.root")
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38130p474.root")
+#WITH corrections
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38192p4755.root")
+f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38207p4768.root")
+#medium muon ID
+#f2mu = ROOT.TFile.Open("root://cmseos.fnal.gov//store/user/bgreenbe/BParking2022/ultraskimmed/bparking_mumuMCtest38122.root")
 ptGen1 = f2mu.Get("hpTGenAll")
 ptGen1.SetName("hpTGenAllmumu")
 #ptGen.Rebin(5)
 ptGen = ROOT.TH1F("ptGen", "ptGen", newnptbins, array('d', newbins)) 
-ptAcc = f2mu.Get("hpTGenAccmumu")
+#ptAcc = f2mu.Get("hpTGenAccmumu")
+ptAcc = f2mu.Get("hpTGenAccdRmumu")
 ptAcc1 = ptAcc
 #ptAcc1 = f2mu.Get("hpTGenAccdRmumu")
 ptAcc = ROOT.TH1F("ptAcc", "ptAcc", newnptbins, array('d', newbins)) 
@@ -148,6 +184,9 @@ ptAcc.Divide(ptGen)
 #counter for which newbin we're on
 nb = 0
 nextbin = newbins[nb]
+
+#use official CMS Style.
+import utils.CMSStyle as cmsstyle
 
 if not test:
     fout = open("xsec_compare.txt", "w")
@@ -186,7 +225,7 @@ for j in range(nptbins+1): #-1):
     hipt = nextbin
     nextbin = newbins[nb+1]
     print("*********lowbin: %d, nextbin: %d, lowpt: %f, hipt: %f******************"%(lowbin, nextbin, lowpt, hipt)) 
-    if remake and lowpt > 18: #5 #69: #28: #40: #3: #i > 30 and i < 32: 
+    if remake and lowpt > 5: #28: #40: #3: #i > 30 and i < 32: 
         ctest = ROOT.TCanvas()
         ctest.cd()
     #projection = h2d.ProjectionY("hx"+str(i),i+1, i+1)
@@ -213,15 +252,13 @@ for j in range(nptbins+1): #-1):
     #fit_func = ROOT.TF1("fit_func"+str(nb), fit_str, 0.45, 0.65)
     #print("Now i = %d. Low edge: %f, high edge: %f"%(i, lowpt, hipt)) 
     
-    mlo = .45
-    mhi = .65
     mbinwidth = (projection.GetXaxis().GetXmax() - projection.GetXaxis().GetXmin()) / projection.GetNbinsX()
     nmbins = int((mhi-mlo)/mbinwidth) 
     rrv = ROOT.RooRealVar("m_{2#mu}(p_{T}bin"+str(j)+")","",mlo,mhi)
     data = ROOT.RooDataHist("data"+str(j), "data"+str(j), rrv, ROOT.RooFit.Import(projection))
     #total number of fit parameters
-    #sigModel = 'Voigtian' #old nominal
-    sigModel = 'DoubleGauss' #new nominal
+    #sigModel = 'Voigtian' # old nominal
+    sigModel = 'DoubleGauss' #nominal
     #sigModel = 'TripleGauss'
     #sigModel = 'SingleGauss'
     if sigModel == 'SingleGauss':
@@ -238,12 +275,16 @@ for j in range(nptbins+1): #-1):
         nsigparams = 8 #10
     elif sigModel == 'TripleGauss':
         nsigparams = 7 #10
-    #bkgMod = 'Cheb3' #old nominal
-    #nbkgparams = 4
+    bkgMod = 'Cheb3' #nominal
+    nbkgparams = 4
     #bkgMod = 'Cheb2' #alternative
     #nbkgparams = 3
-    bkgMod = 'Cheb4' #new nominal
-    nbkgparams = 5
+    #bkgMod = 'Cheb4' #old nominal
+    #nbkgparams = 5
+    #bkgMod = 'ExpCheb2' #another possible alternative?
+    #nbkgparams = 4
+    #bkgMod = 'ExpCheb3' #another possible alternative?
+    #nbkgparams = 5
     nparams = nsigparams + nbkgparams
     myfitter = fitter.fitter_2mu(mass=rrv, bkg_model=bkgMod, sig_model=sigModel) 
     if sigModel == 'SingleGauss':
@@ -256,23 +297,39 @@ for j in range(nptbins+1): #-1):
     elif sigModel == 'DoubleGauss' and bkgMod == 'Cheb2':
         if lowpt > 17 and lowpt < 20:
             myfitter.set_sig_params( mg=library.Param(.547, .544, .549), sg1=library.Param(.01, .001, .02), sg2=library.Param(0.01, 0.002, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 49 and lowpt < 51:
+            myfitter.set_sig_params( mg=library.Param(.547, .544, .549), sg1=library.Param(.003, .001, .015), sg2=library.Param(0.004, 0.0005, 0.01), sig1frac=library.Param(0.1, 0.005, 0.995) )
     elif sigModel == 'DoubleGauss':
         if lowpt > 7 and lowpt < 9:
-        #if 2 + 2 == 5:
             myfitter.set_sig_params( mg=library.Param(.547, .544, .548), sg1=library.Param(.01, .001, .02), sg2=library.Param(0.005, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
-        elif lowpt > 25:
-            myfitter.set_sig_params( mg=library.Param(.548, .544, .548), sg1=library.Param(.013, .001, .02), sg2=library.Param(0.002, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
-        elif lowpt > 18:
-            myfitter.set_sig_params( mg=library.Param(.548, .544, .548), sg1=library.Param(.013, .0005, .02), sg2=library.Param(0.002, 0.0005, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
-        elif lowpt > 9:
+        #elif bkgMod == "Cheb2" and lowpt > 17 and lowpt < 50:
+        #    myfitter.set_sig_params( mg=library.Param(.548, .544, .549), sg1=library.Param(.005, .001, .015), sg2=library.Param(0.002, 0.0005, 0.01), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 25 and lowpt < 27:
+            myfitter.set_sig_params( mg=library.Param(.548, .544, .549), sg1=library.Param(.013, .001, .02), sg2=library.Param(0.002, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 20 and lowpt < 22: #23:
+            myfitter.set_sig_params( mg=library.Param(.548, .544, .549), sg1=library.Param(.013, .001, .02), sg2=library.Param(0.002, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 31 and lowpt < 34:
+            myfitter.set_sig_params( mg=library.Param(.548, .544, .549), sg1=library.Param(.013, .001, .02), sg2=library.Param(0.002, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 35 and lowpt < 45: #50: 
+            myfitter.set_sig_params( mg=library.Param(.548, .544, .549), sg1=library.Param(.013, .001, .05), sg2=library.Param(0.03, 0.005, 0.05), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        #elif lowpt > 44 and lowpt < 50: 
+        #    myfitter.set_sig_params( mg=library.Param(.548, .544, .549), sg1=library.Param(.013, .001, .05), sg2=library.Param(0.01, 0.005, 0.05), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 51 and lowpt < 56: 
+        #elif lowpt > 49 and lowpt < 55: 
+            myfitter.set_sig_params( mg=library.Param(.548, .544, .550), sg1=library.Param(.013, .001, .05), sg2=library.Param(0.01, 0.006, 0.05), sig1frac=library.Param(0.5, 0.05, 0.95) )
+        elif lowpt > 9 and lowpt < 10:
             myfitter.set_sig_params( mg=library.Param(.548, .544, .548), sg1=library.Param(.01, .001, .02), sg2=library.Param(0.005, 0.001, 0.03), sig1frac=library.Param(0.5, 0.05, 0.95) )
     elif sigModel == 'TripleGauss':
         myfitter.set_sig_params( mg=library.Param(.547, .544, .548), sg1=library.Param(.01, .0001, .02), sg2=library.Param(0.005, 0.001, 0.1), sig1frac=library.Param(0.5, 0.05, 0.95), sg3=library.Param(0.005, 0.001, 0.1), sig2frac=library.Param(0.5, 0.05, 0.95) ) 
     elif sigModel == 'CB':
         pass
     elif sigModel == 'Voigtian':
-        if lowpt > 44 and lowpt < 50:
+        if (lowpt > 45 and lowpt < 50): # or lowpt > 50:
             myfitter.set_sig_params( mv=library.Param(.548, .545, .551), sv=library.Param(.005, .0001, .01), wv=library.Param(.005, .0001, .01) )
+        elif bkgMod == "Cheb4" and lowpt > 69:
+            myfitter.set_sig_params( mv=library.Param(.548, .546, .550), sv=library.Param(.01, .008, .02), wv=library.Param(.01, .005, .02) )
+        elif bkgMod == "Cheb4" and lowpt > 33 and lowpt < 39:
+            myfitter.set_sig_params( mv=library.Param(.548, .546, .550), sv=library.Param(.005, .002, .01), wv=library.Param(.004, .001, .01) )
     elif sigModel == 'BreitWigner':
         pass
     elif sigModel == 'CB_Gauss':
@@ -283,14 +340,24 @@ for j in range(nptbins+1): #-1):
         else:
             myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(.42, -1., 1.), a3=library.Param(.001, -1., 1.) )
     elif bkgMod == 'Cheb2':
-        myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(.92, -1., 1.) )
+        if lowpt > 17 and lowpt < 50:
+            myfitter.set_bkg_params( a1=library.Param(-.43, -1, 1), a2=library.Param(.12, -1., 1.) )
+        else:
+            myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(.92, -1., 1.) )
     elif bkgMod == 'Cheb4':
         if lowpt < 9:
             myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(.92, -1., 1.), a3=library.Param(.001, -1., 1.), a4=library.Param(.05, -1., 1.))
+        elif lowpt > 35 : #and lowpt < 39:
+            myfitter.set_bkg_params( a1=library.Param(-.63, -1, 1), a2=library.Param(-.92, -1., 1.), a3=library.Param(.001, -1., 1.), a4=library.Param(-0.01, 0, 0.01))
         elif lowpt > 25:
             myfitter.set_bkg_params( a1=library.Param(-.40, -1, 1), a2=library.Param(.70, -1., 1.), a3=library.Param(.1, -1., 1.), a4=library.Param(.5, -1., 1.))
         else:
             myfitter.set_bkg_params( a1=library.Param(-.50, -1, 1), a2=library.Param(.50, -1., 1.), a3=library.Param(.001, -1., 1.), a4=library.Param(.05, -1., 1.))
+    elif bkgMod == 'ExpPol2':
+        myfitter.set_bkg_params( p0=library.Param(55000, 40000, 100000), p1=library.Param(20, -100, 100), p2=library.Param(100, -50, 50), C=library.Param(3, -5, 8) )
+    elif bkgMod == 'ExpCheb2':
+        if (lowpt > 17 and lowpt < 27) or (lowpt > 54 and lowpt < 70):
+            myfitter.set_bkg_params( a1=library.Param(-.50, -1, 1), a2=library.Param(.50, -1., 1.), C=library.Param(5, -5, 10))
     fit_result = myfitter.model.fitTo(data, ROOT.RooFit.Save()) 
     #if test:
     #    fit_func.SetParameters(14000, .1, -.1, 1000, 0.548, 0.01, .1)
@@ -346,7 +413,9 @@ for j in range(nptbins+1): #-1):
     #ndata = h.Integral(h.FindBin(0.90), h.FindBin(1.0))
     argset = ROOT.RooArgSet(rrv)
     rrv.setRange("peak", peakmin, peakmax)
+    rrv.setRange("full", mlo, mhi)
     sig_int = myfitter.sig.func.createIntegral(argset, ROOT.RooFit.NormSet(argset), ROOT.RooFit.Range("peak"))
+    #sig_int = myfitter.sig.func.createIntegral(argset, ROOT.RooFit.NormSet(argset), ROOT.RooFit.Range("full"))
     bkg_int = myfitter.bkg.func.createIntegral(argset, ROOT.RooFit.NormSet(argset), ROOT.RooFit.Range("peak"))
     tot_int = myfitter.model.createIntegral(argset, ROOT.RooFit.NormSet(argset), ROOT.RooFit.Range("peak"))
     print("sigvals: %f, %f; bkgvals: %f, %f"%(sig_int.getVal(), myfitter.nsig.getVal(), bkg_int.getVal(), myfitter.nbkg.getVal())) 
@@ -360,7 +429,7 @@ for j in range(nptbins+1): #-1):
     hRawYields.SetBinContent(nb, nEta)
     hRawYields.SetBinError(nb, unct)
 
-    if remake and lowpt > 18: #5 #69: #28: # 3: #30 and i < 32:
+    if remake and lowpt > 5: #28: # 3: #30 and i < 32:
         frame = rrv.frame(ROOT.RooFit.Name(f"pullframe"), ROOT.RooFit.Title(" "))
         frame.SetTitle("Two-Muon Invariant Mass spectrum, %.1f < p_{T} < %.1f GeV"%(lowpt, hipt))
         frame.GetXaxis().SetTitle("m_{2#mu} [GeV]")
@@ -383,25 +452,9 @@ for j in range(nptbins+1): #-1):
         #datamax = 0.0
         #data.getRange(data, datamin, datamax)
         frame.SetMinimum( datamin / 1.2 ) 
-        #print("trying to plot!!!!!!!!!!!!")
-        #projection.SetMarkerStyle(20)
-        #projection.Draw("PE")
-        ##projection.GetXaxis().SetRangeUser(.45, .65) 
-        #projection.GetXaxis().SetRangeUser(.5, .6) 
-        #projection.GetXaxis().SetTitle("Invariant mass (GeV)")
-        #projection.GetYaxis().SetTitle("Events / .0025 GeV")
-        #projection.SetTitle("Invariant mass spectrum for %.1f < p_{T} < %.1f"%(lowpt, hipt)) 
-        #leg = ROOT.TLegend()
-        #header = fit_str + "\n"
-        #for p in range(6):
-        #    header += "Param %d: %.3f +/- %.3f"%(p, params[p], errors[p])
-        #leg.SetHeader(header) 
-        #leg.Draw("same") 
-        ##print("nEta = %f"%nEta)
-        #ctest.Modified()
-        #ctest.Update()
         frame.Draw("AC")
-        pav = ROOT.TPaveText(.49,datamin/1.2,.61,datamin/1.02, "NB")
+        pav = ROOT.TPaveText(.46,datamin*1.1,.52,datamin*1.3, "NB")
+        #pav = ROOT.TPaveText(.505,datamin*1.1,.535,datamin*1.3, "NB")
         #pav = ROOT.TPaveText()
         pav.AddText("Fit Parameters:")
         #print("All sig pars: ") # + str(myfitter.sig.get_arg_list())) 
@@ -426,11 +479,71 @@ for j in range(nptbins+1): #-1):
         leg.Draw("same")
         ctest.Modified()
         ctest.Update()
-        if lowpt > 5:
+        
+        if add_pulls:
+            #trying to add pull frame underneath! #####
+            minX = .45
+            maxX = .8
+            pullframe = rrv.frame(ROOT.RooFit.Name(f"pullframe"), ROOT.RooFit.Title(" "))
+            pullh = frame.pullHist("Data", "Tot") #Bkg")
+            #print("pullh: " + str(pullh)) 
+            residh = frame.residHist("Data", "Tot") #Bkg")
+            binning = rrv.getBinning()
+            pullmax = 0
+            pullmin = 0
+            #for i in range(1, projection.GetNbinsX()+1):
+            for i in range(0, projection.GetNbinsX()+1):
+                rrv.setRange("range_for_bin", binning.binLow(i), binning.binHigh(i))
+                normset = ROOT.RooFit.NormSet(rrv)
+                bkgPdfIntegral = myfitter.bkg().createIntegral(ROOT.RooArgSet(rrv), "range_for_bin")
+                ##print("bkgPdfIntegral: " + str(bkgPdfIntegral)) 
+                pset = ROOT.RooArgList()
+                pset.add(bkgPdfIntegral) 
+                bkgYield = ROOT.RooProduct("bkgYield", "bkgYield", pset)
+                fitError = bkgYield.getPropagatedError(fit_result)
+                old_sigma_i = residh.GetPointY(i)/pullh.GetPointY(i)
+                new_sigma_i = (old_sigma_i**2 - fitError**2)**(1/2)
+                residh.SetPointY(i, residh.GetPointY(i)/new_sigma_i)
+                residh.SetPointEYhigh(i, residh.GetErrorYhigh(i)/new_sigma_i)
+                residh.SetPointEYlow(i, residh.GetErrorYlow(i)/new_sigma_i)
+            pullframe.addPlotable(residh, 'P')
+            pullframe.GetXaxis().SetTitle("m_{#mu#muee} (GeV)")
+            pullframe.GetYaxis().SetTitle("Pull") 
+            line = ROOT.TLine(minX, 0, maxX, 0)
+            line.SetLineColor(ROOT.kGray)
+            pullframe.addObject(line)
+            c2 = cmsstyle.get_fit_canvas(frame, pullframe)
+            pad1 = c2.FindObject("pad1")
+            pad1.cd()
+            pullframe.SetMinimum( datamin / 1.2 ) 
+            leg.Draw("same")
+            pav.Draw("same")
+        if year == 2022:
+            if add_pulls:
+                cmsstyle.setCMSLumiStyle(c2, 0, era='2022')
+            else:
+                cmsstyle.setCMSLumiStyle(ctest, 0, era='2022')
+        elif year == 2223:
+            cmsstyle.setCMSLumiStyle(c2, 0, era='2022-2023')
+        if add_pulls:
+            c2.Update()
+        else:
+            ctest.Update()
+        ####
+        if lowpt > 6:
             input("wait...")
         if not test:
             #ctest.SaveAs("fit_plots_%s%s/bin%d.pdf"%(sigModel, bkgMod if bkgMod != 'Cheb3' else '', lowbin-1)) 
-            ctest.SaveAs("fit_plots_muID_%s%s/bin%d.pdf"%(sigModel, bkgMod, lowbin-1)) 
+            #ctest.SaveAs("fit_plots_muID_%s%s/bin%d.pdf"%(sigModel, bkgMod, lowbin-1)) 
+            #ctest.SaveAs("fit_plots_tightMuID_%s%s/bin%d.pdf"%(sigModel, bkgMod, lowbin-1)) 
+            if add_pulls:
+                c2.SaveAs("fit_plots_muID_%s%s/bin%d.pdf"%(sigModel, bkgMod, lowbin-1)) 
+            else:
+                if tight:
+                    ctest.SaveAs("fit_plots_tightMuID_%s%s/bin%d.pdf"%(sigModel, bkgMod, lowbin-1)) 
+                else:
+                    ctest.SaveAs("fit_plots_muID_%s%s/bin%d.pdf"%(sigModel, bkgMod, lowbin-1)) 
+            
     #if nEta < 0:
     #    print("nEta < 0 ????????????")
     #    projection.Draw("hist")
